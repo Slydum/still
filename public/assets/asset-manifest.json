@@ -1,0 +1,1102 @@
+{
+  "library": "Still. Asset Library",
+  "version": "working-master",
+  "asset_count": 120,
+  "notes": [
+    "Production assets are normalized to 1024x1024 PNG files.",
+    "Aspin and Shipom assets use descriptive pose-based filenames.",
+    "Weather assets now include rain, thunderstorm, snow, fog, tornado, rainbow, and wind variants.",
+    "Aspin set expanded with play, cuddle, food, curious, and resting pose variants.",
+    "Mood and energy check-in assets added for calm, tired, sad, overwhelmed, motivated, resting, and loved states.",
+    "Celebration and holiday assets added for New Year, Valentine\u2019s Day, Halloween, and Easter."
+  ],
+  "assets": [
+    {
+      "filename": "cat_ginger_grooming_paw.webp",
+      "path": "assets/illustrations/cats/cat_ginger_grooming_paw.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_ginger_loaf_sleeping.webp",
+      "path": "assets/illustrations/cats/cat_ginger_loaf_sleeping.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_ginger_play_bow.webp",
+      "path": "assets/illustrations/cats/cat_ginger_play_bow.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_ginger_resting_awake.webp",
+      "path": "assets/illustrations/cats/cat_ginger_resting_awake.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_ginger_sitting.webp",
+      "path": "assets/illustrations/cats/cat_ginger_sitting.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_ginger_sleeping_curled.webp",
+      "path": "assets/illustrations/cats/cat_ginger_sleeping_curled.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_ginger_standing_curious.webp",
+      "path": "assets/illustrations/cats/cat_ginger_standing_curious.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_ginger_standing_smiling.webp",
+      "path": "assets/illustrations/cats/cat_ginger_standing_smiling.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_ginger_stretching.webp",
+      "path": "assets/illustrations/cats/cat_ginger_stretching.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_ginger_walking.webp",
+      "path": "assets/illustrations/cats/cat_ginger_walking.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_sitting.webp",
+      "path": "assets/illustrations/cats/cat_sitting.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_sleeping.webp",
+      "path": "assets/illustrations/cats/cat_sleeping.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_stretching.webp",
+      "path": "assets/illustrations/cats/cat_stretching.webp",
+      "category": "cats",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cat_pillow.webp",
+      "path": "assets/illustrations/cozy/cat_pillow.webp",
+      "category": "cozy",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "coffee_mug.webp",
+      "path": "assets/illustrations/cozy/coffee_mug.webp",
+      "category": "cozy",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "cozy_window.webp",
+      "path": "assets/illustrations/cozy/cozy_window.webp",
+      "category": "cozy",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "folded_blanket.webp",
+      "path": "assets/illustrations/cozy/folded_blanket.webp",
+      "category": "cozy",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "heart_jar_candle.webp",
+      "path": "assets/illustrations/cozy/heart_jar_candle.webp",
+      "category": "cozy",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "round_woven_rug.webp",
+      "path": "assets/illustrations/cozy/round_woven_rug.webp",
+      "category": "cozy",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "stacked_books.webp",
+      "path": "assets/illustrations/cozy/stacked_books.webp",
+      "category": "cozy",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "tea_cup_saucer.webp",
+      "path": "assets/illustrations/cozy/tea_cup_saucer.webp",
+      "category": "cozy",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "watering_can.webp",
+      "path": "assets/illustrations/cozy/watering_can.webp",
+      "category": "cozy",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "aspin_cuddling_pair.webp",
+      "path": "assets/illustrations/dogs/aspin_cuddling_pair.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "aspin_curious.webp",
+      "path": "assets/illustrations/dogs/aspin_curious.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "aspin_playing_with_ball.webp",
+      "path": "assets/illustrations/dogs/aspin_playing_with_ball.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "aspin_playing_with_stick.webp",
+      "path": "assets/illustrations/dogs/aspin_playing_with_stick.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "aspin_playing_with_stick_and_blanket.webp",
+      "path": "assets/illustrations/dogs/aspin_playing_with_stick_and_blanket.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "aspin_sitting.webp",
+      "path": "assets/illustrations/dogs/aspin_sitting.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "aspin_sitting_with_food_bowl.webp",
+      "path": "assets/illustrations/dogs/aspin_sitting_with_food_bowl.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "aspin_sleeping_on_bed.webp",
+      "path": "assets/illustrations/dogs/aspin_sleeping_on_bed.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "aspin_sleeping_on_round_bed.webp",
+      "path": "assets/illustrations/dogs/aspin_sleeping_on_round_bed.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "aspin_standing_happy.webp",
+      "path": "assets/illustrations/dogs/aspin_standing_happy.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "golden_sitting.webp",
+      "path": "assets/illustrations/dogs/golden_sitting.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "golden_sleeping.webp",
+      "path": "assets/illustrations/dogs/golden_sleeping.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "golden_standing.webp",
+      "path": "assets/illustrations/dogs/golden_standing.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "golden_walking.webp",
+      "path": "assets/illustrations/dogs/golden_walking.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "puppy_sitting.webp",
+      "path": "assets/illustrations/dogs/puppy_sitting.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "puppy_sleeping.webp",
+      "path": "assets/illustrations/dogs/puppy_sleeping.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "puppy_standing.webp",
+      "path": "assets/illustrations/dogs/puppy_standing.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "shipom_lying_relaxed.webp",
+      "path": "assets/illustrations/dogs/shipom_lying_relaxed.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "shipom_resting_curled.webp",
+      "path": "assets/illustrations/dogs/shipom_resting_curled.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "shipom_resting_flat.webp",
+      "path": "assets/illustrations/dogs/shipom_resting_flat.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "shipom_resting_sphinx.webp",
+      "path": "assets/illustrations/dogs/shipom_resting_sphinx.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "shipom_sitting.webp",
+      "path": "assets/illustrations/dogs/shipom_sitting.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "shipom_sitting_happy.webp",
+      "path": "assets/illustrations/dogs/shipom_sitting_happy.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "shipom_sitting_one_ear_up.webp",
+      "path": "assets/illustrations/dogs/shipom_sitting_one_ear_up.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "shipom_standing_front.webp",
+      "path": "assets/illustrations/dogs/shipom_standing_front.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "shipom_standing_side.webp",
+      "path": "assets/illustrations/dogs/shipom_standing_side.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "shipom_walking.webp",
+      "path": "assets/illustrations/dogs/shipom_walking.webp",
+      "category": "dogs",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "energy_motivated.webp",
+      "path": "assets/illustrations/mood-energy/energy_motivated.webp",
+      "category": "mood-energy",
+      "subtype": "energy",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "energy_resting.webp",
+      "path": "assets/illustrations/mood-energy/energy_resting.webp",
+      "category": "mood-energy",
+      "subtype": "energy",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "energy_tired.webp",
+      "path": "assets/illustrations/mood-energy/energy_tired.webp",
+      "category": "mood-energy",
+      "subtype": "energy",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "mood_calm.webp",
+      "path": "assets/illustrations/mood-energy/mood_calm.webp",
+      "category": "mood-energy",
+      "subtype": "mood",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "mood_loved.webp",
+      "path": "assets/illustrations/mood-energy/mood_loved.webp",
+      "category": "mood-energy",
+      "subtype": "mood",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "mood_overwhelmed.webp",
+      "path": "assets/illustrations/mood-energy/mood_overwhelmed.webp",
+      "category": "mood-energy",
+      "subtype": "mood",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "mood_sad.webp",
+      "path": "assets/illustrations/mood-energy/mood_sad.webp",
+      "category": "mood-energy",
+      "subtype": "mood",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "nature_acorns_pair.webp",
+      "path": "assets/illustrations/nature/nature_acorns_pair.webp",
+      "category": "nature",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "nature_bee_sparkle.webp",
+      "path": "assets/illustrations/nature/nature_bee_sparkle.webp",
+      "category": "nature",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "nature_butterflies_pastel_pair.webp",
+      "path": "assets/illustrations/nature/nature_butterflies_pastel_pair.webp",
+      "category": "nature",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "nature_dandelion_wish.webp",
+      "path": "assets/illustrations/nature/nature_dandelion_wish.webp",
+      "category": "nature",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "nature_dragonfly_blue.webp",
+      "path": "assets/illustrations/nature/nature_dragonfly_blue.webp",
+      "category": "nature",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "nature_flower_cluster_pastel.webp",
+      "path": "assets/illustrations/nature/nature_flower_cluster_pastel.webp",
+      "category": "nature",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "nature_flower_pot_pastel.webp",
+      "path": "assets/illustrations/nature/nature_flower_pot_pastel.webp",
+      "category": "nature",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "nature_leaf_pair.webp",
+      "path": "assets/illustrations/nature/nature_leaf_pair.webp",
+      "category": "nature",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "nature_mushroom_red_spotted.webp",
+      "path": "assets/illustrations/nature/nature_mushroom_red_spotted.webp",
+      "category": "nature",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "nature_rocks_log_flowers.webp",
+      "path": "assets/illustrations/nature/nature_rocks_log_flowers.webp",
+      "category": "nature",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_fern.webp",
+      "path": "assets/illustrations/plants/plant_fern.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_hanging_vine.webp",
+      "path": "assets/illustrations/plants/plant_hanging_vine.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_lavender.webp",
+      "path": "assets/illustrations/plants/plant_lavender.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_leafy.webp",
+      "path": "assets/illustrations/plants/plant_leafy.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_peace_lily.webp",
+      "path": "assets/illustrations/plants/plant_peace_lily.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_pink_blossoms_blush_pot.webp",
+      "path": "assets/illustrations/plants/plant_pink_blossoms_blush_pot.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_pink_blossoms_blush_pot_dense.webp",
+      "path": "assets/illustrations/plants/plant_pink_blossoms_blush_pot_dense.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_pink_blossoms_cream_pot.webp",
+      "path": "assets/illustrations/plants/plant_pink_blossoms_cream_pot.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_pink_flowers.webp",
+      "path": "assets/illustrations/plants/plant_pink_flowers.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_succulent_cluster.webp",
+      "path": "assets/illustrations/plants/plant_succulent_cluster.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_tall_dracaena.webp",
+      "path": "assets/illustrations/plants/plant_tall_dracaena.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_tall_leaves.webp",
+      "path": "assets/illustrations/plants/plant_tall_leaves.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_yellow_blossoms.webp",
+      "path": "assets/illustrations/plants/plant_yellow_blossoms.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "plant_yellow_blossoms_cream_pot.webp",
+      "path": "assets/illustrations/plants/plant_yellow_blossoms_cream_pot.webp",
+      "category": "plants",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "sky_cloud_fluffy.webp",
+      "path": "assets/illustrations/sky/sky_cloud_fluffy.webp",
+      "category": "sky",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "sky_moon_with_stars.webp",
+      "path": "assets/illustrations/sky/sky_moon_with_stars.webp",
+      "category": "sky",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "sky_rainbow_clouds.webp",
+      "path": "assets/illustrations/sky/sky_rainbow_clouds.webp",
+      "category": "sky",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "sky_shooting_star_pastel.webp",
+      "path": "assets/illustrations/sky/sky_shooting_star_pastel.webp",
+      "category": "sky",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "sky_sleeping_cloud_moon.webp",
+      "path": "assets/illustrations/sky/sky_sleeping_cloud_moon.webp",
+      "category": "sky",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "sky_sparkle_stars.webp",
+      "path": "assets/illustrations/sky/sky_sparkle_stars.webp",
+      "category": "sky",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "sky_star_cluster_pastel.webp",
+      "path": "assets/illustrations/sky/sky_star_cluster_pastel.webp",
+      "category": "sky",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "sky_sun_behind_cloud.webp",
+      "path": "assets/illustrations/sky/sky_sun_behind_cloud.webp",
+      "category": "sky",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "sky_sun_smiling.webp",
+      "path": "assets/illustrations/sky/sky_sun_smiling.webp",
+      "category": "sky",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "sky_wind_swirl_pastel.webp",
+      "path": "assets/illustrations/sky/sky_wind_swirl_pastel.webp",
+      "category": "sky",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "time_dawn_peeking_sun.webp",
+      "path": "assets/illustrations/time/time_dawn_peeking_sun.webp",
+      "category": "time",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "time_deep_night_stars.webp",
+      "path": "assets/illustrations/time/time_deep_night_stars.webp",
+      "category": "time",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "time_early_evening_sun.webp",
+      "path": "assets/illustrations/time/time_early_evening_sun.webp",
+      "category": "time",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "time_golden_hour.webp",
+      "path": "assets/illustrations/time/time_golden_hour.webp",
+      "category": "time",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "time_midday_bright_sun.webp",
+      "path": "assets/illustrations/time/time_midday_bright_sun.webp",
+      "category": "time",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "time_morning_clear_sky.webp",
+      "path": "assets/illustrations/time/time_morning_clear_sky.webp",
+      "category": "time",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "time_night_crescent_moon.webp",
+      "path": "assets/illustrations/time/time_night_crescent_moon.webp",
+      "category": "time",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "time_sunrise_soft_hills.webp",
+      "path": "assets/illustrations/time/time_sunrise_soft_hills.webp",
+      "category": "time",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "time_sunset_pink_sky.webp",
+      "path": "assets/illustrations/time/time_sunset_pink_sky.webp",
+      "category": "time",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "time_twilight.webp",
+      "path": "assets/illustrations/time/time_twilight.webp",
+      "category": "time",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "weather_cloudy.webp",
+      "path": "assets/illustrations/weather/weather_cloudy.webp",
+      "category": "weather",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "weather_fog.webp",
+      "path": "assets/illustrations/weather/weather_fog.webp",
+      "category": "weather",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "weather_overcast.webp",
+      "path": "assets/illustrations/weather/weather_overcast.webp",
+      "category": "weather",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "weather_partly_sunny.webp",
+      "path": "assets/illustrations/weather/weather_partly_sunny.webp",
+      "category": "weather",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "weather_rain.webp",
+      "path": "assets/illustrations/weather/weather_rain.webp",
+      "category": "weather",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "weather_rainbow.webp",
+      "path": "assets/illustrations/weather/weather_rainbow.webp",
+      "category": "weather",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "weather_snow.webp",
+      "path": "assets/illustrations/weather/weather_snow.webp",
+      "category": "weather",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "weather_thunderstorm.webp",
+      "path": "assets/illustrations/weather/weather_thunderstorm.webp",
+      "category": "weather",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "weather_tornado.webp",
+      "path": "assets/illustrations/weather/weather_tornado.webp",
+      "category": "weather",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "weather_windy.webp",
+      "path": "assets/illustrations/weather/weather_windy.webp",
+      "category": "weather",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "new_year_fireworks.webp",
+      "path": "assets/illustrations/celebrations/new_year_fireworks.webp",
+      "category": "celebrations",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "new_year_star_cluster.webp",
+      "path": "assets/illustrations/celebrations/new_year_star_cluster.webp",
+      "category": "celebrations",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "new_year_banner.webp",
+      "path": "assets/illustrations/celebrations/new_year_banner.webp",
+      "category": "celebrations",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "valentines_heart_cluster.webp",
+      "path": "assets/illustrations/celebrations/valentines_heart_cluster.webp",
+      "category": "celebrations",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "valentines_flower_bouquet.webp",
+      "path": "assets/illustrations/celebrations/valentines_flower_bouquet.webp",
+      "category": "celebrations",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "valentines_love_letter.webp",
+      "path": "assets/illustrations/celebrations/valentines_love_letter.webp",
+      "category": "celebrations",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "halloween_friendly_pumpkin.webp",
+      "path": "assets/illustrations/celebrations/halloween_friendly_pumpkin.webp",
+      "category": "celebrations",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "halloween_crescent_moon.webp",
+      "path": "assets/illustrations/celebrations/halloween_crescent_moon.webp",
+      "category": "celebrations",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "halloween_friendly_ghost.webp",
+      "path": "assets/illustrations/celebrations/halloween_friendly_ghost.webp",
+      "category": "celebrations",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    },
+    {
+      "filename": "easter_decorated_egg.webp",
+      "path": "assets/illustrations/celebrations/easter_decorated_egg.webp",
+      "category": "celebrations",
+      "status": "approved",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "background": "transparent"
+    }
+  ]
+}
