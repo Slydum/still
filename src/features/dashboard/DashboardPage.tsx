@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
-import { Bell, BriefcaseBusiness, CalendarDays, Heart, Sparkles, WalletCards } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Bell, BriefcaseBusiness, CalendarDays, Heart, MapPin, Sparkles, WalletCards } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getSecondaryQuote } from '../../content/quoteEngine';
 import { saveCheckIn } from '../../data/stillDb';
 import { useDailyQuote } from '../../hooks/useDailyQuote';
@@ -44,6 +44,58 @@ const weatherOptions: Array<{ value: WeatherKey | ''; label: string }> = [
   { value: 'snow', label: 'Snowy' },
 ];
 
+const weatherVisuals: Partial<Record<WeatherKey, string>> = {
+  'partly-sunny': stillAssets.weather.partlySunny,
+  cloudy: stillAssets.weather.cloudy,
+  overcast: stillAssets.weather.overcast,
+  rain: stillAssets.weather.rain,
+  thunderstorm: stillAssets.weather.thunderstorm,
+  windy: stillAssets.weather.windy,
+  fog: stillAssets.weather.fog,
+  rainbow: stillAssets.weather.rainbow,
+  snow: stillAssets.weather.snow,
+};
+
+type WeatherStatus =
+  | 'idle'
+  | 'requesting'
+  | 'ready'
+  | 'denied'
+  | 'error';
+
+const LOCATION_WEATHER_KEY =
+  'still-location-weather-enabled-v2';
+
+function weatherCodeToKey(code: number): WeatherKey {
+  if (code <= 1) return 'partly-sunny';
+  if (code === 2) return 'cloudy';
+  if (code === 3) return 'overcast';
+
+  if (code === 45 || code === 48) {
+    return 'fog';
+  }
+
+  if (
+    [
+      51, 53, 55, 56, 57,
+      61, 63, 65, 66, 67,
+      80, 81, 82,
+    ].includes(code)
+  ) {
+    return 'rain';
+  }
+
+  if ([71, 73, 75, 77, 85, 86].includes(code)) {
+    return 'snow';
+  }
+
+  if ([95, 96, 99].includes(code)) {
+    return 'thunderstorm';
+  }
+
+  return 'cloudy';
+}
+
 const lifeAreas = [
   { key: 'work', label: 'Work', status: 'Focused', progress: 5, icon: stillAssets.tabs.work },
   { key: 'love', label: 'Love', status: 'Needs attention', progress: 3, icon: stillAssets.tabs.love },
@@ -70,7 +122,159 @@ export function DashboardPage() {
   const setWeather = useAppStore((state) => state.setWeather);
   const hydrateForToday = useAppStore((state) => state.hydrateForToday);
   const [done, setDone] = useState<number[]>([]);
+  const [weatherStatus, setWeatherStatus] =
+    useState<WeatherStatus>('idle');
+  const [temperature, setTemperature] =
+    useState<number | null>(null);
+
   const now = useCurrentTime();
+
+  const selectedWeather =
+    weatherOptions.find((option) => option.value === (weather ?? '')) ??
+    weatherOptions[0];
+
+  const selectedWeatherAsset = weather
+    ? weatherVisuals[weather] ?? stillAssets.sky.sunCloud
+    : stillAssets.sky.sunCloud;
+
+  const refreshWeatherFromLocation = useCallback(
+    (rememberPermission: boolean) => {
+      if (!navigator.geolocation) {
+        setWeatherStatus('error');
+        return;
+      }
+
+      setWeatherStatus('requesting');
+
+      navigator.geolocation.getCurrentPosition(
+        async ({ coords }) => {
+          try {
+            const endpoint = new URL(
+              'https://api.open-meteo.com/v1/forecast',
+            );
+
+            endpoint.searchParams.set(
+              'latitude',
+              String(coords.latitude),
+            );
+
+            endpoint.searchParams.set(
+              'longitude',
+              String(coords.longitude),
+            );
+
+            endpoint.searchParams.set(
+              'current',
+              'temperature_2m,weather_code',
+            );
+
+            endpoint.searchParams.set('timezone', 'auto');
+
+            const response = await fetch(endpoint);
+
+            if (!response.ok) {
+              throw new Error(
+                `Weather request failed: ${response.status}`,
+              );
+            }
+
+            const result = (await response.json()) as {
+              current?: {
+                temperature_2m?: number;
+                weather_code?: number;
+              };
+            };
+
+            const current = result.current;
+
+            if (
+              typeof current?.temperature_2m !== 'number' ||
+              typeof current?.weather_code !== 'number'
+            ) {
+              throw new Error('Current weather was unavailable.');
+            }
+
+            setTemperature(current.temperature_2m);
+            setWeather(weatherCodeToKey(current.weather_code));
+            setWeatherStatus('ready');
+
+            if (rememberPermission) {
+              window.localStorage.setItem(
+                LOCATION_WEATHER_KEY,
+                'true',
+              );
+            }
+          } catch (error) {
+            console.error(
+              'Still could not load local weather:',
+              error,
+            );
+
+            setWeatherStatus('error');
+          }
+        },
+        (error) => {
+          if (error.code === 1) {
+            setWeatherStatus('denied');
+
+            window.localStorage.removeItem(
+              LOCATION_WEATHER_KEY,
+            );
+
+            return;
+          }
+
+          console.error(
+            'Still could not access location:',
+            error,
+          );
+
+          setWeatherStatus('error');
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 12_000,
+          maximumAge: 30 * 60 * 1_000,
+        },
+      );
+    },
+    [setWeather],
+  );
+
+  useEffect(() => {
+    const locationWeatherEnabled =
+      window.localStorage.getItem(
+        LOCATION_WEATHER_KEY,
+      ) === 'true';
+
+    // First visit: request permission.
+    // Later visits: refresh automatically using the saved permission.
+    refreshWeatherFromLocation(!locationWeatherEnabled);
+  }, [refreshWeatherFromLocation]);
+
+  const weatherCaption =
+    weatherStatus === 'ready'
+      ? 'Weather near you'
+      : weatherStatus === 'requesting'
+        ? 'Checking your area'
+        : weatherStatus === 'denied'
+          ? 'Location permission'
+          : weatherStatus === 'error'
+            ? 'Weather unavailable'
+            : 'Local weather';
+
+  const weatherHeadline =
+    weatherStatus === 'ready' && temperature !== null
+      ? `${selectedWeather.label} · ${Math.round(
+          temperature,
+        )}°C`
+      : weatherStatus === 'requesting'
+        ? 'Finding your weather…'
+        : weatherStatus === 'denied'
+          ? 'Location blocked'
+          : weatherStatus === 'error'
+            ? 'Tap to try again'
+            : 'Use my location';
 
   const context = useMemo(
     () => createStillContext({ date: now, mood, energy, weather, occasion }),
@@ -108,17 +312,69 @@ export function DashboardPage() {
         <div className="hero-copy">
           <h1>{getGreeting(context.timeOfDay)}</h1>
           <p className={`quote ${isLoading ? 'is-loading' : ''}`}>“{quote.text}”</p>
-          <label className="weather-picker weather-picker-v2">
-            <span className="visually-hidden">Choose today’s weather</span>
-            <select value={weather ?? ''} onChange={(event) => setWeather((event.target.value || undefined) as WeatherKey | undefined)}>
-              {weatherOptions.map((option) => <option key={option.value || 'none'} value={option.value}>{option.label}</option>)}
-            </select>
-          </label>
+          <button
+              className={`weather-ambient weather-status-${weatherStatus}`}
+              type="button"
+              onClick={() => refreshWeatherFromLocation(true)}
+              aria-busy={weatherStatus === 'requesting'}
+              aria-label="Use my location for automatic weather"
+            >
+              <span
+                className="weather-ambient-icon"
+                aria-hidden="true"
+              >
+                <img src={selectedWeatherAsset} alt="" />
+              </span>
+
+              <span className="weather-ambient-copy">
+                <small>{weatherCaption}</small>
+                <strong>{weatherHeadline}</strong>
+              </span>
+
+              <MapPin
+                className="weather-location-icon"
+                size={16}
+                aria-hidden="true"
+              />
+            </button>
         </div>
         <div className={`hero-art hero-art-v2 hero-kind-${theme.heroKind}`}>
-          <div className="hero-scene-wash" />
-          <img className="hero-main-art hero-main-art-v2" src={theme.heroAsset} alt={theme.heroAlt} />
-        </div>
+            <div className="hero-scene-wash" />
+
+            <img
+              className="hero-scene-sky"
+              src={selectedWeatherAsset}
+              alt=""
+              aria-hidden="true"
+            />
+
+            <img
+              className="hero-scene-plant"
+              src={stillAssets.plants.pinkBlossoms}
+              alt=""
+              aria-hidden="true"
+            />
+
+            <span
+              className="hero-scene-sparkle sparkle-one"
+              aria-hidden="true"
+            >
+              ✦
+            </span>
+
+            <span
+              className="hero-scene-sparkle sparkle-two"
+              aria-hidden="true"
+            >
+              ✧
+            </span>
+
+            <img
+              className="hero-main-art hero-main-art-v2"
+              src={theme.heroAsset}
+              alt={theme.heroAlt}
+            />
+          </div>
       </section>
 
       <section className="section section-v2">
@@ -127,7 +383,7 @@ export function DashboardPage() {
           <button className="link-btn" type="button">View history</button>
         </div>
 
-        <article className="card checkin-combined-card">
+        <article className="card checkin-combined-card surface-checkin">
           <div className="checkin-column">
             <strong>Mood</strong>
             <div className="emoji-row">
@@ -159,7 +415,7 @@ export function DashboardPage() {
       </section>
 
       <section className="section dashboard-two-column">
-        <article className="card focus-card">
+        <article className="card focus-card surface-focus">
           <p className="section-kicker">Today’s focus</p>
           <div className="focus-list">
             {priorities.map((task, index) => {
@@ -175,7 +431,7 @@ export function DashboardPage() {
           <img className="priority-pet focus-pet" src={theme.priorityAsset} alt="" aria-hidden="true" />
         </article>
 
-        <article className="card upcoming-card">
+        <article className="card upcoming-card surface-upcoming">
           <p className="section-kicker">Coming up</p>
           <div className="timeline">
             <div className="timeline-item"><span className="timeline-dot" /><span className="timeline-icon work"><BriefcaseBusiness size={18} /></span><div><small>9:00 PM</small><strong>Work shift</strong></div></div>
@@ -194,9 +450,21 @@ export function DashboardPage() {
           {lifeAreas.map((area) => (
             <button className={`card garden-card ${area.key}`} type="button" key={area.key}>
               <div className="garden-card-head"><img src={area.icon} alt="" /><strong>{area.label}</strong></div>
-              <div className="garden-progress" aria-label={`${area.label}: ${area.progress} of 7`}>
-                {Array.from({ length: 7 }, (_, index) => <span key={index} className={index < area.progress ? 'filled' : ''} />)}
-              </div>
+              <div
+                  className="garden-progress"
+                  role="img"
+                  aria-label={`${area.label}: ${area.progress} of 7`}
+                >
+                  {Array.from({ length: 7 }, (_, index) => (
+                    <span
+                      key={index}
+                      className={
+                        index < area.progress ? 'filled' : ''
+                      }
+                      aria-hidden="true"
+                    />
+                  ))}
+                </div>
               <span className="garden-status">{area.status}</span>
             </button>
           ))}
