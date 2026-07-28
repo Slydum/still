@@ -1,0 +1,1 @@
+{"root":["./src/main.tsx","./src/app/App.tsx","./src/components/navigation/BottomNav.tsx","./src/components/ui/QuickAddSheet.tsx","./src/features/dashboard/DashboardPage.tsx","./src/stores/useAppStore.ts"],"errors":true,"version":"5.8.3"}
