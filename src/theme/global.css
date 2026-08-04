@@ -2387,3 +2387,98 @@ h1 {
   .work-days-field > div { gap: 5px; }
   .work-shift-row { align-items: flex-start; }
 }
+
+
+/* Cozy Little Rooms — connected life areas */
+.cozy-area-page {
+  --cozy-ink: #5d4131;
+  --cozy-muted: #9a7c68;
+  --cozy-line: rgba(201, 165, 139, .3);
+  position: relative;
+  max-width: 760px;
+  padding-top: 18px;
+  padding-bottom: 126px;
+  color: var(--cozy-ink);
+}
+.cozy-area-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(circle at 82% 5%, rgba(255, 220, 192, .31), transparent 24rem),
+    radial-gradient(circle at 4% 32%, rgba(248, 211, 202, .24), transparent 23rem),
+    #fffaf1;
+}
+.cozy-area-page .card { border-color: var(--cozy-line); box-shadow: 0 10px 24px rgba(116, 79, 54, .07); background: rgba(255,253,247,.94); }
+.cozy-area-page .section-kicker { color: #aa7961; letter-spacing: .09em; }
+
+.cozy-topbar { height: 48px; display: grid; grid-template-columns: 42px 1fr 42px; align-items: center; }
+.cozy-topbar > button { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 13px; color: #765744; background: rgba(255,255,255,.62); }
+.cozy-brand { justify-self: center; font-family: Georgia,serif; font-size: 28px; font-weight: 700; color: #5b3d2b; }
+
+.cozy-area-intro { min-height: 145px; display: grid; grid-template-columns: minmax(0,1fr) minmax(120px,42%); align-items: center; overflow: hidden; }
+.cozy-area-intro h1 { margin: 2px 0 5px; color: #c46d67; font-size: clamp(40px,11vw,56px); }
+.cozy-area-intro p:last-child { margin: 0; color: #a0705d; font-family: Georgia,serif; font-size: 15px; }
+.cozy-area-intro img { width: 100%; max-height: 142px; object-fit: contain; filter: drop-shadow(0 7px 8px rgba(108,75,53,.08)); }
+
+.cozy-next-shift { min-height: 166px; padding: 20px; display: grid; grid-template-columns: minmax(0,1fr) 44%; align-items: center; overflow: hidden; background: linear-gradient(145deg,rgba(255,253,247,.98),rgba(255,240,226,.93)) !important; }
+.cozy-next-shift strong,.cozy-next-shift span { display: block; }
+.cozy-next-shift strong { color: #684634; font-family: Georgia,serif; font-size: 23px; line-height: 1.15; }
+.cozy-next-shift span { margin-top: 7px; color: #9e7662; font-size: 12px; font-weight: 700; }
+.cozy-next-shift img { width: 130%; max-height: 150px; object-fit: contain; transform: translateX(-7%); filter: drop-shadow(0 7px 8px rgba(108,75,53,.07)); }
+
+.cozy-earned-card { position: relative; min-height: 138px; margin-top: 12px; padding: 22px 100px 21px 20px; overflow: hidden; border: 1px solid rgba(219,149,135,.32); border-radius: 24px; background: linear-gradient(145deg,#fff5ed,#fbded5); box-shadow: 0 12px 28px rgba(142,83,67,.1); }
+.cozy-earned-card strong,.cozy-earned-card span { display: block; }
+.cozy-earned-card strong { margin-top: 3px; color: #6a4434; font-family: Georgia,serif; font-size: 34px; line-height: 1; }
+.cozy-earned-card span { margin-top: 8px; color: #a57765; font-size: 11px; font-weight: 700; }
+.cozy-earned-card > button { position: absolute; top: 16px; right: 17px; z-index: 2; width: 38px; height: 38px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; color: #a15f5c; background: rgba(255,255,255,.68); }
+.cozy-earned-card > img { position: absolute; right: -8px; bottom: -15px; width: 104px; height: 95px; object-fit: contain; opacity: .36; transform: rotate(-6deg); }
+
+.cozy-clock-actions { margin-top: 12px; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.cozy-clock-actions button { min-width: 0; min-height: 105px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; border: 1px solid var(--cozy-line); border-radius: 21px; color: #74513e; background: rgba(255,253,247,.94); box-shadow: 0 9px 22px rgba(116,79,54,.065); }
+.cozy-clock-actions button span { width: 45px; height: 45px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: #d98678; }
+.cozy-clock-actions button:nth-child(2) span { color: #765b37; background: #f0c777; }
+.cozy-clock-actions button:nth-child(3) span { background: #8fa66a; }
+.cozy-clock-actions button.is-active { border-color: #d6ae63; background: #fff8e8; }
+.cozy-clock-actions button:disabled { opacity: .42; }
+.cozy-clock-actions strong { overflow: hidden; max-width: 100%; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+
+.cozy-privacy-card { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.cozy-privacy-card strong,.cozy-privacy-card small { display: block; }
+.cozy-privacy-card strong { color: #694b3b; font-size: 13px; }
+.cozy-privacy-card small { margin-top: 4px; color: #a18473; font-size: 10px; }
+.cozy-privacy-card input { flex: none; width: 46px; height: 27px; accent-color: #d98678; }
+
+.cozy-work-summary { margin-top: 12px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.cozy-work-summary article { min-height: 116px; display: flex; flex-direction: column; justify-content: center; }
+.cozy-work-summary small,.cozy-work-summary span { color: #a18473; font-size: 10px; }
+.cozy-work-summary small { font-weight: 800; text-transform: uppercase; }
+.cozy-work-summary strong { margin: 6px 0 4px; color: #674838; font-family: Georgia,serif; font-size: 19px; }
+
+.cozy-area-page .settings-section-heading > span { color: #9d6c55; background: #fae7db; }
+.cozy-area-page .settings-section-heading h2 { color: #694b3b; }
+.cozy-area-page .settings-section-heading p { color: #a18473; }
+.cozy-area-page .work-shift-row strong { color: #694b3b; }
+.cozy-area-page .work-shift-row span { color: #a18473; }
+
+.cozy-work-settings { margin-top: 28px; padding: 0 !important; overflow: hidden; }
+.cozy-work-settings summary { min-height: 66px; padding: 17px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none; }
+.cozy-work-settings summary::-webkit-details-marker { display: none; }
+.cozy-work-settings summary > span { display: inline-flex; align-items: center; gap: 9px; color: #684b3b; }
+.cozy-work-settings summary small { color: #a18473; font-size: 10px; }
+.cozy-work-settings form { padding: 18px; border-top: 1px solid var(--cozy-line); background: rgba(255,249,241,.62); }
+.cozy-work-settings .work-form-grid input,.cozy-work-settings .work-form-grid select { border-color: rgba(201,165,139,.4); color: #674b3b; background: #fffdf8; }
+.cozy-work-settings .work-days-field button.is-selected { border-color: #d98678; background: #d98678; }
+.cozy-work-settings .work-save-button { background: linear-gradient(135deg,#d47c70,#e7a08e); box-shadow: 0 8px 18px rgba(177,99,85,.18); }
+
+@media (max-width: 420px) {
+  .cozy-area-page { padding-right: 15px; padding-left: 15px; }
+  .cozy-area-intro { grid-template-columns: minmax(0,1fr) 42%; }
+  .cozy-area-intro img { transform: scale(1.08); }
+  .cozy-next-shift { grid-template-columns: minmax(0,1fr) 42%; padding-right: 12px; }
+  .cozy-next-shift strong { font-size: 20px; }
+  .cozy-clock-actions { gap: 8px; }
+  .cozy-clock-actions button { min-height: 99px; }
+  .cozy-work-summary article { padding: 15px; }
+}
