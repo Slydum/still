@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { BottomNav } from '../components/navigation/BottomNav';
 import { QuickAddSheet } from '../components/ui/QuickAddSheet';
+import { CalendarPage } from '../features/calendar/CalendarPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 
 function Placeholder({ title, icon }: { title: string; icon: string }) {
@@ -12,7 +13,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<DashboardPage />} />
       <Route path="/today" element={<Placeholder title="Today" icon="☀️" />} />
-      <Route path="/calendar" element={<Placeholder title="Calendar" icon="🗓️" />} />
+      <Route path="/calendar" element={<CalendarPage />} />
       <Route path="/more" element={<Placeholder title="More" icon="🌷" />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
