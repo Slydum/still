@@ -24,6 +24,7 @@ import {
   getCloudCompanionKey,
   loadCloudCompanionArt,
 } from '../../theme/companionArt';
+import { getHeroSceneKey, loadHeroSceneArt } from '../../theme/sceneArt';
 import { stillAssets } from '../../theme/stillAssets';
 import { createStillContext, getGreeting, getLocalDateKey, type WeatherKey } from '../../theme/stillContext';
 import { buildStillTheme } from '../../theme/themeEngine';
@@ -339,7 +340,9 @@ export function DashboardPage() {
     [now, mood, energy, weather, occasion],
   );
   const heroCompanionKey = getCloudCompanionKey(context);
+  const heroSceneKey = getHeroSceneKey(context);
   const [heroCompanionArt, setHeroCompanionArt] = useState(cloudCompanionArt);
+  const [heroSceneArt, setHeroSceneArt] = useState<string>();
   const heroConditionSymbol = context.weather
     ? heroConditionSymbols[context.weather]
     : context.timeOfDay === 'night'
@@ -357,6 +360,18 @@ export function DashboardPage() {
       active = false;
     };
   }, [heroCompanionKey]);
+
+  useEffect(() => {
+    let active = true;
+
+    void loadHeroSceneArt(heroSceneKey).then((art) => {
+      if (active) setHeroSceneArt(art);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [heroSceneKey]);
 
   useEffect(() => { hydrateForToday(); }, [context.dateKey, hydrateForToday]);
   const theme = useMemo(() => buildStillTheme(context), [context]);
@@ -401,23 +416,9 @@ export function DashboardPage() {
         </button>
       </header>
 
-      <section className={`hero hero-v3 ${theme.paletteClass}`}>
-        <svg className="hero-v3-leaves" viewBox="0 0 150 150" aria-hidden="true">
-          <defs>
-            <filter id="hero-leaf-soft">
-              <feGaussianBlur stdDeviation="0.9" />
-            </filter>
-          </defs>
-          <g filter="url(#hero-leaf-soft)">
-            <path d="M154 -6 C 118 6 96 30 84 62" stroke="#dcb95c" strokeWidth="4" fill="none" strokeLinecap="round" />
-            <ellipse cx="126" cy="16" rx="17" ry="8" fill="#e7c469" transform="rotate(-38 126 16)" />
-            <ellipse cx="106" cy="34" rx="15" ry="7" fill="#f0d384" transform="rotate(-30 106 34)" />
-            <ellipse cx="92" cy="54" rx="13" ry="6.5" fill="#e7c469" transform="rotate(-42 92 54)" />
-            <ellipse cx="138" cy="40" rx="14" ry="7" fill="#f0d384" transform="rotate(-70 138 40)" />
-            <ellipse cx="120" cy="62" rx="12" ry="6" fill="#e7c469" transform="rotate(-58 120 62)" />
-          </g>
-        </svg>
-        <span className="hero-v3-leaf-drift" style={{ top: '30%', right: '16%' }} aria-hidden="true">🍂</span>
+      <section className={`hero hero-v3 hero-scene-${heroSceneKey} ${theme.paletteClass}`}>
+        {heroSceneArt && <img className="hero-v3-scene" src={heroSceneArt} alt="" aria-hidden="true" />}
+        <div className="hero-v3-scrim" aria-hidden="true" />
         <div className="hero-v3-copy">
           <h1>
             {getGreeting(context.timeOfDay).replace('.', '')},<br />
@@ -425,13 +426,11 @@ export function DashboardPage() {
           </h1>
           <p className={`hero-v3-quote ${isLoading ? 'is-loading' : ''}`}>{quote.text}</p>
         </div>
-        <img className="hero-v3-plant" src={stillAssets.plants.yellowBlossomsCreamPot} alt="" aria-hidden="true" />
         <img
-          className="hero-v3-art"
+          className={`hero-v3-art companion-${heroCompanionKey}`}
           src={heroCompanionArt}
           alt="A fluffy cloud companion matching the moment"
         />
-        <img className="hero-v3-grass" src={stillAssets.nature.flowers} alt="" aria-hidden="true" />
         <button
           className={`hero-v3-weather weather-status-${weatherStatus}`}
           type="button"
