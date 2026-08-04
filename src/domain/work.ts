@@ -80,14 +80,15 @@ export function payPeriodEstimate(profile: WorkProfile) {
 }
 
 export function nextPayday(profile: WorkProfile, from = new Date()) {
-  const result = new Date(from);
-  const days = profile.payFrequency === 'weekly'
-    ? 7
-    : profile.payFrequency === 'biweekly'
-      ? 14
-      : profile.payFrequency === 'semimonthly'
-        ? (from.getDate() < 15 ? 15 - from.getDate() : new Date(from.getFullYear(), from.getMonth() + 1, 1).getDate())
-        : new Date(from.getFullYear(), from.getMonth() + 1, 1).getDate();
-  result.setDate(result.getDate() + Math.max(1, days));
-  return result;
+  if (profile.payFrequency === 'weekly' || profile.payFrequency === 'biweekly') {
+    const result = new Date(from);
+    result.setDate(result.getDate() + (profile.payFrequency === 'weekly' ? 7 : 14));
+    return result;
+  }
+
+  if (profile.payFrequency === 'semimonthly' && from.getDate() < 15) {
+    return new Date(from.getFullYear(), from.getMonth(), 15);
+  }
+
+  return new Date(from.getFullYear(), from.getMonth() + 1, 1);
 }
