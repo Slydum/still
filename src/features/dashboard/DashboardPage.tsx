@@ -172,9 +172,12 @@ export function DashboardPage() {
   const weather = useAppStore((state) => state.weather);
   const occasion = useAppStore((state) => state.occasion);
   const name = useAppStore((state) => state.name);
+  const notificationsEnabled = useAppStore((state) => state.notificationsEnabled);
+  const autoWeather = useAppStore((state) => state.autoWeather);
   const setMood = useAppStore((state) => state.setMood);
   const setEnergy = useAppStore((state) => state.setEnergy);
   const setWeather = useAppStore((state) => state.setWeather);
+  const setAutoWeather = useAppStore((state) => state.setAutoWeather);
   const hydrateForToday = useAppStore((state) => state.hydrateForToday);
   const tasks = useAppStore((state) => state.tasks);
   const openTaskEditor = useAppStore((state) => state.openTaskEditor);
@@ -307,6 +310,13 @@ export function DashboardPage() {
   );
 
   useEffect(() => {
+    if (!autoWeather) {
+      requestedLocationWeather.current = false;
+      setWeatherStatus('idle');
+      setTemperature(null);
+      return;
+    }
+
     // React Strict Mode replays effects in development. Avoid issuing two
     // simultaneous geolocation prompts and weather requests during that replay.
     if (requestedLocationWeather.current) return;
@@ -320,7 +330,7 @@ export function DashboardPage() {
     // First visit: request permission.
     // Later visits: refresh automatically using the saved permission.
     refreshWeatherFromLocation(!locationWeatherEnabled);
-  }, [refreshWeatherFromLocation]);
+  }, [autoWeather, refreshWeatherFromLocation]);
 
   const weatherHeadline =
     weatherStatus === 'ready' && temperature !== null
@@ -397,9 +407,9 @@ export function DashboardPage() {
           <div className="brand">Still.</div>
           <p className="topbar-date">{format(now, 'EEEE, MMMM d')}</p>
         </div>
-        <button className="icon-button" type="button" aria-label="Open notifications">
+        <button className="icon-button" onClick={() => navigate('/more#notifications')} type="button" aria-label="Open notification settings">
           <Bell size={20} />
-          <span className="notification-dot" />
+          {!notificationsEnabled && <span className="notification-dot" />}
         </button>
       </header>
 
@@ -425,7 +435,10 @@ export function DashboardPage() {
         <button
           className={`hero-v3-weather weather-status-${weatherStatus}`}
           type="button"
-          onClick={() => refreshWeatherFromLocation(true)}
+          onClick={() => {
+            setAutoWeather(true);
+            refreshWeatherFromLocation(true);
+          }}
           aria-busy={weatherStatus === 'requesting'}
           aria-label="Use my location for automatic weather"
         >
