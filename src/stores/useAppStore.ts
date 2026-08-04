@@ -1,10 +1,18 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { getLocalDateKey, type OccasionKey, type WeatherKey } from '../theme/stillContext';
+import {
+  createLifeEntityLink,
+  type LifeAreaId,
+  type LifeAreaRecord,
+  type LifeEntityLink,
+  type LifeEntityLinkType,
+  type LifeEntityRef,
+} from '../domain/lifeAreas';
 
 export type TaskPriority = 'low' | 'medium' | 'high';
 export type TaskRepeat = 'none' | 'daily' | 'weekly' | 'monthly';
-export type EventCategory = 'personal' | 'work' | 'health' | 'love' | 'money';
+export type EventCategory = 'personal' | LifeAreaId;
 export type EventRepeat = TaskRepeat;
 
 export type StillTask = {
@@ -19,12 +27,14 @@ export type StillTask = {
   updatedAt: number;
   completedAt?: number;
   generatedFromId?: string;
+  areaId?: LifeAreaId;
+  links?: LifeEntityRef[];
 };
 
 export type TaskInput = Pick<
   StillTask,
   'title' | 'note' | 'dueDate' | 'priority' | 'repeat'
->;
+> & LifeAreaRecord;
 
 export type StillEvent = {
   id: string;
@@ -39,6 +49,8 @@ export type StillEvent = {
   repeat: EventRepeat;
   createdAt: number;
   updatedAt: number;
+  areaId?: LifeAreaId;
+  links?: LifeEntityRef[];
 };
 
 export type EventInput = Pick<
@@ -52,7 +64,7 @@ export type EventInput = Pick<
   | 'startTime'
   | 'endTime'
   | 'repeat'
->;
+> & LifeAreaRecord;
 
 export type JournalMood = 1 | 2 | 3 | 4 | 5;
 export type AppearanceTone = 'lavender' | 'warm' | 'sage';
@@ -76,12 +88,14 @@ export type JournalEntry = {
   tags: string[];
   createdAt: number;
   updatedAt: number;
+  areaId?: LifeAreaId;
+  links?: LifeEntityRef[];
 };
 
 export type JournalInput = Pick<
   JournalEntry,
   'title' | 'body' | 'entryDate' | 'mood' | 'tags'
->;
+> & LifeAreaRecord;
 
 type QuickAddMode = 'menu' | 'task' | 'event' | 'journal';
 
@@ -97,6 +111,7 @@ type AppState = {
   events: StillEvent[];
   journalEntries: JournalEntry[];
   notifications: AppNotification[];
+  entityLinks: LifeEntityLink[];
   name: string;
   mood?: number;
   energy?: number;
@@ -144,6 +159,8 @@ type AppState = {
   addNotification: (notification: Omit<AppNotification, 'createdAt' | 'read'>) => void;
   markAllNotificationsRead: () => void;
   clearNotifications: () => void;
+  linkEntities: (from: LifeEntityRef, to: LifeEntityRef, type?: LifeEntityLinkType) => void;
+  unlinkEntities: (linkId: string) => void;
   setAutoWeather: (value: boolean) => void;
   hydrateForToday: () => void;
 };
@@ -176,6 +193,8 @@ function normalizedTaskInput(input: TaskInput): TaskInput {
     dueDate: input.dueDate || undefined,
     priority: input.priority,
     repeat: input.dueDate ? input.repeat : 'none',
+    areaId: input.areaId,
+    links: input.links,
   };
 }
 
@@ -195,6 +214,8 @@ function normalizedEventInput(input: EventInput): EventInput {
     startTime: input.allDay ? undefined : input.startTime || '09:00',
     endTime: input.allDay ? undefined : input.endTime || '10:00',
     repeat: input.repeat,
+    areaId: input.areaId ?? (input.category === 'personal' ? undefined : input.category),
+    links: input.links,
   };
 }
 
@@ -205,6 +226,8 @@ function normalizedJournalInput(input: JournalInput): JournalInput {
     entryDate: input.entryDate || getLocalDateKey(),
     mood: input.mood,
     tags: Array.from(new Set(input.tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean))).slice(0, 8),
+    areaId: input.areaId,
+    links: input.links,
   };
 }
 
@@ -222,6 +245,7 @@ export const useAppStore = create<AppState>()(
       events: [],
       journalEntries: [],
       notifications: [],
+      entityLinks: [],
       name: 'Tien',
       appearanceTone: 'lavender',
       reduceMotion: false,
@@ -444,6 +468,16 @@ export const useAppStore = create<AppState>()(
         notifications: state.notifications.map((notification) => ({ ...notification, read: true })),
       })),
       clearNotifications: () => set({ notifications: [] }),
+      linkEntities: (from, to, type = 'related') => set((state) => {
+        const duplicate = state.entityLinks.some((link) =>
+          link.from.kind === from.kind && link.from.id === from.id
+          && link.to.kind === to.kind && link.to.id === to.id
+          && link.type === type);
+        return duplicate ? state : { entityLinks: [...state.entityLinks, createLifeEntityLink(from, to, type)] };
+      }),
+      unlinkEntities: (linkId) => set((state) => ({
+        entityLinks: state.entityLinks.filter((link) => link.id !== linkId),
+      })),
       setAutoWeather: (autoWeather) => set({ autoWeather }),
       hydrateForToday: () => {
         const today = getLocalDateKey();
@@ -461,6 +495,7 @@ export const useAppStore = create<AppState>()(
         events: state.events,
         journalEntries: state.journalEntries,
         notifications: state.notifications,
+        entityLinks: state.entityLinks,
         name: state.name,
         mood: state.mood,
         energy: state.energy,
