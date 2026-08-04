@@ -19,7 +19,11 @@ import { saveCheckIn } from '../../data/stillDb';
 import { useDailyQuote } from '../../hooks/useDailyQuote';
 import { useAppStore, type EventCategory } from '../../stores/useAppStore';
 import { eventTimeLabel, getEventOccurrences } from '../calendar/eventUtils';
-import { cloudCompanionArt } from '../../theme/companionArt';
+import {
+  cloudCompanionArt,
+  getCloudCompanionKey,
+  loadCloudCompanionArt,
+} from '../../theme/companionArt';
 import { stillAssets } from '../../theme/stillAssets';
 import { createStillContext, getGreeting, getLocalDateKey, type WeatherKey } from '../../theme/stillContext';
 import { buildStillTheme } from '../../theme/themeEngine';
@@ -64,6 +68,19 @@ const weatherVisuals: Partial<Record<WeatherKey, string>> = {
   fog: stillAssets.weather.fog,
   rainbow: stillAssets.weather.rainbow,
   snow: stillAssets.weather.snow,
+};
+
+const heroConditionSymbols: Record<WeatherKey, string> = {
+  'partly-sunny': '🌤️',
+  cloudy: '☁️',
+  overcast: '☁️',
+  rain: '🌧️',
+  thunderstorm: '⛈️',
+  windy: '🍃',
+  fog: '🌫️',
+  rainbow: '🌈',
+  snow: '❄️',
+  tornado: '🌪️',
 };
 
 type WeatherStatus =
@@ -321,6 +338,25 @@ export function DashboardPage() {
     () => createStillContext({ date: now, mood, energy, weather, occasion }),
     [now, mood, energy, weather, occasion],
   );
+  const heroCompanionKey = getCloudCompanionKey(context);
+  const [heroCompanionArt, setHeroCompanionArt] = useState(cloudCompanionArt);
+  const heroConditionSymbol = context.weather
+    ? heroConditionSymbols[context.weather]
+    : context.timeOfDay === 'night'
+      ? '🌙'
+      : '☀️';
+
+  useEffect(() => {
+    let active = true;
+
+    void loadCloudCompanionArt(heroCompanionKey).then((art) => {
+      if (active) setHeroCompanionArt(art);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [heroCompanionKey]);
 
   useEffect(() => { hydrateForToday(); }, [context.dateKey, hydrateForToday]);
   const theme = useMemo(() => buildStillTheme(context), [context]);
@@ -385,15 +421,15 @@ export function DashboardPage() {
         <div className="hero-v3-copy">
           <h1>
             {getGreeting(context.timeOfDay).replace('.', '')},<br />
-            {name}. <span className="hero-v3-sun" aria-hidden="true">☀️</span>
+            {name}. <span className="hero-v3-sun" aria-hidden="true">{heroConditionSymbol}</span>
           </h1>
           <p className={`hero-v3-quote ${isLoading ? 'is-loading' : ''}`}>{quote.text}</p>
         </div>
         <img className="hero-v3-plant" src={stillAssets.plants.yellowBlossomsCreamPot} alt="" aria-hidden="true" />
         <img
           className="hero-v3-art"
-          src={cloudCompanionArt}
-          alt="A fluffy cloud companion enjoying a warm coffee"
+          src={heroCompanionArt}
+          alt="A fluffy cloud companion matching the moment"
         />
         <img className="hero-v3-grass" src={stillAssets.nature.flowers} alt="" aria-hidden="true" />
         <button
