@@ -2484,16 +2484,6 @@ h1 {
 }
 
 
-/* Cozy Life garden entry cards */
-.life-garden-grid .garden-card { border-color: rgba(201,165,139,.28); box-shadow: 0 9px 24px rgba(116,79,54,.065); }
-.life-garden-grid .garden-card.work { background: linear-gradient(145deg,#fff9f2,#f9e8df); }
-.life-garden-grid .garden-card.love { background: linear-gradient(145deg,#fff9f2,#fce9e3); }
-.life-garden-grid .garden-card.health { background: linear-gradient(145deg,#fffaf2,#f3eddf); }
-.life-garden-grid .garden-card.money { background: linear-gradient(145deg,#fffaf1,#eef2df); }
-.life-garden-grid .garden-card-head img { width: 62px; height: 52px; filter: drop-shadow(0 5px 5px rgba(96,70,51,.07)); }
-.life-garden-grid .garden-card-head strong { color: #684b3a; }
-.life-garden-grid .garden-status { color: #967563; font-family: Georgia,serif; font-size: 11px; line-height: 1.35; }
-
 /* Still Work — compact lavender/neutral system */
 .still-work-page {
   max-width: 760px;
