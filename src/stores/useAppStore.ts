@@ -54,16 +54,37 @@ export type EventInput = Pick<
   | 'repeat'
 >;
 
-type QuickAddMode = 'menu' | 'task' | 'event';
+export type JournalMood = 1 | 2 | 3 | 4 | 5;
+
+export type JournalEntry = {
+  id: string;
+  title?: string;
+  body: string;
+  entryDate: string;
+  mood?: JournalMood;
+  tags: string[];
+  createdAt: number;
+  updatedAt: number;
+};
+
+export type JournalInput = Pick<
+  JournalEntry,
+  'title' | 'body' | 'entryDate' | 'mood' | 'tags'
+>;
+
+type QuickAddMode = 'menu' | 'task' | 'event' | 'journal';
 
 type AppState = {
   quickAddOpen: boolean;
   quickAddMode: QuickAddMode;
   editingTaskId?: string;
   editingEventId?: string;
+  editingJournalId?: string;
   eventDraftDate?: string;
+  journalDraftDate?: string;
   tasks: StillTask[];
   events: StillEvent[];
+  journalEntries: JournalEntry[];
   name: string;
   mood?: number;
   energy?: number;
@@ -73,6 +94,7 @@ type AppState = {
   openQuickAdd: () => void;
   openTaskEditor: (taskId?: string) => void;
   openEventEditor: (eventId?: string, initialDate?: string) => void;
+  openJournalEditor: (entryId?: string, initialDate?: string) => void;
   closeQuickAdd: () => void;
   addTask: (input: TaskInput) => void;
   updateTask: (id: string, input: TaskInput) => void;
@@ -81,6 +103,9 @@ type AppState = {
   addEvent: (input: EventInput) => void;
   updateEvent: (id: string, input: EventInput) => void;
   deleteEvent: (id: string) => void;
+  addJournalEntry: (input: JournalInput) => void;
+  updateJournalEntry: (id: string, input: JournalInput) => void;
+  deleteJournalEntry: (id: string) => void;
   setName: (value: string) => void;
   setMood: (value: number) => void;
   setEnergy: (value: number) => void;
@@ -139,6 +164,16 @@ function normalizedEventInput(input: EventInput): EventInput {
   };
 }
 
+function normalizedJournalInput(input: JournalInput): JournalInput {
+  return {
+    title: input.title?.trim() || undefined,
+    body: input.body.trim(),
+    entryDate: input.entryDate || getLocalDateKey(),
+    mood: input.mood,
+    tags: Array.from(new Set(input.tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean))).slice(0, 8),
+  };
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -146,37 +181,57 @@ export const useAppStore = create<AppState>()(
       quickAddMode: 'menu',
       editingTaskId: undefined,
       editingEventId: undefined,
+      editingJournalId: undefined,
       eventDraftDate: undefined,
+      journalDraftDate: undefined,
       tasks: [],
       events: [],
+      journalEntries: [],
       name: 'Tien',
       openQuickAdd: () => set({
         quickAddOpen: true,
         quickAddMode: 'menu',
         editingTaskId: undefined,
         editingEventId: undefined,
+        editingJournalId: undefined,
         eventDraftDate: undefined,
+        journalDraftDate: undefined,
       }),
       openTaskEditor: (editingTaskId) => set({
         quickAddOpen: true,
         quickAddMode: 'task',
         editingTaskId,
         editingEventId: undefined,
+        editingJournalId: undefined,
         eventDraftDate: undefined,
+        journalDraftDate: undefined,
       }),
       openEventEditor: (editingEventId, eventDraftDate) => set({
         quickAddOpen: true,
         quickAddMode: 'event',
         editingTaskId: undefined,
         editingEventId,
+        editingJournalId: undefined,
         eventDraftDate,
+        journalDraftDate: undefined,
+      }),
+      openJournalEditor: (editingJournalId, journalDraftDate) => set({
+        quickAddOpen: true,
+        quickAddMode: 'journal',
+        editingTaskId: undefined,
+        editingEventId: undefined,
+        editingJournalId,
+        eventDraftDate: undefined,
+        journalDraftDate,
       }),
       closeQuickAdd: () => set({
         quickAddOpen: false,
         quickAddMode: 'menu',
         editingTaskId: undefined,
         editingEventId: undefined,
+        editingJournalId: undefined,
         eventDraftDate: undefined,
+        journalDraftDate: undefined,
       }),
       addTask: (input) => set((state) => {
         const now = Date.now();
@@ -274,6 +329,36 @@ export const useAppStore = create<AppState>()(
       deleteEvent: (id) => set((state) => ({
         events: state.events.filter((event) => event.id !== id),
       })),
+      addJournalEntry: (input) => set((state) => {
+        const normalized = normalizedJournalInput(input);
+        if (!normalized.body) return state;
+
+        const now = Date.now();
+        return {
+          journalEntries: [
+            ...state.journalEntries,
+            {
+              id: createTaskId(),
+              ...normalized,
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+        };
+      }),
+      updateJournalEntry: (id, input) => set((state) => {
+        const normalized = normalizedJournalInput(input);
+        if (!normalized.body) return state;
+
+        return {
+          journalEntries: state.journalEntries.map((entry) => entry.id === id
+            ? { ...entry, ...normalized, updatedAt: Date.now() }
+            : entry),
+        };
+      }),
+      deleteJournalEntry: (id) => set((state) => ({
+        journalEntries: state.journalEntries.filter((entry) => entry.id !== id),
+      })),
       setName: (name) => set({ name }),
       setMood: (mood) => set((state) => {
         const today = getLocalDateKey();
@@ -307,6 +392,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         tasks: state.tasks,
         events: state.events,
+        journalEntries: state.journalEntries,
         name: state.name,
         mood: state.mood,
         energy: state.energy,
