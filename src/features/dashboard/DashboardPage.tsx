@@ -173,6 +173,7 @@ export function DashboardPage() {
   const occasion = useAppStore((state) => state.occasion);
   const name = useAppStore((state) => state.name);
   const notificationsEnabled = useAppStore((state) => state.notificationsEnabled);
+  const hasUnreadNotifications = useAppStore((state) => state.notifications.some((notification) => !notification.read));
   const autoWeather = useAppStore((state) => state.autoWeather);
   const setMood = useAppStore((state) => state.setMood);
   const setEnergy = useAppStore((state) => state.setEnergy);
@@ -407,9 +408,9 @@ export function DashboardPage() {
           <div className="brand">Still.</div>
           <p className="topbar-date">{format(now, 'EEEE, MMMM d')}</p>
         </div>
-        <button className="icon-button" onClick={() => navigate('/more#notifications')} type="button" aria-label="Open notification settings">
+        <button className="icon-button" onClick={() => navigate('/notifications')} type="button" aria-label="Open notifications">
           <Bell size={20} />
-          {!notificationsEnabled && <span className="notification-dot" />}
+          {(hasUnreadNotifications || !notificationsEnabled) && <span className="notification-dot" />}
         </button>
       </header>
 
