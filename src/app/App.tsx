@@ -8,8 +8,10 @@ import { JournalPage } from '../features/journal/JournalPage';
 import { CheckInHistoryPage } from '../features/check-ins/CheckInHistoryPage';
 import { MorePage } from '../features/more/MorePage';
 import { useAppStore } from '../stores/useAppStore';
+import { useReminderEngine } from '../hooks/useReminderEngine';
 
 export default function App() {
+  useReminderEngine();
   const appearanceTone = useAppStore((state) => state.appearanceTone);
   const reduceMotion = useAppStore((state) => state.reduceMotion);
 
