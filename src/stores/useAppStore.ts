@@ -168,6 +168,7 @@ type AppState = {
   updateWorkProfile: (profile: WorkProfile) => void;
   startWorkShift: () => void;
   endWorkShift: () => void;
+  toggleWorkBreak: () => void;
   setWorkPrivacyBlur: (value: boolean) => void;
   setAutoWeather: (value: boolean) => void;
   hydrateForToday: () => void;
@@ -504,10 +505,33 @@ export const useAppStore = create<AppState>()(
         const active = state.workShifts.find((shift) => !shift.endedAt);
         if (!active) return state;
         const endedAt = Date.now();
+        const completed = {
+          ...active,
+          endedAt,
+          recordedBreakMs: (active.recordedBreakMs ?? 0)
+            + (active.breakStartedAt ? endedAt - active.breakStartedAt : 0),
+          breakStartedAt: undefined,
+        };
         return {
           workShifts: state.workShifts.map((shift) => shift.id === active.id
-            ? { ...shift, endedAt, expectedEarnings: shiftEarnings({ ...shift, endedAt }, state.workProfile, endedAt) }
+            ? { ...completed, expectedEarnings: shiftEarnings(completed, state.workProfile, endedAt) }
             : shift),
+        };
+      }),
+      toggleWorkBreak: () => set((state) => {
+        const active = state.workShifts.find((shift) => !shift.endedAt);
+        if (!active) return state;
+        const now = Date.now();
+        return {
+          workShifts: state.workShifts.map((shift) => {
+            if (shift.id !== active.id) return shift;
+            if (!shift.breakStartedAt) return { ...shift, breakStartedAt: now };
+            return {
+              ...shift,
+              breakStartedAt: undefined,
+              recordedBreakMs: (shift.recordedBreakMs ?? 0) + (now - shift.breakStartedAt),
+            };
+          }),
         };
       }),
       setWorkPrivacyBlur: (workPrivacyBlur) => set({ workPrivacyBlur }),
