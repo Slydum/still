@@ -179,7 +179,7 @@
 
 @media (max-width: 560px) {
   .hero.hero-v3 {
-    min-height: 340px;
+    min-height: 300px;
     border-radius: 27px;
   }
 
@@ -201,21 +201,21 @@
 
   .hero-v3-art {
     right: 10px;
-    bottom: 68px;
+    bottom: 28px;
     width: 39%;
     height: 43%;
   }
 
   .hero-v3-art.companion-umbrella {
     right: 8px;
-    bottom: 70px;
+    bottom: 30px;
     width: 40%;
     height: 44%;
   }
 
   .hero-v3-art.companion-sleeping {
     right: 7px;
-    bottom: 62px;
+    bottom: 22px;
     width: 42%;
     height: 46%;
   }
