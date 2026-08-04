@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { BottomNav } from '../components/navigation/BottomNav';
 import { QuickAddSheet } from '../components/ui/QuickAddSheet';
@@ -12,6 +12,25 @@ import { WorkPage } from '../features/work/WorkPage';
 import { useAppStore } from '../stores/useAppStore';
 import { useReminderEngine } from '../hooks/useReminderEngine';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
+
+  return null;
+}
+
 export default function App() {
   useReminderEngine();
   const appearanceTone = useAppStore((state) => state.appearanceTone);
@@ -23,6 +42,7 @@ export default function App() {
   }, [appearanceTone, reduceMotion]);
 
   return <div className="app">
+    <ScrollToTop />
     <Routes>
       <Route path="/" element={<DashboardPage />} />
       <Route path="/today" element={<JournalPage />} />
