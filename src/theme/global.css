@@ -1577,6 +1577,13 @@ h1 {
 .settings-status-row button,
 .settings-secondary-action { flex: none; min-height: 36px; padding: 7px 10px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #e4dce8; border-radius: 11px; color: #786c86; font-size: 10px; font-weight: 900; background: #fff; }
 .settings-footnote { margin: 13px 0 0; color: #a198a8; font-size: 10px; line-height: 1.5; }
+.settings-reminder-options { margin-top: 15px; border-top: 1px solid #eee8f0; }
+.settings-reminder-fields { margin-top: 15px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.settings-reminder-fields label { min-width: 0; }
+.settings-reminder-fields label > span { min-height: 19px; margin-bottom: 7px; display: flex; align-items: center; gap: 5px; color: #746a80; font-size: 10px; font-weight: 800; }
+.settings-reminder-fields input,
+.settings-reminder-fields select { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid #e5ddea; border-radius: 12px; color: #5d5369; font: inherit; font-size: 12px; font-weight: 700; background: #fff; }
+.settings-test-notification { margin-top: 12px; padding: 8px 11px; border: 1px solid #ddd2e8; border-radius: 11px; color: #75649d; font-size: 11px; font-weight: 800; background: #faf7ff; }
 .settings-message { margin: 13px 0 0; padding: 10px 12px; border-radius: 12px; color: #695c78; font-size: 11px; line-height: 1.45; background: #f5f0f8; }
 
 .settings-data-actions { padding: 7px; }
@@ -1610,6 +1617,7 @@ h1 {
   .settings-profile-form { grid-template-columns: 1fr; align-items: stretch; }
   .settings-profile-form button { justify-self: end; }
   .settings-card { padding: 16px; }
+  .settings-reminder-fields { grid-template-columns: 1fr; }
   .tone-picker { gap: 5px; }
   .tone-picker > button { min-height: 68px; padding: 8px; }
   .tone-swatches i { width: 21px; height: 21px; }
