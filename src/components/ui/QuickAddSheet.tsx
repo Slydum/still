@@ -15,6 +15,9 @@ import {
   type EventCategory,
   type EventInput,
   type EventRepeat,
+  type JournalEntry,
+  type JournalInput,
+  type JournalMood,
   type StillEvent,
   type StillTask,
   type TaskInput,
@@ -30,6 +33,14 @@ const actions: Array<[label: string, icon: LucideIcon]> = [
   ['Work', Timer],
   ['Check-in', HeartPulse],
   ['Journal', BookOpen],
+];
+
+const journalMoods: Array<{ value: JournalMood; emoji: string; label: string }> = [
+  { value: 1, emoji: '🌧️', label: 'Heavy' },
+  { value: 2, emoji: '🌫️', label: 'Low' },
+  { value: 3, emoji: '🌿', label: 'Steady' },
+  { value: 4, emoji: '🌤️', label: 'Good' },
+  { value: 5, emoji: '✨', label: 'Bright' },
 ];
 
 function TaskEditor({
@@ -308,24 +319,140 @@ function EventEditor({
   );
 }
 
+function JournalEditor({
+  entry,
+  initialDate,
+  onCancel,
+  onSave,
+}: {
+  entry?: JournalEntry;
+  initialDate?: string;
+  onCancel: () => void;
+  onSave: (input: JournalInput) => void;
+}) {
+  const [title, setTitle] = useState(entry?.title ?? '');
+  const [body, setBody] = useState(entry?.body ?? '');
+  const [entryDate, setEntryDate] = useState(entry?.entryDate ?? initialDate ?? getLocalDateKey());
+  const [mood, setMood] = useState<JournalMood | undefined>(entry?.mood);
+  const [tags, setTags] = useState(entry?.tags.join(', ') ?? '');
+
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!body.trim()) return;
+
+    onSave({
+      title,
+      body,
+      entryDate,
+      mood,
+      tags: tags.split(','),
+    });
+  };
+
+  return (
+    <form className="task-editor journal-editor" onSubmit={submit}>
+      <div className="task-form-row journal-editor-top-row">
+        <label className="task-field">
+          <span>Date</span>
+          <input
+            onChange={(event) => setEntryDate(event.target.value)}
+            required
+            type="date"
+            value={entryDate}
+          />
+        </label>
+        <label className="task-field">
+          <span>Title <small>(optional)</small></span>
+          <input
+            maxLength={120}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Give this moment a name"
+            type="text"
+            value={title}
+          />
+        </label>
+      </div>
+
+      <label className="task-field">
+        <span>Reflection</span>
+        <textarea
+          autoFocus
+          maxLength={5000}
+          onChange={(event) => setBody(event.target.value)}
+          placeholder="What’s on your mind?"
+          required
+          rows={8}
+          value={body}
+        />
+        <small className="journal-character-count">{body.length.toLocaleString()} / 5,000</small>
+      </label>
+
+      <fieldset className="journal-mood-field">
+        <legend>How did this moment feel? <small>(optional)</small></legend>
+        <div className="journal-mood-options">
+          {journalMoods.map((option) => (
+            <button
+              className={mood === option.value ? 'is-selected' : ''}
+              key={option.value}
+              onClick={() => setMood(mood === option.value ? undefined : option.value)}
+              type="button"
+              aria-label={option.label}
+              aria-pressed={mood === option.value}
+            >
+              <span>{option.emoji}</span>
+              <small>{option.label}</small>
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      <label className="task-field">
+        <span>Tags <small>(optional)</small></span>
+        <input
+          maxLength={160}
+          onChange={(event) => setTags(event.target.value)}
+          placeholder="gratitude, work, rest"
+          type="text"
+          value={tags}
+        />
+        <small className="task-field-hint">Separate tags with commas.</small>
+      </label>
+
+      <div className="task-editor-actions">
+        <button className="task-secondary-button" onClick={onCancel} type="button">Cancel</button>
+        <button className="task-primary-button" disabled={!body.trim()} type="submit">
+          {entry ? 'Save changes' : 'Save entry'}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export function QuickAddSheet() {
   const open = useAppStore((state) => state.quickAddOpen);
   const mode = useAppStore((state) => state.quickAddMode);
   const editingTaskId = useAppStore((state) => state.editingTaskId);
   const editingEventId = useAppStore((state) => state.editingEventId);
+  const editingJournalId = useAppStore((state) => state.editingJournalId);
   const eventDraftDate = useAppStore((state) => state.eventDraftDate);
+  const journalDraftDate = useAppStore((state) => state.journalDraftDate);
   const tasks = useAppStore((state) => state.tasks);
   const events = useAppStore((state) => state.events);
+  const journalEntries = useAppStore((state) => state.journalEntries);
   const openQuickAdd = useAppStore((state) => state.openQuickAdd);
   const openTaskEditor = useAppStore((state) => state.openTaskEditor);
   const openEventEditor = useAppStore((state) => state.openEventEditor);
+  const openJournalEditor = useAppStore((state) => state.openJournalEditor);
   const close = useAppStore((state) => state.closeQuickAdd);
   const addTask = useAppStore((state) => state.addTask);
   const updateTask = useAppStore((state) => state.updateTask);
   const addEvent = useAppStore((state) => state.addEvent);
   const updateEvent = useAppStore((state) => state.updateEvent);
+  const addJournalEntry = useAppStore((state) => state.addJournalEntry);
+  const updateJournalEntry = useAppStore((state) => state.updateJournalEntry);
   const editingTask = tasks.find((task) => task.id === editingTaskId);
   const editingEvent = events.find((event) => event.id === editingEventId);
+  const editingJournalEntry = journalEntries.find((entry) => entry.id === editingJournalId);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -352,16 +479,26 @@ export function QuickAddSheet() {
     close();
   };
 
+  const saveJournalEntry = (input: JournalInput) => {
+    if (editingJournalEntry) updateJournalEntry(editingJournalEntry.id, input);
+    else addJournalEntry(input);
+    close();
+  };
+
   const editorTitle = mode === 'task'
     ? (editingTask ? 'Edit task' : 'Add a task')
     : mode === 'event'
       ? (editingEvent ? 'Edit event' : 'Add an event')
+      : mode === 'journal'
+        ? (editingJournalEntry ? 'Edit entry' : 'New journal entry')
       : 'Add something';
 
   const editorSubtitle = mode === 'task'
     ? 'Make space for what matters next.'
     : mode === 'event'
       ? 'Keep the moments that shape your day close.'
+      : mode === 'journal'
+        ? 'There is no right way to put this moment into words.'
       : 'What would you like to remember?';
 
   return (
@@ -376,7 +513,7 @@ export function QuickAddSheet() {
         <div className="sheet-handle" />
         <div className="section-head">
           <div className="task-sheet-heading">
-            {mode !== 'menu' && !editingTask && !editingEvent && (
+            {mode !== 'menu' && !editingTask && !editingEvent && !editingJournalEntry && (
               <button className="task-back-button" onClick={openQuickAdd} aria-label="Back to quick add" type="button">
                 <ChevronLeft size={20} />
               </button>
@@ -408,6 +545,14 @@ export function QuickAddSheet() {
             onCancel={close}
             onSave={saveEvent}
           />
+        ) : mode === 'journal' ? (
+          <JournalEditor
+            key={editingJournalEntry?.id ?? `new-journal-${journalDraftDate ?? 'today'}`}
+            entry={editingJournalEntry}
+            initialDate={journalDraftDate}
+            onCancel={close}
+            onSave={saveJournalEntry}
+          />
         ) : (
           <div className="quick-grid">
             {actions.map(([label, Icon]) => (
@@ -417,6 +562,7 @@ export function QuickAddSheet() {
                 onClick={() => {
                   if (label === 'Task') openTaskEditor();
                   else if (label === 'Event') openEventEditor();
+                  else if (label === 'Journal') openJournalEditor();
                   else window.alert(`${label} form comes next.`);
                 }}
                 type="button"
