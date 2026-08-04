@@ -177,46 +177,55 @@
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 560px) {
   .hero.hero-v3 {
-    min-height: 390px;
+    min-height: 340px;
     border-radius: 27px;
   }
 
   .hero-v3-copy {
-    top: 26px;
-    left: 22px;
-    width: calc(100% - 44px);
+    top: 24px;
+    left: 21px;
+    width: calc(100% - 42px);
   }
 
   .hero-v3 h1 {
-    margin-bottom: 13px;
-    font-size: clamp(31px, 8.8vw, 34px);
+    margin-bottom: 12px;
+    font-size: clamp(29px, 8vw, 31px);
   }
 
   .hero-v3-quote {
-    max-width: 215px;
+    max-width: 195px;
+    font-size: 14px;
   }
 
   .hero-v3-art {
-    right: 2px;
-    bottom: 36px;
-    width: 42%;
-    height: 45%;
+    right: 10px;
+    bottom: 20px;
+    width: 39%;
+    height: 43%;
   }
 
-  .hero-v3-art.companion-umbrella,
+  .hero-v3-art.companion-umbrella {
+    right: 8px;
+    bottom: 20px;
+    width: 40%;
+    height: 44%;
+  }
+
   .hero-v3-art.companion-sleeping {
-    right: -5px;
-    width: 46%;
-    height: 49%;
+    right: 7px;
+    bottom: 19px;
+    width: 42%;
+    height: 46%;
   }
 
   .hero-v3-weather {
-    left: 18px;
-    bottom: 14px;
-    max-width: 62%;
+    left: 16px;
+    bottom: 15px;
+    max-width: 55%;
     min-height: 40px;
+    padding-right: 14px;
     font-size: 13px;
   }
 }
