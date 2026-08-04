@@ -421,8 +421,12 @@ export function DashboardPage() {
         <div className="hero-v3-scrim" aria-hidden="true" />
         <div className="hero-v3-copy">
           <h1>
-            {getGreeting(context.timeOfDay).replace('.', '')},<br />
-            {name}. <span className="hero-v3-sun" aria-hidden="true">{heroConditionSymbol}</span>
+            <span className="hero-v3-title-line">
+              {getGreeting(context.timeOfDay).replace('.', '')},
+            </span>
+            <span className="hero-v3-title-line">
+              {name}. <span className="hero-v3-sun" aria-hidden="true">{heroConditionSymbol}</span>
+            </span>
           </h1>
           <p className={`hero-v3-quote ${isLoading ? 'is-loading' : ''}`}>{quote.text}</p>
         </div>
