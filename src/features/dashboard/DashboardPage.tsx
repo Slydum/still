@@ -1,21 +1,24 @@
-import { format } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import {
   Bell,
   BriefcaseBusiness,
   CalendarDays,
   Heart,
+  HeartPulse,
   Pencil,
   Plus,
   Repeat2,
   Sparkles,
   Trash2,
   WalletCards,
+  type LucideIcon,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getSecondaryQuote } from '../../content/quoteEngine';
 import { saveCheckIn } from '../../data/stillDb';
 import { useDailyQuote } from '../../hooks/useDailyQuote';
-import { useAppStore } from '../../stores/useAppStore';
+import { useAppStore, type EventCategory } from '../../stores/useAppStore';
+import { eventTimeLabel, getEventOccurrences } from '../calendar/eventUtils';
 import { cloudCompanionArt } from '../../theme/companionArt';
 import { stillAssets } from '../../theme/stillAssets';
 import { createStillContext, getGreeting, getLocalDateKey, type WeatherKey } from '../../theme/stillContext';
@@ -121,6 +124,14 @@ function useCurrentTime() {
 
 const taskPriorityRank = { high: 0, medium: 1, low: 2 } as const;
 
+const eventCategoryIcons: Record<EventCategory, LucideIcon> = {
+  personal: Sparkles,
+  work: BriefcaseBusiness,
+  health: HeartPulse,
+  love: Heart,
+  money: WalletCards,
+};
+
 function taskDueLabel(dueDate: string, today: string) {
   if (dueDate === today) return 'Today';
 
@@ -151,6 +162,8 @@ export function DashboardPage() {
   const openTaskEditor = useAppStore((state) => state.openTaskEditor);
   const toggleTask = useAppStore((state) => state.toggleTask);
   const deleteTask = useAppStore((state) => state.deleteTask);
+  const events = useAppStore((state) => state.events);
+  const openEventEditor = useAppStore((state) => state.openEventEditor);
   const [weatherStatus, setWeatherStatus] =
     useState<WeatherStatus>('idle');
   const [temperature, setTemperature] =
@@ -328,6 +341,12 @@ export function DashboardPage() {
 
   const remainingTaskCount = tasks.filter((task) => !task.completed).length;
 
+  const upcomingEvents = useMemo(() => getEventOccurrences(
+    events,
+    todayKey,
+    format(addDays(now, 45), 'yyyy-MM-dd'),
+  ).slice(0, 4), [events, now, todayKey]);
+
   useEffect(() => {
     if (!mood && !energy) return;
     void saveCheckIn({ date: context.dateKey, mood, energy, updatedAt: Date.now() }).catch(() => undefined);
@@ -500,11 +519,33 @@ export function DashboardPage() {
         </article>
 
         <article className="card upcoming-card surface-upcoming">
-          <p className="section-kicker">Coming up</p>
+          <div className="upcoming-heading">
+            <p className="section-kicker">Coming up</p>
+            <button className="upcoming-add-button" onClick={() => openEventEditor()} type="button">
+              <Plus size={15} /> Event
+            </button>
+          </div>
           <div className="timeline">
-            <div className="timeline-item"><span className="timeline-dot" /><span className="timeline-icon work"><BriefcaseBusiness size={18} /></span><div><small>9:00 PM</small><strong>Work shift</strong></div></div>
-            <div className="timeline-item"><span className="timeline-dot" /><span className="timeline-icon money"><WalletCards size={18} /></span><div><small>Friday</small><strong>Payday</strong></div></div>
-            <div className="timeline-item"><span className="timeline-dot" /><span className="timeline-icon love"><Heart size={18} /></span><div><small>Saturday</small><strong>Date night</strong></div></div>
+            {upcomingEvents.length === 0 ? (
+              <button className="upcoming-empty" onClick={() => openEventEditor()} type="button">
+                <CalendarDays size={24} />
+                <span><strong>Your calendar is open</strong><small>Add an event when you’re ready.</small></span>
+              </button>
+            ) : upcomingEvents.map((event) => {
+              const EventIcon = eventCategoryIcons[event.category];
+              const dateLabel = taskDueLabel(event.occurrenceStartDate, todayKey);
+
+              return (
+                <button className="timeline-item timeline-event" key={event.occurrenceId} onClick={() => openEventEditor(event.id)} type="button">
+                  <span className="timeline-dot" />
+                  <span className={`timeline-icon ${event.category}`}><EventIcon size={18} /></span>
+                  <span className="timeline-event-copy">
+                    <small>{dateLabel} · {eventTimeLabel(event)}</small>
+                    <strong>{event.title}</strong>
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </article>
       </section>
