@@ -23,7 +23,7 @@ function saveSentReminders(sent: Set<string>) {
 }
 
 async function displayReminder(title: string, body: string, tag: string) {
-  const options: NotificationOptions = { body, tag };
+  const options: NotificationOptions = { body, tag, data: { url: '/notifications' } };
   if ('serviceWorker' in navigator) {
     try {
       const registration = await navigator.serviceWorker.ready;
@@ -51,16 +51,17 @@ export function useReminderEngine() {
       const now = new Date();
       const today = getLocalDateKey(now);
       const sent = readSentReminders();
-      const queue = (id: string, dueAt: Date, title: string, body: string) => {
+      const queue = (id: string, dueAt: Date, title: string, body: string, kind: 'task' | 'event' | 'check-in') => {
         const elapsed = now.getTime() - dueAt.getTime();
         if (sent.has(id) || elapsed < 0 || elapsed > DELIVERY_WINDOW_MS) return;
         sent.add(id);
+        state.addNotification({ id, title, body, kind });
         void displayReminder(title, body, id);
       };
 
       if (state.taskReminders) {
         state.tasks.filter((task) => !task.completed && task.dueDate === today).forEach((task) => {
-          queue(`task:${task.id}:${today}`, new Date(`${today}T${state.reminderTime}:00`), 'A gentle task reminder', task.title);
+          queue(`task:${task.id}:${today}`, new Date(`${today}T${state.reminderTime}:00`), 'A gentle task reminder', task.title, 'task');
         });
       }
 
@@ -68,12 +69,12 @@ export function useReminderEngine() {
         getEventOccurrences(state.events, today, today).filter((event) => !event.allDay && event.startTime).forEach((event) => {
           const startsAt = new Date(`${today}T${event.startTime}:00`);
           const dueAt = new Date(startsAt.getTime() - state.eventReminderMinutes * 60_000);
-          queue(`event:${event.occurrenceId}:${state.eventReminderMinutes}`, dueAt, 'An event is coming up', `${event.title} starts at ${event.startTime}`);
+          queue(`event:${event.occurrenceId}:${state.eventReminderMinutes}`, dueAt, 'An event is coming up', `${event.title} starts at ${event.startTime}`, 'event');
         });
       }
 
       if (state.dailyCheckInReminder && state.checkInDate !== today) {
-        queue(`check-in:${today}`, new Date(`${today}T${state.reminderTime}:00`), 'How are you feeling?', 'Take a quiet moment to check in with yourself.');
+        queue(`check-in:${today}`, new Date(`${today}T${state.reminderTime}:00`), 'How are you feeling?', 'Take a quiet moment to check in with yourself.', 'check-in');
       }
 
       saveSentReminders(sent);
