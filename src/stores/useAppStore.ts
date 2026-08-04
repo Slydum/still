@@ -9,7 +9,7 @@ import {
   type LifeEntityLinkType,
   type LifeEntityRef,
 } from '../domain/lifeAreas';
-import { DEFAULT_WORK_PROFILE, shiftEarnings, type WorkProfile, type WorkShift } from '../domain/work';
+import { DEFAULT_WORK_PROFILE, shiftEarnings, type WorkProfile, type WorkShift, type WorkShiftInput } from '../domain/work';
 
 export type TaskPriority = 'low' | 'medium' | 'high';
 export type TaskRepeat = 'none' | 'daily' | 'weekly' | 'monthly';
@@ -169,6 +169,9 @@ type AppState = {
   startWorkShift: () => void;
   endWorkShift: () => void;
   toggleWorkBreak: () => void;
+  addWorkShift: (input: WorkShiftInput) => void;
+  updateWorkShift: (id: string, input: WorkShiftInput) => void;
+  deleteWorkShift: (id: string) => void;
   setWorkPrivacyBlur: (value: boolean) => void;
   setAutoWeather: (value: boolean) => void;
   hydrateForToday: () => void;
@@ -534,6 +537,47 @@ export const useAppStore = create<AppState>()(
           }),
         };
       }),
+      addWorkShift: (input) => set((state) => {
+        const shift: WorkShift = {
+          id: createTaskId(),
+          startedAt: input.startedAt,
+          endedAt: input.endedAt,
+          unpaidBreakMinutes: Math.max(0, input.unpaidBreakMinutes),
+          recordedBreakMs: 0,
+          note: input.note,
+        };
+        const completed = {
+          ...shift,
+          expectedEarnings: shiftEarnings(shift, state.workProfile, input.endedAt),
+        };
+        return {
+          workShifts: [completed, ...state.workShifts]
+            .sort((a, b) => b.startedAt - a.startedAt),
+        };
+      }),
+      updateWorkShift: (id, input) => set((state) => ({
+        workShifts: state.workShifts
+          .map((shift) => {
+            if (shift.id !== id || !shift.endedAt) return shift;
+            const updated: WorkShift = {
+              ...shift,
+              startedAt: input.startedAt,
+              endedAt: input.endedAt,
+              unpaidBreakMinutes: Math.max(0, input.unpaidBreakMinutes),
+              recordedBreakMs: 0,
+              breakStartedAt: undefined,
+              note: input.note,
+            };
+            return {
+              ...updated,
+              expectedEarnings: shiftEarnings(updated, state.workProfile, input.endedAt),
+            };
+          })
+          .sort((a, b) => b.startedAt - a.startedAt),
+      })),
+      deleteWorkShift: (id) => set((state) => ({
+        workShifts: state.workShifts.filter((shift) => shift.id !== id || !shift.endedAt),
+      })),
       setWorkPrivacyBlur: (workPrivacyBlur) => set({ workPrivacyBlur }),
       setAutoWeather: (autoWeather) => set({ autoWeather }),
       hydrateForToday: () => {
