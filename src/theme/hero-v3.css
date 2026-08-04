@@ -1,99 +1,43 @@
-/* Contextual watercolor hero scene */
+/* Still hero — quiet companion card */
 
 .hero.hero-v3 {
   position: relative;
   isolation: isolate;
   display: block;
-  min-height: 410px;
+  min-height: 400px;
   padding: 0;
   overflow: hidden;
-  border: 1px solid rgba(222, 205, 172, 0.72);
+  border: 1px solid rgba(216, 205, 226, 0.72);
   border-radius: 30px;
-  background: linear-gradient(155deg, #fff7df, #eadfb8);
-  box-shadow: 0 20px 48px rgba(93, 76, 49, 0.14);
+  background:
+    radial-gradient(circle at 88% 18%, rgba(218, 211, 249, 0.72), transparent 33%),
+    radial-gradient(circle at 16% 92%, rgba(244, 222, 207, 0.58), transparent 34%),
+    linear-gradient(145deg, #fffdf8 0%, #faf7ff 55%, #f0f6f2 100%);
+  box-shadow: 0 18px 44px rgba(86, 73, 111, 0.11);
 }
 
-.hero.hero-v3::before {
+.hero.hero-v3::before,
+.hero.hero-v3::after {
   display: none;
-}
-
-.hero-v3-scene,
-.hero-v3-scrim {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.hero-v3-scene {
-  z-index: 0;
-  object-fit: cover;
-  object-position: center;
-}
-
-.hero-v3-scrim {
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 252, 244, 0.97) 0%,
-    rgba(255, 249, 232, 0.9) 37%,
-    rgba(255, 249, 232, 0.48) 58%,
-    rgba(255, 249, 232, 0.06) 82%
-  );
-}
-
-.hero-scene-rain .hero-v3-scrim {
-  background: linear-gradient(
-    90deg,
-    rgba(248, 248, 243, 0.97) 0%,
-    rgba(244, 246, 239, 0.9) 38%,
-    rgba(235, 240, 234, 0.45) 61%,
-    rgba(225, 233, 229, 0.08) 84%
-  );
-}
-
-.hero-scene-golden .hero-v3-scrim {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 250, 236, 0.97) 0%,
-    rgba(255, 245, 221, 0.88) 38%,
-    rgba(255, 239, 205, 0.4) 62%,
-    rgba(255, 234, 194, 0.04) 84%
-  );
-}
-
-.hero-scene-night {
-  border-color: rgba(184, 174, 224, 0.52);
-  box-shadow: 0 20px 50px rgba(58, 48, 103, 0.2);
-}
-
-.hero-scene-night .hero-v3-scrim {
-  background: linear-gradient(
-    90deg,
-    rgba(48, 40, 93, 0.86) 0%,
-    rgba(61, 49, 112, 0.72) 38%,
-    rgba(79, 60, 131, 0.26) 65%,
-    rgba(91, 68, 142, 0.02) 86%
-  );
 }
 
 .hero-v3-copy {
   position: absolute;
   z-index: 4;
   top: 28px;
-  left: 26px;
-  width: 72%;
-  max-width: 310px;
+  left: 24px;
+  width: calc(100% - 48px);
+  max-width: 285px;
 }
 
 .hero-v3 h1 {
   max-width: 100%;
-  margin: 0 0 16px;
-  color: #322d49;
-  font-size: clamp(34px, 9.2vw, 43px);
+  margin: 0 0 14px;
+  color: #39334f;
+  font-size: clamp(32px, 8.5vw, 38px);
+  font-weight: 700;
   line-height: 1.06;
-  letter-spacing: -0.9px;
+  letter-spacing: -0.7px;
 }
 
 .hero-v3-title-line {
@@ -103,36 +47,22 @@
 
 .hero-v3-sun {
   font-size: 0.5em;
-  vertical-align: 0.42em;
+  vertical-align: 0.4em;
 }
 
 .hero-v3-quote {
   display: -webkit-box;
-  max-width: 225px;
-  min-height: 45px;
+  max-width: 220px;
+  min-height: 42px;
   margin: 0;
   overflow: hidden;
-  color: #74694f;
+  color: #766e83;
   font-family: Georgia, serif;
-  font-size: 16px;
-  line-height: 1.4;
+  font-size: 15px;
+  line-height: 1.42;
   transition: opacity 0.2s ease;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
-}
-
-.hero-scene-rain .hero-v3-quote {
-  color: #63716d;
-}
-
-.hero-scene-night .hero-v3 h1 {
-  color: #fffafc;
-  text-shadow: 0 2px 18px rgba(43, 31, 79, 0.3);
-}
-
-.hero-scene-night .hero-v3-quote {
-  color: #eee8ff;
-  text-shadow: 0 2px 15px rgba(43, 31, 79, 0.28);
 }
 
 .hero-v3-quote.is-loading {
@@ -141,49 +71,50 @@
 
 .hero-v3-art {
   position: absolute;
-  z-index: 3;
-  right: 6px;
-  bottom: 50px;
-  width: 62%;
-  height: 48%;
+  z-index: 2;
+  right: 5px;
+  bottom: 34px;
+  width: 42%;
+  height: 47%;
   margin: 0;
   object-fit: contain;
   object-position: right bottom;
   pointer-events: none;
-  filter: drop-shadow(0 14px 15px rgba(75, 64, 88, 0.17));
+  filter: drop-shadow(0 12px 14px rgba(76, 68, 105, 0.13));
 }
 
 .hero-v3-art.companion-umbrella,
 .hero-v3-art.companion-sleeping {
-  width: 66%;
-  height: 52%;
+  right: -2px;
+  width: 46%;
+  height: 50%;
 }
 
 .hero-v3-weather {
   position: absolute;
-  z-index: 6;
+  z-index: 5;
   left: 20px;
   bottom: 16px;
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  max-width: 66%;
-  min-height: 43px;
-  padding: 8px 17px 8px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.74);
+  max-width: 60%;
+  min-height: 42px;
+  padding: 8px 16px 8px 10px;
+  border: 1px solid rgba(210, 200, 222, 0.7);
   border-radius: 999px;
-  color: #322d49;
+  color: #39334f;
   font-size: 14px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 9px 24px rgba(73, 61, 51, 0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 8px 20px rgba(82, 72, 103, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .hero-v3-weather:hover {
   transform: translateY(-1px);
-  box-shadow: 0 11px 28px rgba(73, 61, 51, 0.18);
+  box-shadow: 0 10px 24px rgba(82, 72, 103, 0.14);
 }
 
 .hero-v3-weather:active {
@@ -191,8 +122,8 @@
 }
 
 .hero-v3-weather img {
-  width: 24px;
-  height: 24px;
+  width: 23px;
+  height: 23px;
   object-fit: contain;
 }
 
@@ -205,98 +136,93 @@
 
 @media (min-width: 620px) {
   .hero.hero-v3 {
-    min-height: 400px;
+    min-height: 360px;
   }
 
   .hero-v3-copy {
-    top: 38px;
-    left: 40px;
-    width: 48%;
-    max-width: 340px;
+    top: 34px;
+    left: 38px;
+    max-width: 330px;
   }
 
   .hero-v3 h1 {
-    margin-bottom: 17px;
-    font-size: 46px;
+    margin-bottom: 16px;
+    font-size: 42px;
   }
 
   .hero-v3-quote {
-    max-width: 275px;
-    font-size: 19px;
+    max-width: 265px;
+    font-size: 17px;
   }
 
   .hero-v3-art {
-    right: 26px;
-    bottom: 24px;
-    width: 45%;
-    height: 57%;
+    right: 24px;
+    bottom: 20px;
+    width: 35%;
+    height: 62%;
   }
 
   .hero-v3-art.companion-umbrella,
   .hero-v3-art.companion-sleeping {
-    right: 16px;
-    width: 48%;
-    height: 61%;
+    right: 14px;
+    width: 39%;
+    height: 66%;
   }
 
   .hero-v3-weather {
     left: 38px;
     bottom: 22px;
-    max-width: 46%;
+    max-width: 45%;
     font-size: 15px;
   }
 }
 
 @media (max-width: 420px) {
   .hero.hero-v3 {
-    min-height: 400px;
+    min-height: 390px;
     border-radius: 27px;
   }
 
   .hero-v3-copy {
-    top: 24px;
-    left: 20px;
-    width: 76%;
+    top: 26px;
+    left: 22px;
+    width: calc(100% - 44px);
   }
 
   .hero-v3 h1 {
     margin-bottom: 13px;
-    font-size: clamp(32px, 9.4vw, 38px);
+    font-size: clamp(31px, 8.8vw, 34px);
   }
 
   .hero-v3-quote {
     max-width: 215px;
-    font-size: 15px;
   }
 
   .hero-v3-art {
-    right: -5px;
-    bottom: 49px;
-    width: 66%;
-    height: 46%;
+    right: 2px;
+    bottom: 36px;
+    width: 42%;
+    height: 45%;
   }
 
   .hero-v3-art.companion-umbrella,
   .hero-v3-art.companion-sleeping {
-    right: -12px;
-    width: 70%;
-    height: 50%;
+    right: -5px;
+    width: 46%;
+    height: 49%;
   }
 
   .hero-v3-weather {
-    left: 16px;
+    left: 18px;
     bottom: 14px;
-    max-width: 68%;
-    min-height: 41px;
+    max-width: 62%;
+    min-height: 40px;
     font-size: 13px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-v3-scene,
-  .hero-v3-art,
   .hero-v3-weather {
-    animation: none !important;
     transition: none !important;
   }
 }
