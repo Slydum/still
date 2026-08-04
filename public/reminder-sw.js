@@ -48,11 +48,12 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const targetUrl = event.notification.data?.url || '/notifications';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       const openClient = clients.find((client) => 'focus' in client);
-      if (openClient) return openClient.focus();
-      return self.clients.openWindow('/');
+      if (openClient) return openClient.navigate(targetUrl).then(() => openClient.focus());
+      return self.clients.openWindow(targetUrl);
     }),
   );
 });
