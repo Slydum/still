@@ -49,7 +49,12 @@ export type WorkShift = {
   links?: LifeEntityRef[];
 };
 
-export type WorkShiftInput = Pick<WorkShift, 'startedAt' | 'endedAt' | 'unpaidBreakMinutes' | 'note'>;
+export type WorkShiftInput = {
+  startedAt: number;
+  endedAt: number;
+  unpaidBreakMinutes: number;
+  note?: string;
+};
 
 export const DEFAULT_WORK_SCHEDULE: WorkScheduleDay[] = [
   { day: 1, enabled: true, start: '09:00', end: '17:00' },
