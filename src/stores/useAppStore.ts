@@ -95,6 +95,11 @@ type AppState = {
   appearanceTone: AppearanceTone;
   reduceMotion: boolean;
   notificationsEnabled: boolean;
+  taskReminders: boolean;
+  eventReminders: boolean;
+  dailyCheckInReminder: boolean;
+  reminderTime: string;
+  eventReminderMinutes: number;
   autoWeather: boolean;
   openQuickAdd: () => void;
   openTaskEditor: (taskId?: string) => void;
@@ -120,6 +125,11 @@ type AppState = {
   setAppearanceTone: (value: AppearanceTone) => void;
   setReduceMotion: (value: boolean) => void;
   setNotificationsEnabled: (value: boolean) => void;
+  setTaskReminders: (value: boolean) => void;
+  setEventReminders: (value: boolean) => void;
+  setDailyCheckInReminder: (value: boolean) => void;
+  setReminderTime: (value: string) => void;
+  setEventReminderMinutes: (value: number) => void;
   setAutoWeather: (value: boolean) => void;
   hydrateForToday: () => void;
 };
@@ -201,6 +211,11 @@ export const useAppStore = create<AppState>()(
       appearanceTone: 'lavender',
       reduceMotion: false,
       notificationsEnabled: false,
+      taskReminders: true,
+      eventReminders: true,
+      dailyCheckInReminder: false,
+      reminderTime: '09:00',
+      eventReminderMinutes: 30,
       autoWeather: true,
       openQuickAdd: () => set({
         quickAddOpen: true,
@@ -400,6 +415,11 @@ export const useAppStore = create<AppState>()(
       setAppearanceTone: (appearanceTone) => set({ appearanceTone }),
       setReduceMotion: (reduceMotion) => set({ reduceMotion }),
       setNotificationsEnabled: (notificationsEnabled) => set({ notificationsEnabled }),
+      setTaskReminders: (taskReminders) => set({ taskReminders }),
+      setEventReminders: (eventReminders) => set({ eventReminders }),
+      setDailyCheckInReminder: (dailyCheckInReminder) => set({ dailyCheckInReminder }),
+      setReminderTime: (reminderTime) => set({ reminderTime }),
+      setEventReminderMinutes: (eventReminderMinutes) => set({ eventReminderMinutes }),
       setAutoWeather: (autoWeather) => set({ autoWeather }),
       hydrateForToday: () => {
         const today = getLocalDateKey();
@@ -425,6 +445,11 @@ export const useAppStore = create<AppState>()(
         appearanceTone: state.appearanceTone,
         reduceMotion: state.reduceMotion,
         notificationsEnabled: state.notificationsEnabled,
+        taskReminders: state.taskReminders,
+        eventReminders: state.eventReminders,
+        dailyCheckInReminder: state.dailyCheckInReminder,
+        reminderTime: state.reminderTime,
+        eventReminderMinutes: state.eventReminderMinutes,
         autoWeather: state.autoWeather,
       }),
     },
