@@ -8,6 +8,7 @@ import { JournalPage } from '../features/journal/JournalPage';
 import { CheckInHistoryPage } from '../features/check-ins/CheckInHistoryPage';
 import { MorePage } from '../features/more/MorePage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
+import { WorkPage } from '../features/work/WorkPage';
 import { useAppStore } from '../stores/useAppStore';
 import { useReminderEngine } from '../hooks/useReminderEngine';
 
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/check-ins" element={<CheckInHistoryPage />} />
       <Route path="/more" element={<MorePage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
+      <Route path="/work" element={<WorkPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     <BottomNav />
