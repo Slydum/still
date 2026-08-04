@@ -24,13 +24,28 @@ export const useAppStore = create<AppState>()(
       quickAddOpen: false,
       openQuickAdd: () => set({ quickAddOpen: true }),
       closeQuickAdd: () => set({ quickAddOpen: false }),
-      setMood: (mood) => set({ mood, checkInDate: getLocalDateKey() }),
-      setEnergy: (energy) => set({ energy, checkInDate: getLocalDateKey() }),
+      setMood: (mood) => set((state) => {
+        const today = getLocalDateKey();
+        return {
+          mood,
+          energy: state.checkInDate === today ? state.energy : undefined,
+          checkInDate: today,
+        };
+      }),
+      setEnergy: (energy) => set((state) => {
+        const today = getLocalDateKey();
+        return {
+          mood: state.checkInDate === today ? state.mood : undefined,
+          energy,
+          checkInDate: today,
+        };
+      }),
       setWeather: (weather) => set({ weather }),
       setOccasion: (occasion) => set({ occasion }),
       hydrateForToday: () => {
         const today = getLocalDateKey();
-        if (get().checkInDate && get().checkInDate !== today) {
+        const { checkInDate, mood, energy } = get();
+        if (checkInDate !== today && (mood !== undefined || energy !== undefined)) {
           set({ mood: undefined, energy: undefined, checkInDate: today });
         }
       },
