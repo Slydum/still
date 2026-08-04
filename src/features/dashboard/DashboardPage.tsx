@@ -124,10 +124,10 @@ function weatherCodeToKey(code: number): WeatherKey {
 }
 
 const lifeAreas = [
-  { key: 'work', label: 'Work', status: 'Do your best, then rest.', progress: 5, icon: '/assets/cozy/work-teddy-shelf.png' },
-  { key: 'love', label: 'Love', status: 'Nurture what matters.', progress: 3, icon: '/assets/cozy/love-bunny-letter.png' },
-  { key: 'health', label: 'Health', status: 'Gentle care, every day.', progress: 6, icon: '/assets/cozy/health-turtle-bath.png' },
-  { key: 'money', label: 'Money', status: 'Small steps, big future.', progress: 5, icon: '/assets/cozy/money-piggy-bank.png' },
+  { key: 'work', label: 'Work', status: 'Focused', progress: 5, icon: '/assets/cozy/work-teddy-shelf.png' },
+  { key: 'love', label: 'Love', status: 'Needs attention', progress: 3, icon: '/assets/cozy/love-bunny-letter.png' },
+  { key: 'health', label: 'Health', status: 'Doing well', progress: 6, icon: '/assets/cozy/health-turtle-bath.png' },
+  { key: 'money', label: 'Money', status: 'On budget', progress: 5, icon: '/assets/cozy/money-piggy-bank.png' },
 ] as const;
 
 function useCurrentTime() {
