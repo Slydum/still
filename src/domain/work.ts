@@ -24,6 +24,8 @@ export type WorkShift = {
   endedAt?: number;
   unpaidBreakMinutes: number;
   expectedEarnings?: number;
+  breakStartedAt?: number;
+  recordedBreakMs?: number;
   links?: LifeEntityRef[];
 };
 
@@ -49,7 +51,14 @@ export function effectiveHourlyRate(profile: WorkProfile) {
 
 export function workedHours(shift: WorkShift, now = Date.now()) {
   const elapsedMs = Math.max(0, (shift.endedAt ?? now) - shift.startedAt);
-  return Math.max(0, elapsedMs / 3_600_000 - shift.unpaidBreakMinutes / 60);
+  const activeBreakMs = shift.breakStartedAt
+    ? Math.max(0, (shift.endedAt ?? now) - shift.breakStartedAt)
+    : 0;
+  const recordedBreakMs = Math.max(0, shift.recordedBreakMs ?? 0) + activeBreakMs;
+  const breakMs = shift.endedAt
+    ? Math.max(recordedBreakMs, shift.unpaidBreakMinutes * 60_000)
+    : recordedBreakMs;
+  return Math.max(0, (elapsedMs - breakMs) / 3_600_000);
 }
 
 export function shiftEarnings(shift: WorkShift, profile: WorkProfile, now = Date.now()) {
