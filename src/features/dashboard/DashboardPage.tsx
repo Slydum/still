@@ -21,7 +21,6 @@ import { useDailyQuote } from '../../hooks/useDailyQuote';
 import { useAppStore, type EventCategory } from '../../stores/useAppStore';
 import { eventTimeLabel, getEventOccurrences } from '../calendar/eventUtils';
 import {
-  cloudCompanionArt,
   getCloudCompanionKey,
   loadCloudCompanionArt,
 } from '../../theme/companionArt';
@@ -341,7 +340,7 @@ export function DashboardPage() {
     [now, mood, energy, weather, occasion],
   );
   const heroCompanionKey = getCloudCompanionKey(context);
-  const [heroCompanionArt, setHeroCompanionArt] = useState(cloudCompanionArt);
+  const [heroCompanionArt, setHeroCompanionArt] = useState<string>();
   const heroConditionSymbol = context.weather
     ? heroConditionSymbols[context.weather]
     : context.timeOfDay === 'night'
@@ -350,6 +349,7 @@ export function DashboardPage() {
 
   useEffect(() => {
     let active = true;
+    setHeroCompanionArt(undefined);
 
     void loadCloudCompanionArt(heroCompanionKey).then((art) => {
       if (active) setHeroCompanionArt(art);
@@ -415,11 +415,13 @@ export function DashboardPage() {
           </h1>
           <p className={`hero-v3-quote ${isLoading ? 'is-loading' : ''}`}>{quote.text}</p>
         </div>
-        <img
-          className={`hero-v3-art companion-${heroCompanionKey}`}
-          src={heroCompanionArt}
-          alt="A fluffy cloud companion matching the moment"
-        />
+        {heroCompanionArt && (
+          <img
+            className={`hero-v3-art companion-${heroCompanionKey}`}
+            src={heroCompanionArt}
+            alt="A fluffy cloud companion matching the moment"
+          />
+        )}
         <button
           className={`hero-v3-weather weather-status-${weatherStatus}`}
           type="button"
