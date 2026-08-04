@@ -24,7 +24,6 @@ import {
   getCloudCompanionKey,
   loadCloudCompanionArt,
 } from '../../theme/companionArt';
-import { getHeroSceneKey, loadHeroSceneArt } from '../../theme/sceneArt';
 import { stillAssets } from '../../theme/stillAssets';
 import { createStillContext, getGreeting, getLocalDateKey, type WeatherKey } from '../../theme/stillContext';
 import { buildStillTheme } from '../../theme/themeEngine';
@@ -340,9 +339,7 @@ export function DashboardPage() {
     [now, mood, energy, weather, occasion],
   );
   const heroCompanionKey = getCloudCompanionKey(context);
-  const heroSceneKey = getHeroSceneKey(context);
   const [heroCompanionArt, setHeroCompanionArt] = useState(cloudCompanionArt);
-  const [heroSceneArt, setHeroSceneArt] = useState<string>();
   const heroConditionSymbol = context.weather
     ? heroConditionSymbols[context.weather]
     : context.timeOfDay === 'night'
@@ -360,18 +357,6 @@ export function DashboardPage() {
       active = false;
     };
   }, [heroCompanionKey]);
-
-  useEffect(() => {
-    let active = true;
-
-    void loadHeroSceneArt(heroSceneKey).then((art) => {
-      if (active) setHeroSceneArt(art);
-    });
-
-    return () => {
-      active = false;
-    };
-  }, [heroSceneKey]);
 
   useEffect(() => { hydrateForToday(); }, [context.dateKey, hydrateForToday]);
   const theme = useMemo(() => buildStillTheme(context), [context]);
@@ -416,9 +401,7 @@ export function DashboardPage() {
         </button>
       </header>
 
-      <section className={`hero hero-v3 hero-scene-${heroSceneKey} ${theme.paletteClass}`}>
-        {heroSceneArt && <img className="hero-v3-scene" src={heroSceneArt} alt="" aria-hidden="true" />}
-        <div className="hero-v3-scrim" aria-hidden="true" />
+      <section className={`hero hero-v3 ${theme.paletteClass}`}>
         <div className="hero-v3-copy">
           <h1>
             <span className="hero-v3-title-line">
