@@ -56,6 +56,16 @@ export type EventInput = Pick<
 
 export type JournalMood = 1 | 2 | 3 | 4 | 5;
 export type AppearanceTone = 'lavender' | 'warm' | 'sage';
+export type AppNotificationKind = 'task' | 'event' | 'check-in' | 'system';
+
+export type AppNotification = {
+  id: string;
+  title: string;
+  body: string;
+  kind: AppNotificationKind;
+  createdAt: number;
+  read: boolean;
+};
 
 export type JournalEntry = {
   id: string;
@@ -86,6 +96,7 @@ type AppState = {
   tasks: StillTask[];
   events: StillEvent[];
   journalEntries: JournalEntry[];
+  notifications: AppNotification[];
   name: string;
   mood?: number;
   energy?: number;
@@ -130,6 +141,9 @@ type AppState = {
   setDailyCheckInReminder: (value: boolean) => void;
   setReminderTime: (value: string) => void;
   setEventReminderMinutes: (value: number) => void;
+  addNotification: (notification: Omit<AppNotification, 'createdAt' | 'read'>) => void;
+  markAllNotificationsRead: () => void;
+  clearNotifications: () => void;
   setAutoWeather: (value: boolean) => void;
   hydrateForToday: () => void;
 };
@@ -207,6 +221,7 @@ export const useAppStore = create<AppState>()(
       tasks: [],
       events: [],
       journalEntries: [],
+      notifications: [],
       name: 'Tien',
       appearanceTone: 'lavender',
       reduceMotion: false,
@@ -420,6 +435,15 @@ export const useAppStore = create<AppState>()(
       setDailyCheckInReminder: (dailyCheckInReminder) => set({ dailyCheckInReminder }),
       setReminderTime: (reminderTime) => set({ reminderTime }),
       setEventReminderMinutes: (eventReminderMinutes) => set({ eventReminderMinutes }),
+      addNotification: (notification) => set((state) => ({
+        notifications: state.notifications.some((item) => item.id === notification.id)
+          ? state.notifications
+          : [{ ...notification, createdAt: Date.now(), read: false }, ...state.notifications].slice(0, 50),
+      })),
+      markAllNotificationsRead: () => set((state) => ({
+        notifications: state.notifications.map((notification) => ({ ...notification, read: true })),
+      })),
+      clearNotifications: () => set({ notifications: [] }),
       setAutoWeather: (autoWeather) => set({ autoWeather }),
       hydrateForToday: () => {
         const today = getLocalDateKey();
@@ -436,6 +460,7 @@ export const useAppStore = create<AppState>()(
         tasks: state.tasks,
         events: state.events,
         journalEntries: state.journalEntries,
+        notifications: state.notifications,
         name: state.name,
         mood: state.mood,
         energy: state.energy,
