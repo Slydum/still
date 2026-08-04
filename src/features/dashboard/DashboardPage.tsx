@@ -1,5 +1,16 @@
 import { format } from 'date-fns';
-import { Bell, BriefcaseBusiness, Heart, Sparkles, WalletCards } from 'lucide-react';
+import {
+  Bell,
+  BriefcaseBusiness,
+  CalendarDays,
+  Heart,
+  Pencil,
+  Plus,
+  Repeat2,
+  Sparkles,
+  Trash2,
+  WalletCards,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getSecondaryQuote } from '../../content/quoteEngine';
 import { saveCheckIn } from '../../data/stillDb';
@@ -10,12 +21,6 @@ import { stillAssets } from '../../theme/stillAssets';
 import { createStillContext, getGreeting, getLocalDateKey, type WeatherKey } from '../../theme/stillContext';
 import { buildStillTheme } from '../../theme/themeEngine';
 import '../../theme/hero-v3.css';
-
-const priorities = [
-  { title: 'Finish the presentation', note: 'A small step still counts.' },
-  { title: 'Walk the dogs', note: 'Fresh air for all of you.' },
-  { title: 'Drink enough water', note: 'Take gentle care of your body.' },
-];
 
 const moods = [
   { asset: stillAssets.checkIn.mood.sad, label: 'Sad' },
@@ -114,6 +119,23 @@ function useCurrentTime() {
   return now;
 }
 
+const taskPriorityRank = { high: 0, medium: 1, low: 2 } as const;
+
+function taskDueLabel(dueDate: string, today: string) {
+  if (dueDate === today) return 'Today';
+
+  const tomorrow = new Date(`${today}T12:00:00`);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowKey = [
+    tomorrow.getFullYear(),
+    String(tomorrow.getMonth() + 1).padStart(2, '0'),
+    String(tomorrow.getDate()).padStart(2, '0'),
+  ].join('-');
+
+  if (dueDate === tomorrowKey) return 'Tomorrow';
+  return format(new Date(`${dueDate}T12:00:00`), 'MMM d');
+}
+
 export function DashboardPage() {
   const storedMood = useAppStore((state) => state.mood);
   const storedEnergy = useAppStore((state) => state.energy);
@@ -125,7 +147,10 @@ export function DashboardPage() {
   const setEnergy = useAppStore((state) => state.setEnergy);
   const setWeather = useAppStore((state) => state.setWeather);
   const hydrateForToday = useAppStore((state) => state.hydrateForToday);
-  const [done, setDone] = useState<number[]>([]);
+  const tasks = useAppStore((state) => state.tasks);
+  const openTaskEditor = useAppStore((state) => state.openTaskEditor);
+  const toggleTask = useAppStore((state) => state.toggleTask);
+  const deleteTask = useAppStore((state) => state.deleteTask);
   const [weatherStatus, setWeatherStatus] =
     useState<WeatherStatus>('idle');
   const [temperature, setTemperature] =
@@ -133,6 +158,7 @@ export function DashboardPage() {
   const requestedLocationWeather = useRef(false);
 
   const now = useCurrentTime();
+  const todayKey = getLocalDateKey(now);
   const isTodaysCheckIn = checkInDate === getLocalDateKey(now);
   const mood = isTodaysCheckIn ? storedMood : undefined;
   const energy = isTodaysCheckIn ? storedEnergy : undefined;
@@ -288,14 +314,24 @@ export function DashboardPage() {
   const { quote, isLoading } = useDailyQuote(context);
   const closingQuote = useMemo(() => getSecondaryQuote(context, quote.id), [context, quote.id]);
 
+  const orderedTasks = useMemo(() => [...tasks].sort((left, right) => {
+    if (left.completed !== right.completed) return left.completed ? 1 : -1;
+
+    const leftDue = left.dueDate ?? '9999-12-31';
+    const rightDue = right.dueDate ?? '9999-12-31';
+    if (leftDue !== rightDue) return leftDue.localeCompare(rightDue);
+
+    const priorityDifference = taskPriorityRank[left.priority] - taskPriorityRank[right.priority];
+    if (priorityDifference !== 0) return priorityDifference;
+    return left.createdAt - right.createdAt;
+  }), [tasks]);
+
+  const remainingTaskCount = tasks.filter((task) => !task.completed).length;
+
   useEffect(() => {
     if (!mood && !energy) return;
     void saveCheckIn({ date: context.dateKey, mood, energy, updatedAt: Date.now() }).catch(() => undefined);
   }, [context.dateKey, mood, energy]);
-
-  const toggle = (index: number) => {
-    setDone((items) => items.includes(index) ? items.filter((item) => item !== index) : [...items, index]);
-  };
 
   return (
     <main className="shell dashboard-shell dashboard-v2">
@@ -392,19 +428,75 @@ export function DashboardPage() {
 
       <section className="section dashboard-two-column">
         <article className="card focus-card surface-focus">
-          <p className="section-kicker">Today’s focus</p>
+          <div className="focus-task-heading">
+            <div>
+              <p className="section-kicker">Today’s focus</p>
+              <p className="micro-copy">
+                {remainingTaskCount === 0
+                  ? 'Nothing waiting for you.'
+                  : `${remainingTaskCount} ${remainingTaskCount === 1 ? 'task' : 'tasks'} left`}
+              </p>
+            </div>
+            <button className="task-add-button" onClick={() => openTaskEditor()} type="button">
+              <Plus size={17} /> Add task
+            </button>
+          </div>
           <div className="focus-list">
-            {priorities.map((task, index) => {
-              const completed = done.includes(index);
+            {orderedTasks.length === 0 ? (
+              <button className="task-empty-state" onClick={() => openTaskEditor()} type="button">
+                <span>🌱</span>
+                <strong>Add your first task</strong>
+                <small>Start with one small, meaningful step.</small>
+              </button>
+            ) : orderedTasks.map((task) => {
+              const overdue = Boolean(task.dueDate && task.dueDate < todayKey && !task.completed);
+
               return (
-                <div className={`task ${completed ? 'is-complete' : ''}`} key={task.title}>
-                  <button className={`checkbox ${completed ? 'done' : ''}`} onClick={() => toggle(index)} type="button" aria-label={`${completed ? 'Mark incomplete' : 'Complete'} ${task.title}`} aria-pressed={completed}>{completed ? '✓' : ''}</button>
-                  <div className="task-copy"><strong>{task.title}</strong></div>
+                <div className={`task task-record ${task.completed ? 'is-complete' : ''}`} key={task.id}>
+                  <button
+                    className={`checkbox ${task.completed ? 'done' : ''}`}
+                    onClick={() => toggleTask(task.id)}
+                    type="button"
+                    aria-label={`${task.completed ? 'Mark incomplete' : 'Complete'} ${task.title}`}
+                    aria-pressed={task.completed}
+                  >
+                    {task.completed ? '✓' : ''}
+                  </button>
+                  <div className="task-copy">
+                    <strong>{task.title}</strong>
+                    {task.note && <span className="task-note">{task.note}</span>}
+                    <div className="task-meta">
+                      <span className={`task-priority task-priority-${task.priority}`}>{task.priority}</span>
+                      {task.dueDate && (
+                        <span className={overdue ? 'task-overdue' : ''}>
+                          <CalendarDays size={13} />
+                          {overdue ? 'Overdue · ' : ''}{taskDueLabel(task.dueDate, todayKey)}
+                        </span>
+                      )}
+                      {task.repeat !== 'none' && (
+                        <span><Repeat2 size={13} />{task.repeat}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="task-record-actions">
+                    <button onClick={() => openTaskEditor(task.id)} type="button" aria-label={`Edit ${task.title}`}>
+                      <Pencil size={15} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Delete “${task.title}”?`)) deleteTask(task.id);
+                      }}
+                      type="button"
+                      aria-label={`Delete ${task.title}`}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </div>
               );
             })}
           </div>
-          <img className="priority-pet focus-pet" src={theme.priorityAsset} alt="" aria-hidden="true" />
+          {orderedTasks.length === 0 && <img className="priority-pet focus-pet" src={theme.priorityAsset} alt="" aria-hidden="true" />}
         </article>
 
         <article className="card upcoming-card surface-upcoming">
