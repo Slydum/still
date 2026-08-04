@@ -22,3 +22,17 @@
   --shadow: 0 14px 40px rgba(78, 73, 106, 0.09);
   --radius-card: 24px;
 }
+
+:root[data-tone="warm"] {
+  --bg: #fff8f1;
+  --lavender: #d5a27d;
+  --lavender-soft: #f8e6d8;
+  --surface-soft: #fff5ee;
+}
+
+:root[data-tone="sage"] {
+  --bg: #f5faf6;
+  --lavender: #87ad9b;
+  --lavender-soft: #dfefe7;
+  --surface-soft: #eff8f2;
+}
