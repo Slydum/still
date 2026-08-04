@@ -109,6 +109,7 @@ type AppState = {
   setName: (value: string) => void;
   setMood: (value: number) => void;
   setEnergy: (value: number) => void;
+  replaceTodayCheckIn: (mood?: number, energy?: number) => void;
   setWeather: (value?: WeatherKey) => void;
   setOccasion: (value?: OccasionKey) => void;
   hydrateForToday: () => void;
@@ -375,6 +376,11 @@ export const useAppStore = create<AppState>()(
           energy,
           checkInDate: today,
         };
+      }),
+      replaceTodayCheckIn: (mood, energy) => set({
+        mood,
+        energy,
+        checkInDate: getLocalDateKey(),
       }),
       setWeather: (weather) => set({ weather }),
       setOccasion: (occasion) => set({ occasion }),
