@@ -31,3 +31,11 @@ export const stillDb = new StillDatabase();
 export async function saveCheckIn(record: CheckInRecord) {
   await stillDb.checkIns.put(record);
 }
+
+export async function listCheckIns() {
+  return stillDb.checkIns.orderBy('date').reverse().toArray();
+}
+
+export async function deleteCheckIn(date: string) {
+  await stillDb.checkIns.delete(date);
+}
