@@ -51,6 +51,7 @@ export function MorePage() {
   const setReminderTime = useAppStore((state) => state.setReminderTime);
   const eventReminderMinutes = useAppStore((state) => state.eventReminderMinutes);
   const setEventReminderMinutes = useAppStore((state) => state.setEventReminderMinutes);
+  const addNotification = useAppStore((state) => state.addNotification);
   const autoWeather = useAppStore((state) => state.autoWeather);
   const setAutoWeather = useAppStore((state) => state.setAutoWeather);
   const weather = useAppStore((state) => state.weather);
@@ -111,6 +112,7 @@ export function MorePage() {
         new Notification('A quiet hello from Still', { body: 'Your reminders are working.', tag: 'still-test' });
       }
       setNotificationMessage('Test reminder sent.');
+      addNotification({ id: `system:test:${Date.now()}`, title: 'A quiet hello from Still', body: 'Your reminders are working.', kind: 'system' });
     } catch {
       setNotificationMessage('This browser could not display the test reminder.');
     }
@@ -149,6 +151,7 @@ export function MorePage() {
       tasks: state.tasks,
       events: state.events,
       journalEntries: state.journalEntries,
+      notifications: state.notifications,
       checkIns,
       dailyQuotes,
     };
