@@ -4,6 +4,7 @@ import { getLocalDateKey, type OccasionKey, type WeatherKey } from '../theme/sti
 
 type AppState = {
   quickAddOpen: boolean;
+  name: string;
   mood?: number;
   energy?: number;
   checkInDate?: string;
@@ -11,6 +12,7 @@ type AppState = {
   occasion?: OccasionKey;
   openQuickAdd: () => void;
   closeQuickAdd: () => void;
+  setName: (value: string) => void;
   setMood: (value: number) => void;
   setEnergy: (value: number) => void;
   setWeather: (value?: WeatherKey) => void;
@@ -22,8 +24,10 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       quickAddOpen: false,
+      name: 'Tien',
       openQuickAdd: () => set({ quickAddOpen: true }),
       closeQuickAdd: () => set({ quickAddOpen: false }),
+      setName: (name) => set({ name }),
       setMood: (mood) => set((state) => {
         const today = getLocalDateKey();
         return {
@@ -54,6 +58,7 @@ export const useAppStore = create<AppState>()(
       name: 'still-app-state-v1',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
+        name: state.name,
         mood: state.mood,
         energy: state.energy,
         checkInDate: state.checkInDate,

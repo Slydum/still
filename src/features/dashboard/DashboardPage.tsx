@@ -1,13 +1,15 @@
 import { format } from 'date-fns';
-import { Bell, BriefcaseBusiness, CalendarDays, Heart, MapPin, Sparkles, WalletCards } from 'lucide-react';
+import { Bell, BriefcaseBusiness, Heart, Sparkles, WalletCards } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getSecondaryQuote } from '../../content/quoteEngine';
 import { saveCheckIn } from '../../data/stillDb';
 import { useDailyQuote } from '../../hooks/useDailyQuote';
 import { useAppStore } from '../../stores/useAppStore';
+import { cloudCompanionArt } from '../../theme/companionArt';
 import { stillAssets } from '../../theme/stillAssets';
 import { createStillContext, getGreeting, getLocalDateKey, type WeatherKey } from '../../theme/stillContext';
 import { buildStillTheme } from '../../theme/themeEngine';
+import '../../theme/hero-v3.css';
 
 const priorities = [
   { title: 'Finish the presentation', note: 'A small step still counts.' },
@@ -118,6 +120,7 @@ export function DashboardPage() {
   const checkInDate = useAppStore((state) => state.checkInDate);
   const weather = useAppStore((state) => state.weather);
   const occasion = useAppStore((state) => state.occasion);
+  const name = useAppStore((state) => state.name);
   const setMood = useAppStore((state) => state.setMood);
   const setEnergy = useAppStore((state) => state.setEnergy);
   const setWeather = useAppStore((state) => state.setWeather);
@@ -262,17 +265,6 @@ export function DashboardPage() {
     refreshWeatherFromLocation(!locationWeatherEnabled);
   }, [refreshWeatherFromLocation]);
 
-  const weatherCaption =
-    weatherStatus === 'ready'
-      ? 'Weather near you'
-      : weatherStatus === 'requesting'
-        ? 'Checking your area'
-        : weatherStatus === 'denied'
-          ? 'Location permission'
-          : weatherStatus === 'error'
-            ? 'Weather unavailable'
-            : 'Local weather';
-
   const weatherHeadline =
     weatherStatus === 'ready' && temperature !== null
       ? `${selectedWeather.label} · ${Math.round(
@@ -318,73 +310,47 @@ export function DashboardPage() {
         </button>
       </header>
 
-      <section className={`hero hero-v2 ${theme.paletteClass}`}>
-        <div className="hero-copy">
-          <h1>{getGreeting(context.timeOfDay)}</h1>
-          <p className={`quote ${isLoading ? 'is-loading' : ''}`}>“{quote.text}”</p>
-          <button
-              className={`weather-ambient weather-status-${weatherStatus}`}
-              type="button"
-              onClick={() => refreshWeatherFromLocation(true)}
-              aria-busy={weatherStatus === 'requesting'}
-              aria-label="Use my location for automatic weather"
-            >
-              <span
-                className="weather-ambient-icon"
-                aria-hidden="true"
-              >
-                <img src={selectedWeatherAsset} alt="" />
-              </span>
-
-              <span className="weather-ambient-copy">
-                <small>{weatherCaption}</small>
-                <strong>{weatherHeadline}</strong>
-              </span>
-
-              <MapPin
-                className="weather-location-icon"
-                size={16}
-                aria-hidden="true"
-              />
-            </button>
+      <section className={`hero hero-v3 ${theme.paletteClass}`}>
+        <svg className="hero-v3-leaves" viewBox="0 0 150 150" aria-hidden="true">
+          <defs>
+            <filter id="hero-leaf-soft">
+              <feGaussianBlur stdDeviation="0.9" />
+            </filter>
+          </defs>
+          <g filter="url(#hero-leaf-soft)">
+            <path d="M154 -6 C 118 6 96 30 84 62" stroke="#dcb95c" strokeWidth="4" fill="none" strokeLinecap="round" />
+            <ellipse cx="126" cy="16" rx="17" ry="8" fill="#e7c469" transform="rotate(-38 126 16)" />
+            <ellipse cx="106" cy="34" rx="15" ry="7" fill="#f0d384" transform="rotate(-30 106 34)" />
+            <ellipse cx="92" cy="54" rx="13" ry="6.5" fill="#e7c469" transform="rotate(-42 92 54)" />
+            <ellipse cx="138" cy="40" rx="14" ry="7" fill="#f0d384" transform="rotate(-70 138 40)" />
+            <ellipse cx="120" cy="62" rx="12" ry="6" fill="#e7c469" transform="rotate(-58 120 62)" />
+          </g>
+        </svg>
+        <span className="hero-v3-leaf-drift" style={{ top: '30%', right: '16%' }} aria-hidden="true">🍂</span>
+        <div className="hero-v3-copy">
+          <h1>
+            {getGreeting(context.timeOfDay).replace('.', '')},<br />
+            {name}. <span className="hero-v3-sun" aria-hidden="true">☀️</span>
+          </h1>
+          <p className={`hero-v3-quote ${isLoading ? 'is-loading' : ''}`}>{quote.text}</p>
         </div>
-        <div className={`hero-art hero-art-v2 hero-kind-${theme.heroKind}`}>
-            <div className="hero-scene-wash" />
-
-            <img
-              className="hero-scene-sky"
-              src={selectedWeatherAsset}
-              alt=""
-              aria-hidden="true"
-            />
-
-            <img
-              className="hero-scene-plant"
-              src={stillAssets.plants.pinkBlossoms}
-              alt=""
-              aria-hidden="true"
-            />
-
-            <span
-              className="hero-scene-sparkle sparkle-one"
-              aria-hidden="true"
-            >
-              ✦
-            </span>
-
-            <span
-              className="hero-scene-sparkle sparkle-two"
-              aria-hidden="true"
-            >
-              ✧
-            </span>
-
-            <img
-              className="hero-main-art hero-main-art-v2"
-              src={theme.heroAsset}
-              alt={theme.heroAlt}
-            />
-          </div>
+        <img className="hero-v3-plant" src={stillAssets.plants.yellowBlossomsCreamPot} alt="" aria-hidden="true" />
+        <img
+          className="hero-v3-art"
+          src={cloudCompanionArt}
+          alt="A fluffy cloud companion enjoying a warm coffee"
+        />
+        <img className="hero-v3-grass" src={stillAssets.nature.flowers} alt="" aria-hidden="true" />
+        <button
+          className={`hero-v3-weather weather-status-${weatherStatus}`}
+          type="button"
+          onClick={() => refreshWeatherFromLocation(true)}
+          aria-busy={weatherStatus === 'requesting'}
+          aria-label="Use my location for automatic weather"
+        >
+          <img src={selectedWeatherAsset} alt="" aria-hidden="true" />
+          <strong>{weatherHeadline}</strong>
+        </button>
       </section>
 
       <section className="section section-v2">
