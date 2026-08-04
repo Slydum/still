@@ -4,6 +4,8 @@ import { getLocalDateKey, type OccasionKey, type WeatherKey } from '../theme/sti
 
 export type TaskPriority = 'low' | 'medium' | 'high';
 export type TaskRepeat = 'none' | 'daily' | 'weekly' | 'monthly';
+export type EventCategory = 'personal' | 'work' | 'health' | 'love' | 'money';
+export type EventRepeat = TaskRepeat;
 
 export type StillTask = {
   id: string;
@@ -24,13 +26,44 @@ export type TaskInput = Pick<
   'title' | 'note' | 'dueDate' | 'priority' | 'repeat'
 >;
 
-type QuickAddMode = 'menu' | 'task';
+export type StillEvent = {
+  id: string;
+  title: string;
+  note?: string;
+  category: EventCategory;
+  startDate: string;
+  endDate: string;
+  allDay: boolean;
+  startTime?: string;
+  endTime?: string;
+  repeat: EventRepeat;
+  createdAt: number;
+  updatedAt: number;
+};
+
+export type EventInput = Pick<
+  StillEvent,
+  | 'title'
+  | 'note'
+  | 'category'
+  | 'startDate'
+  | 'endDate'
+  | 'allDay'
+  | 'startTime'
+  | 'endTime'
+  | 'repeat'
+>;
+
+type QuickAddMode = 'menu' | 'task' | 'event';
 
 type AppState = {
   quickAddOpen: boolean;
   quickAddMode: QuickAddMode;
   editingTaskId?: string;
+  editingEventId?: string;
+  eventDraftDate?: string;
   tasks: StillTask[];
+  events: StillEvent[];
   name: string;
   mood?: number;
   energy?: number;
@@ -39,11 +72,15 @@ type AppState = {
   occasion?: OccasionKey;
   openQuickAdd: () => void;
   openTaskEditor: (taskId?: string) => void;
+  openEventEditor: (eventId?: string, initialDate?: string) => void;
   closeQuickAdd: () => void;
   addTask: (input: TaskInput) => void;
   updateTask: (id: string, input: TaskInput) => void;
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
+  addEvent: (input: EventInput) => void;
+  updateEvent: (id: string, input: EventInput) => void;
+  deleteEvent: (id: string) => void;
   setName: (value: string) => void;
   setMood: (value: number) => void;
   setEnergy: (value: number) => void;
@@ -83,28 +120,63 @@ function normalizedTaskInput(input: TaskInput): TaskInput {
   };
 }
 
+function normalizedEventInput(input: EventInput): EventInput {
+  const startDate = input.startDate || getLocalDateKey();
+  const endDate = input.endDate && input.endDate >= startDate
+    ? input.endDate
+    : startDate;
+
+  return {
+    title: input.title.trim(),
+    note: input.note?.trim() || undefined,
+    category: input.category,
+    startDate,
+    endDate,
+    allDay: input.allDay,
+    startTime: input.allDay ? undefined : input.startTime || '09:00',
+    endTime: input.allDay ? undefined : input.endTime || '10:00',
+    repeat: input.repeat,
+  };
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       quickAddOpen: false,
       quickAddMode: 'menu',
       editingTaskId: undefined,
+      editingEventId: undefined,
+      eventDraftDate: undefined,
       tasks: [],
+      events: [],
       name: 'Tien',
       openQuickAdd: () => set({
         quickAddOpen: true,
         quickAddMode: 'menu',
         editingTaskId: undefined,
+        editingEventId: undefined,
+        eventDraftDate: undefined,
       }),
       openTaskEditor: (editingTaskId) => set({
         quickAddOpen: true,
         quickAddMode: 'task',
         editingTaskId,
+        editingEventId: undefined,
+        eventDraftDate: undefined,
+      }),
+      openEventEditor: (editingEventId, eventDraftDate) => set({
+        quickAddOpen: true,
+        quickAddMode: 'event',
+        editingTaskId: undefined,
+        editingEventId,
+        eventDraftDate,
       }),
       closeQuickAdd: () => set({
         quickAddOpen: false,
         quickAddMode: 'menu',
         editingTaskId: undefined,
+        editingEventId: undefined,
+        eventDraftDate: undefined,
       }),
       addTask: (input) => set((state) => {
         const now = Date.now();
@@ -172,6 +244,36 @@ export const useAppStore = create<AppState>()(
       deleteTask: (id) => set((state) => ({
         tasks: state.tasks.filter((task) => task.id !== id),
       })),
+      addEvent: (input) => set((state) => {
+        const normalized = normalizedEventInput(input);
+        if (!normalized.title) return state;
+
+        const now = Date.now();
+        return {
+          events: [
+            ...state.events,
+            {
+              id: createTaskId(),
+              ...normalized,
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+        };
+      }),
+      updateEvent: (id, input) => set((state) => {
+        const normalized = normalizedEventInput(input);
+        if (!normalized.title) return state;
+
+        return {
+          events: state.events.map((event) => event.id === id
+            ? { ...event, ...normalized, updatedAt: Date.now() }
+            : event),
+        };
+      }),
+      deleteEvent: (id) => set((state) => ({
+        events: state.events.filter((event) => event.id !== id),
+      })),
       setName: (name) => set({ name }),
       setMood: (mood) => set((state) => {
         const today = getLocalDateKey();
@@ -204,6 +306,7 @@ export const useAppStore = create<AppState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         tasks: state.tasks,
+        events: state.events,
         name: state.name,
         mood: state.mood,
         energy: state.energy,
