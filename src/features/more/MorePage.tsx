@@ -1,6 +1,7 @@
 import {
   Bell,
   Check,
+  Clock3,
   Download,
   Info,
   MapPin,
@@ -40,6 +41,16 @@ export function MorePage() {
   const setReduceMotion = useAppStore((state) => state.setReduceMotion);
   const notificationsEnabled = useAppStore((state) => state.notificationsEnabled);
   const setNotificationsEnabled = useAppStore((state) => state.setNotificationsEnabled);
+  const taskReminders = useAppStore((state) => state.taskReminders);
+  const setTaskReminders = useAppStore((state) => state.setTaskReminders);
+  const eventReminders = useAppStore((state) => state.eventReminders);
+  const setEventReminders = useAppStore((state) => state.setEventReminders);
+  const dailyCheckInReminder = useAppStore((state) => state.dailyCheckInReminder);
+  const setDailyCheckInReminder = useAppStore((state) => state.setDailyCheckInReminder);
+  const reminderTime = useAppStore((state) => state.reminderTime);
+  const setReminderTime = useAppStore((state) => state.setReminderTime);
+  const eventReminderMinutes = useAppStore((state) => state.eventReminderMinutes);
+  const setEventReminderMinutes = useAppStore((state) => state.setEventReminderMinutes);
   const autoWeather = useAppStore((state) => state.autoWeather);
   const setAutoWeather = useAppStore((state) => state.setAutoWeather);
   const weather = useAppStore((state) => state.weather);
@@ -91,6 +102,20 @@ export function MorePage() {
     }
   };
 
+  const sendTestNotification = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification('A quiet hello from Still', { body: 'Your reminders are working.', tag: 'still-test' });
+      } else {
+        new Notification('A quiet hello from Still', { body: 'Your reminders are working.', tag: 'still-test' });
+      }
+      setNotificationMessage('Test reminder sent.');
+    } catch {
+      setNotificationMessage('This browser could not display the test reminder.');
+    }
+  };
+
   const updateWeatherPreference = (enabled: boolean) => {
     setAutoWeather(enabled);
     if (!enabled) {
@@ -114,6 +139,11 @@ export function MorePage() {
         appearanceTone: state.appearanceTone,
         reduceMotion: state.reduceMotion,
         notificationsEnabled: state.notificationsEnabled,
+        taskReminders: state.taskReminders,
+        eventReminders: state.eventReminders,
+        dailyCheckInReminder: state.dailyCheckInReminder,
+        reminderTime: state.reminderTime,
+        eventReminderMinutes: state.eventReminderMinutes,
         autoWeather: state.autoWeather,
       },
       tasks: state.tasks,
@@ -136,6 +166,7 @@ export function MorePage() {
     await stillDb.delete();
     window.localStorage.removeItem('still-app-state-v1');
     window.localStorage.removeItem(LOCATION_WEATHER_KEY);
+    window.localStorage.removeItem('still-sent-reminders-v1');
     window.location.reload();
   };
 
@@ -174,7 +205,20 @@ export function MorePage() {
         <div className="settings-section-heading"><span><Bell size={19} /></span><div><h2 id="notification-settings-title">Notifications</h2><p>Control whether Still may send gentle browser reminders.</p></div></div>
         <div className="card settings-card">
           <div className="settings-action-row"><span><strong>Browser notifications</strong><small>Permission: {notificationPermission}</small></span>{notificationsEnabled ? <button className="settings-secondary-action" onClick={() => setNotificationsEnabled(false)} type="button">Turn off</button> : <button className="settings-primary-action" onClick={() => void enableNotifications()} type="button">Enable</button>}</div>
+          {notificationsEnabled && <>
+            <div className="settings-reminder-options">
+              <SettingToggle checked={taskReminders} label="Task reminders" description="Remind me about unfinished tasks due today." onChange={setTaskReminders} />
+              <SettingToggle checked={eventReminders} label="Event reminders" description="Alert me shortly before timed calendar events." onChange={setEventReminders} />
+              <SettingToggle checked={dailyCheckInReminder} label="Daily check-in" description="A gentle reminder when I have not checked in yet." onChange={setDailyCheckInReminder} />
+            </div>
+            <div className="settings-reminder-fields">
+              <label><span><Clock3 size={15} /> Daily reminder time</span><input aria-label="Daily reminder time" onChange={(event) => setReminderTime(event.target.value)} type="time" value={reminderTime} /></label>
+              <label><span>Event notice</span><select aria-label="Event reminder lead time" onChange={(event) => setEventReminderMinutes(Number(event.target.value))} value={eventReminderMinutes}><option value={10}>10 minutes before</option><option value={30}>30 minutes before</option><option value={60}>1 hour before</option></select></label>
+            </div>
+            <button className="settings-test-notification" onClick={() => void sendTestNotification()} type="button">Send a test reminder</button>
+          </>}
           {notificationMessage && <p className="settings-message" role="status">{notificationMessage}</p>}
+          <p className="settings-footnote">Reminders work while Still is open or running in the background. A fully closed browser cannot receive local reminders without an online push service.</p>
         </div>
       </section>
 
