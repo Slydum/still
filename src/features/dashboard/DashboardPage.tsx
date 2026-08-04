@@ -1,12 +1,12 @@
 import { format } from 'date-fns';
 import { Bell, BriefcaseBusiness, CalendarDays, Heart, MapPin, Sparkles, WalletCards } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getSecondaryQuote } from '../../content/quoteEngine';
 import { saveCheckIn } from '../../data/stillDb';
 import { useDailyQuote } from '../../hooks/useDailyQuote';
 import { useAppStore } from '../../stores/useAppStore';
 import { stillAssets } from '../../theme/stillAssets';
-import { createStillContext, getGreeting, type WeatherKey } from '../../theme/stillContext';
+import { createStillContext, getGreeting, getLocalDateKey, type WeatherKey } from '../../theme/stillContext';
 import { buildStillTheme } from '../../theme/themeEngine';
 
 const priorities = [
@@ -113,8 +113,9 @@ function useCurrentTime() {
 }
 
 export function DashboardPage() {
-  const mood = useAppStore((state) => state.mood);
-  const energy = useAppStore((state) => state.energy);
+  const storedMood = useAppStore((state) => state.mood);
+  const storedEnergy = useAppStore((state) => state.energy);
+  const checkInDate = useAppStore((state) => state.checkInDate);
   const weather = useAppStore((state) => state.weather);
   const occasion = useAppStore((state) => state.occasion);
   const setMood = useAppStore((state) => state.setMood);
@@ -126,8 +127,12 @@ export function DashboardPage() {
     useState<WeatherStatus>('idle');
   const [temperature, setTemperature] =
     useState<number | null>(null);
+  const requestedLocationWeather = useRef(false);
 
   const now = useCurrentTime();
+  const isTodaysCheckIn = checkInDate === getLocalDateKey(now);
+  const mood = isTodaysCheckIn ? storedMood : undefined;
+  const energy = isTodaysCheckIn ? storedEnergy : undefined;
 
   const selectedWeather =
     weatherOptions.find((option) => option.value === (weather ?? '')) ??
@@ -242,6 +247,11 @@ export function DashboardPage() {
   );
 
   useEffect(() => {
+    // React Strict Mode replays effects in development. Avoid issuing two
+    // simultaneous geolocation prompts and weather requests during that replay.
+    if (requestedLocationWeather.current) return;
+    requestedLocationWeather.current = true;
+
     const locationWeatherEnabled =
       window.localStorage.getItem(
         LOCATION_WEATHER_KEY,

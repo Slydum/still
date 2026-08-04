@@ -19,7 +19,10 @@ function hashString(value: string) {
     hash = (hash << 5) - hash + value.charCodeAt(index);
     hash |= 0;
   }
-  return Math.abs(hash);
+  // Convert to an unsigned integer rather than using Math.abs. The absolute
+  // value of the smallest signed 32-bit integer is still outside the positive
+  // signed range, which could otherwise produce a negative array index.
+  return hash >>> 0;
 }
 
 function pick<T>(items: readonly T[], seed: string): T {

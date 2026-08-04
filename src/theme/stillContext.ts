@@ -1,4 +1,4 @@
-export type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night' | 'night';
+export type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
 export type MoodKey = 'sad' | 'overwhelmed' | 'okay' | 'good' | 'loved';
 export type EnergyKey = 'empty' | 'low' | 'steady' | 'bright' | 'full';
 export type WeatherKey =
