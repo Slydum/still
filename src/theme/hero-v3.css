@@ -1,6 +1,6 @@
 /* Still hero v3 — warm morning companion card */
 
-.hero-v3 {
+.hero.hero-v3 {
   display: block;
   min-height: 470px;
   padding: 30px 26px 76px;
@@ -127,7 +127,7 @@
 }
 
 @media (min-width: 620px) {
-  .hero-v3 {
+  .hero.hero-v3 {
     min-height: 480px;
     padding: 36px 40px 84px;
   }
