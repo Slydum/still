@@ -55,6 +55,7 @@ export type EventInput = Pick<
 >;
 
 export type JournalMood = 1 | 2 | 3 | 4 | 5;
+export type AppearanceTone = 'lavender' | 'warm' | 'sage';
 
 export type JournalEntry = {
   id: string;
@@ -91,6 +92,10 @@ type AppState = {
   checkInDate?: string;
   weather?: WeatherKey;
   occasion?: OccasionKey;
+  appearanceTone: AppearanceTone;
+  reduceMotion: boolean;
+  notificationsEnabled: boolean;
+  autoWeather: boolean;
   openQuickAdd: () => void;
   openTaskEditor: (taskId?: string) => void;
   openEventEditor: (eventId?: string, initialDate?: string) => void;
@@ -112,6 +117,10 @@ type AppState = {
   replaceTodayCheckIn: (mood?: number, energy?: number) => void;
   setWeather: (value?: WeatherKey) => void;
   setOccasion: (value?: OccasionKey) => void;
+  setAppearanceTone: (value: AppearanceTone) => void;
+  setReduceMotion: (value: boolean) => void;
+  setNotificationsEnabled: (value: boolean) => void;
+  setAutoWeather: (value: boolean) => void;
   hydrateForToday: () => void;
 };
 
@@ -189,6 +198,10 @@ export const useAppStore = create<AppState>()(
       events: [],
       journalEntries: [],
       name: 'Tien',
+      appearanceTone: 'lavender',
+      reduceMotion: false,
+      notificationsEnabled: false,
+      autoWeather: true,
       openQuickAdd: () => set({
         quickAddOpen: true,
         quickAddMode: 'menu',
@@ -384,6 +397,10 @@ export const useAppStore = create<AppState>()(
       }),
       setWeather: (weather) => set({ weather }),
       setOccasion: (occasion) => set({ occasion }),
+      setAppearanceTone: (appearanceTone) => set({ appearanceTone }),
+      setReduceMotion: (reduceMotion) => set({ reduceMotion }),
+      setNotificationsEnabled: (notificationsEnabled) => set({ notificationsEnabled }),
+      setAutoWeather: (autoWeather) => set({ autoWeather }),
       hydrateForToday: () => {
         const today = getLocalDateKey();
         const { checkInDate, mood, energy } = get();
@@ -405,6 +422,10 @@ export const useAppStore = create<AppState>()(
         checkInDate: state.checkInDate,
         weather: state.weather,
         occasion: state.occasion,
+        appearanceTone: state.appearanceTone,
+        reduceMotion: state.reduceMotion,
+        notificationsEnabled: state.notificationsEnabled,
+        autoWeather: state.autoWeather,
       }),
     },
   ),
