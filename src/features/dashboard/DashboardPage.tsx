@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getSecondaryQuote } from '../../content/quoteEngine';
 import { saveCheckIn } from '../../data/stillDb';
 import { useDailyQuote } from '../../hooks/useDailyQuote';
@@ -165,6 +166,7 @@ function taskDueLabel(dueDate: string, today: string) {
 }
 
 export function DashboardPage() {
+  const navigate = useNavigate();
   const storedMood = useAppStore((state) => state.mood);
   const storedEnergy = useAppStore((state) => state.energy);
   const checkInDate = useAppStore((state) => state.checkInDate);
@@ -433,7 +435,7 @@ export function DashboardPage() {
       <section className="section section-v2">
         <div className="section-head compact-head">
           <div><p className="section-kicker">How are you?</p></div>
-          <button className="link-btn" type="button">View history</button>
+          <button className="link-btn" onClick={() => navigate('/check-ins')} type="button">View history</button>
         </div>
 
         <article className="card checkin-combined-card surface-checkin">
