@@ -29,7 +29,6 @@
   z-index: 0;
   object-fit: cover;
   object-position: center;
-  animation: hero-scene-fade 360ms ease-out both;
 }
 
 .hero-v3-scrim {
@@ -95,7 +94,11 @@
   font-size: clamp(34px, 9.2vw, 43px);
   line-height: 1.06;
   letter-spacing: -0.9px;
-  text-wrap: balance;
+}
+
+.hero-v3-title-line {
+  display: block;
+  white-space: nowrap;
 }
 
 .hero-v3-sun {
@@ -146,8 +149,8 @@
   margin: 0;
   object-fit: contain;
   object-position: right bottom;
+  pointer-events: none;
   filter: drop-shadow(0 14px 15px rgba(75, 64, 88, 0.17));
-  animation: breathe 4s ease-in-out infinite;
 }
 
 .hero-v3-art.companion-umbrella,
@@ -200,14 +203,9 @@
   white-space: nowrap;
 }
 
-@keyframes hero-scene-fade {
-  from { opacity: 0; transform: scale(1.015); }
-  to { opacity: 1; transform: scale(1); }
-}
-
 @media (min-width: 620px) {
   .hero.hero-v3 {
-    min-height: 440px;
+    min-height: 400px;
   }
 
   .hero-v3-copy {
@@ -218,8 +216,8 @@
   }
 
   .hero-v3 h1 {
-    margin-bottom: 20px;
-    font-size: 50px;
+    margin-bottom: 17px;
+    font-size: 46px;
   }
 
   .hero-v3-quote {
@@ -228,20 +226,21 @@
   }
 
   .hero-v3-art {
-    right: 22px;
-    bottom: 56px;
-    width: 49%;
-    height: 62%;
+    right: 26px;
+    bottom: 24px;
+    width: 45%;
+    height: 57%;
   }
 
   .hero-v3-art.companion-umbrella,
   .hero-v3-art.companion-sleeping {
-    width: 52%;
-    height: 66%;
+    right: 16px;
+    width: 48%;
+    height: 61%;
   }
 
   .hero-v3-weather {
-    left: 30px;
+    left: 38px;
     bottom: 22px;
     max-width: 46%;
     font-size: 15px;
@@ -295,8 +294,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .hero-v3-scene,
-  .hero-v3-art {
+  .hero-v3-art,
+  .hero-v3-weather {
     animation: none !important;
+    transition: none !important;
   }
 }
-
