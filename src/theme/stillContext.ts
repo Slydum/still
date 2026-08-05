@@ -1,6 +1,13 @@
+import {
+  getCheckInEnergy,
+  getCheckInMood,
+  type CheckInEnergyKey,
+  type CheckInMoodKey,
+} from '../features/check-ins/checkInScale';
+
 export type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
-export type MoodKey = 'sad' | 'overwhelmed' | 'okay' | 'good' | 'loved';
-export type EnergyKey = 'empty' | 'low' | 'steady' | 'bright' | 'full';
+export type MoodKey = CheckInMoodKey;
+export type EnergyKey = CheckInEnergyKey;
 export type WeatherKey =
   | 'partly-sunny'
   | 'cloudy'
@@ -28,22 +35,6 @@ export type StillContext = {
   energy?: EnergyKey;
   weather?: WeatherKey;
   occasion?: OccasionKey;
-};
-
-const moodMap: Record<number, MoodKey> = {
-  1: 'sad',
-  2: 'overwhelmed',
-  3: 'okay',
-  4: 'good',
-  5: 'loved',
-};
-
-const energyMap: Record<number, EnergyKey> = {
-  1: 'empty',
-  2: 'low',
-  3: 'steady',
-  4: 'bright',
-  5: 'full',
 };
 
 export function getLocalDateKey(date = new Date()) {
@@ -98,8 +89,8 @@ export function createStillContext({
   return {
     dateKey: getLocalDateKey(date),
     timeOfDay: getTimeOfDay(date),
-    mood: mood ? moodMap[mood] : undefined,
-    energy: energy ? energyMap[energy] : undefined,
+    mood: getCheckInMood(mood)?.key,
+    energy: getCheckInEnergy(energy)?.key,
     weather,
     occasion: getOccasion(date, occasion),
   };
