@@ -9,5 +9,11 @@
     "rootDir": ".",
     "types": []
   },
-  "include": ["src/domain/**/*.ts", "tests/**/*.ts", "tests/**/*.d.ts"]
+  "include": [
+    "src/domain/**/*.ts",
+    "src/data/cloudSyncCore.ts",
+    "src/data/repositories/**/*.ts",
+    "tests/**/*.ts",
+    "tests/**/*.d.ts"
+  ]
 }

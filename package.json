@@ -11,6 +11,7 @@
     "test": "rm -rf .tmp/tests && tsc -p tsconfig.test.json && find .tmp/tests/src -name '*.js' -exec sh -c 'cp \"$1\" \"${1%.js}\"' sh {} \\; && node --test .tmp/tests/tests/**/*.test.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.111.0",
     "@vitejs/plugin-react": "latest",
     "date-fns": "latest",
     "dexie": "latest",

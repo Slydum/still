@@ -7,6 +7,7 @@ import type {
   StillTask,
 } from '../../stores/useAppStore';
 import type { CheckInRecord } from '../records';
+import type { CollectionChanges } from './recordChanges';
 
 export const PERMANENT_DATA_SCHEMA_VERSION = 1;
 export const LOCAL_DEVICE_USER_ID = 'local-device';
@@ -43,14 +44,16 @@ export interface StillRepository {
   bootstrap(cache: PermanentDataCache): Promise<PermanentDataSnapshot>;
   load(): Promise<PermanentDataSnapshot>;
 
-  syncTasks(records: StillTask[]): Promise<void>;
-  syncEvents(records: StillEvent[]): Promise<void>;
-  syncJournalEntries(records: JournalEntry[]): Promise<void>;
-  syncExpenses(records: StillExpense[]): Promise<void>;
-  syncEntityLinks(records: LifeEntityLink[]): Promise<void>;
-  syncWorkShifts(records: WorkShift[]): Promise<void>;
+  persistTasks(changes: CollectionChanges<StillTask>): Promise<void>;
+  persistEvents(changes: CollectionChanges<StillEvent>): Promise<void>;
+  persistJournalEntries(changes: CollectionChanges<JournalEntry>): Promise<void>;
+  persistExpenses(changes: CollectionChanges<StillExpense>): Promise<void>;
+  persistEntityLinks(changes: CollectionChanges<LifeEntityLink>): Promise<void>;
+  persistWorkShifts(changes: CollectionChanges<WorkShift>): Promise<void>;
 
   listCheckIns(): Promise<CheckInRecord[]>;
   saveCheckIn(record: CheckInRecord): Promise<void>;
   deleteCheckIn(date: string): Promise<void>;
 }
+
+export type { CollectionChanges } from './recordChanges';

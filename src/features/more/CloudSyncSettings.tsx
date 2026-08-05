@@ -8,6 +8,7 @@ import {
 import { synchronizeCloudData } from '../../data/cloudSync';
 import {
   getCloudSession,
+  getSupabaseConfigurationError,
   isSupabaseAvailable,
   requestCloudMagicLink,
   signOutCloud,
@@ -55,7 +56,16 @@ export function CloudSyncSettings() {
 
   useEffect(() => {
     let disposed = false;
-    setAvailable(isSupabaseAvailable());
+    const cloudAvailable = isSupabaseAvailable();
+    setAvailable(cloudAvailable);
+
+    if (!cloudAvailable) {
+      setMessage(getSupabaseConfigurationError() ?? 'Cloud sync could not load.');
+      setLoading(false);
+      return () => {
+        disposed = true;
+      };
+    }
 
     const initialize = async () => {
       try {
@@ -127,7 +137,7 @@ export function CloudSyncSettings() {
       <div className="card settings-card">
         {!available ? (
           <p className="settings-message" role="status">
-            Cloud sync could not load. Check your connection, then reopen Still.
+            {message || 'Cloud sync is not configured for this deployment.'}
           </p>
         ) : session ? (
           <>
@@ -174,7 +184,7 @@ export function CloudSyncSettings() {
           </form>
         )}
 
-        {message && <p className="settings-message" role="status">{message}</p>}
+        {available && message && <p className="settings-message" role="status">{message}</p>}
         <p className="settings-footnote">
           Cloud sync is optional. Still keeps an offline copy on this device and only lets the signed-in account access its rows.
         </p>

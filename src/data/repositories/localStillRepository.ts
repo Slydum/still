@@ -9,7 +9,8 @@ import type {
 } from '../../stores/useAppStore';
 import { stillDb, withCheckInSyncMetadata } from '../localDb';
 import type { CheckInRecord } from '../records';
-import { activeRecords, reconcileCollection } from './reconcile';
+import { activeRecords, addSyncMetadata, reconcileCollection } from './reconcile';
+import type { CollectionChanges } from './recordChanges';
 import {
   PERMANENT_DATA_SCHEMA_VERSION,
   type PermanentDataCache,
@@ -27,21 +28,64 @@ type RepositoryEntity = {
   createdAt?: number;
 };
 
-async function syncTable<T extends RepositoryEntity>(
-  table: Table<SyncedRecord<T>, string>,
-  records: T[],
-) {
-  const existing = await table.toArray();
-  const reconciled = reconcileCollection(existing, records);
-  await table.bulkPut(reconciled);
-}
-
 async function seedTable<T extends RepositoryEntity>(
   table: Table<SyncedRecord<T>, string>,
   records: T[],
 ) {
   if (!records.length || await table.count() > 0) return;
   await table.bulkPut(reconcileCollection([], records));
+}
+
+async function persistTableChanges<T extends RepositoryEntity>(
+  table: Table<SyncedRecord<T>, string>,
+  changes: CollectionChanges<T>,
+) {
+  if (!changes.upserts.length && !changes.deletedIds.length) return;
+
+  const ids = [...new Set([
+    ...changes.upserts.map((record) => record.id),
+    ...changes.deletedIds,
+  ])];
+  const existingRows = await table.bulkGet(ids);
+  const existingById = new Map(
+    ids.flatMap((id, index) => {
+      const record = existingRows[index];
+      return record ? [[id, record] as const] : [];
+    }),
+  );
+
+  const upserts = changes.upserts.map((record) => {
+    const existing = existingById.get(record.id);
+    const candidate = addSyncMetadata(record, existing);
+
+    if (
+      existing
+      && (
+        existing.updatedAt > candidate.updatedAt
+        || (existing.updatedAt === candidate.updatedAt && existing.deletedAt)
+      )
+    ) {
+      return existing;
+    }
+
+    return candidate;
+  });
+
+  const now = Date.now();
+  const tombstones = changes.deletedIds.flatMap((id) => {
+    const existing = existingById.get(id);
+    if (!existing) return [];
+    if (existing.deletedAt) return [existing];
+
+    const deletedAt = Math.max(now, existing.updatedAt);
+    return [{
+      ...existing,
+      updatedAt: deletedAt,
+      deletedAt,
+    }];
+  });
+
+  await table.bulkPut([...upserts, ...tombstones]);
 }
 
 function stripCheckInMetadata(record: SyncedCheckInRecord): CheckInRecord {
@@ -122,28 +166,28 @@ export class LocalStillRepository implements StillRepository {
     };
   }
 
-  syncTasks(records: StillTask[]) {
-    return syncTable(stillDb.tasks, records);
+  persistTasks(changes: CollectionChanges<StillTask>) {
+    return persistTableChanges(stillDb.tasks, changes);
   }
 
-  syncEvents(records: StillEvent[]) {
-    return syncTable(stillDb.events, records);
+  persistEvents(changes: CollectionChanges<StillEvent>) {
+    return persistTableChanges(stillDb.events, changes);
   }
 
-  syncJournalEntries(records: JournalEntry[]) {
-    return syncTable(stillDb.journalEntries, records);
+  persistJournalEntries(changes: CollectionChanges<JournalEntry>) {
+    return persistTableChanges(stillDb.journalEntries, changes);
   }
 
-  syncExpenses(records: StillExpense[]) {
-    return syncTable(stillDb.expenses, records);
+  persistExpenses(changes: CollectionChanges<StillExpense>) {
+    return persistTableChanges(stillDb.expenses, changes);
   }
 
-  syncEntityLinks(records: LifeEntityLink[]) {
-    return syncTable(stillDb.entityLinks, records);
+  persistEntityLinks(changes: CollectionChanges<LifeEntityLink>) {
+    return persistTableChanges(stillDb.entityLinks, changes);
   }
 
-  syncWorkShifts(records: WorkShift[]) {
-    return syncTable(stillDb.workShifts, records);
+  persistWorkShifts(changes: CollectionChanges<WorkShift>) {
+    return persistTableChanges(stillDb.workShifts, changes);
   }
 
   async listCheckIns() {

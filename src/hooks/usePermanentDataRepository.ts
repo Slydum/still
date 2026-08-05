@@ -1,5 +1,11 @@
 import { useEffect } from 'react';
 import { stillRepository, type PermanentDataCache } from '../data/repositories';
+import {
+  diffCollectionChanges,
+  hasCollectionChanges,
+  type CollectionChanges,
+  type IdentifiedVersionedRecord,
+} from '../data/repositories/recordChanges';
 import { useAppStore } from '../stores/useAppStore';
 
 let bootstrapPromise: ReturnType<typeof stillRepository.bootstrap> | undefined;
@@ -30,6 +36,15 @@ export function usePermanentDataRepository() {
       writeQueue = writeQueue.then(write).catch(reportRepositoryError);
     };
 
+    const persistCollection = <T extends IdentifiedVersionedRecord>(
+      previous: T[],
+      next: T[],
+      persist: (changes: CollectionChanges<T>) => Promise<void>,
+    ) => {
+      const changes = diffCollectionChanges(previous, next);
+      if (hasCollectionChanges(changes)) enqueue(() => persist(changes));
+    };
+
     const start = async () => {
       bootstrapPromise ??= stillRepository.bootstrap(cacheFromStore());
       const snapshot = await bootstrapPromise;
@@ -46,22 +61,34 @@ export function usePermanentDataRepository() {
 
       unsubscribe = useAppStore.subscribe((state, previousState) => {
         if (state.tasks !== previousState.tasks) {
-          enqueue(() => stillRepository.syncTasks(state.tasks));
+          persistCollection(previousState.tasks, state.tasks, (changes) => stillRepository.persistTasks(changes));
         }
         if (state.events !== previousState.events) {
-          enqueue(() => stillRepository.syncEvents(state.events));
+          persistCollection(previousState.events, state.events, (changes) => stillRepository.persistEvents(changes));
         }
         if (state.journalEntries !== previousState.journalEntries) {
-          enqueue(() => stillRepository.syncJournalEntries(state.journalEntries));
+          persistCollection(
+            previousState.journalEntries,
+            state.journalEntries,
+            (changes) => stillRepository.persistJournalEntries(changes),
+          );
         }
         if (state.expenses !== previousState.expenses) {
-          enqueue(() => stillRepository.syncExpenses(state.expenses));
+          persistCollection(previousState.expenses, state.expenses, (changes) => stillRepository.persistExpenses(changes));
         }
         if (state.entityLinks !== previousState.entityLinks) {
-          enqueue(() => stillRepository.syncEntityLinks(state.entityLinks));
+          persistCollection(
+            previousState.entityLinks,
+            state.entityLinks,
+            (changes) => stillRepository.persistEntityLinks(changes),
+          );
         }
         if (state.workShifts !== previousState.workShifts) {
-          enqueue(() => stillRepository.syncWorkShifts(state.workShifts));
+          persistCollection(
+            previousState.workShifts,
+            state.workShifts,
+            (changes) => stillRepository.persistWorkShifts(changes),
+          );
         }
       });
     };
