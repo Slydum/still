@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
-import { selectUpliftingCheckInQuote } from '../../../content/quoteEngine';
-import { createStillContext } from '../../../theme/stillContext';
-import { energyLevels, journalMoods } from './quickAddOptions';
+import {
+  checkInEnergyOptions,
+  checkInMoodOptions,
+  getCheckInAnswer,
+} from '../../../features/check-ins/checkInScale';
 
 type CompletedCheckIn = {
   mood: number;
@@ -25,13 +27,7 @@ export function CheckInEditor({
 
   const resultQuote = useMemo(() => {
     if (!completedCheckIn) return undefined;
-
-    const context = createStillContext({
-      mood: completedCheckIn.mood,
-      energy: completedCheckIn.energy,
-    });
-
-    return selectUpliftingCheckInQuote(context);
+    return getCheckInAnswer(completedCheckIn.mood, completedCheckIn.energy);
   }, [completedCheckIn]);
 
   const chooseMood = (value: number) => {
@@ -69,7 +65,7 @@ export function CheckInEditor({
       <fieldset className="journal-mood-field">
         <legend>Mood</legend>
         <div className="journal-mood-options">
-          {journalMoods.map((option) => (
+          {checkInMoodOptions.map((option) => (
             <button aria-label={option.label} aria-pressed={mood === option.value} className={mood === option.value ? 'is-selected' : ''} key={option.value} onClick={() => chooseMood(option.value)} type="button">
               <span>{option.emoji}</span>
               <small>{option.label}</small>
@@ -80,7 +76,7 @@ export function CheckInEditor({
       <fieldset className="journal-mood-field">
         <legend>Energy</legend>
         <div className="journal-mood-options">
-          {energyLevels.map((option) => (
+          {checkInEnergyOptions.map((option) => (
             <button aria-label={option.label} aria-pressed={energy === option.value} className={energy === option.value ? 'is-selected' : ''} key={option.value} onClick={() => chooseEnergy(option.value)} type="button">
               <span>{option.emoji}</span>
               <small>{option.label}</small>
