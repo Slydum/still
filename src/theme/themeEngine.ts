@@ -1,4 +1,4 @@
-import { selectQuote } from '../content/quoteEngine';
+import { selectUpliftingCheckInQuote } from '../content/quoteEngine';
 import type { StillContext, WeatherKey } from './stillContext';
 import { stillAssets } from './stillAssets';
 
@@ -121,19 +121,7 @@ function checkInAsset(context: StillContext) {
 }
 
 function checkInMessage(context: StillContext) {
-  if (!context.mood || !context.energy) return '';
-
-  // The fifth check-in mood is displayed as “Excited”/“Bright” in the UI.
-  // Keep it in the positive mood bucket instead of returning relationship quotes.
-  const quoteContext: StillContext = context.mood === 'loved'
-    ? { ...context, mood: 'good' }
-    : context;
-
-  return selectQuote(
-    quoteContext,
-    [],
-    `${context.dateKey}:check-in:${context.mood}:${context.energy}`,
-  ).text;
+  return selectUpliftingCheckInQuote(context);
 }
 
 export function buildStillTheme(context: StillContext): StillTheme {
