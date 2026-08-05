@@ -13,6 +13,7 @@ import './theme/dashboard-hierarchy.css';
 import './theme/checkin-history.css';
 import './theme/journal-checkin-links';
 import './theme/checkin-reminder-navigation';
+import './theme/weekly-reflection';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
