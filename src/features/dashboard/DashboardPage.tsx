@@ -496,8 +496,8 @@ export function DashboardPage() {
                   : `${remainingTaskCount} ${remainingTaskCount === 1 ? 'task' : 'tasks'} left`}
               </p>
             </div>
-            <button className="task-add-button" onClick={() => openTaskEditor()} type="button">
-              <Plus size={17} /> Add task
+            <button className="btn btn-secondary btn-compact btn-equal" onClick={() => openTaskEditor()} type="button">
+              <Plus size={16} /> Add task
             </button>
           </div>
           <div className="focus-list">
@@ -538,10 +538,11 @@ export function DashboardPage() {
                     </div>
                   </div>
                   <div className="task-record-actions">
-                    <button onClick={() => openTaskEditor(task.id)} type="button" aria-label={`Edit ${task.title}`}>
+                    <button className="btn-icon" onClick={() => openTaskEditor(task.id)} type="button" aria-label={`Edit ${task.title}`}>
                       <Pencil size={15} />
                     </button>
                     <button
+                      className="btn-icon"
                       onClick={() => {
                         if (window.confirm(`Delete “${task.title}”?`)) deleteTask(task.id);
                       }}
@@ -561,8 +562,8 @@ export function DashboardPage() {
         <article className="card upcoming-card surface-upcoming">
           <div className="upcoming-heading">
             <p className="section-kicker">Coming up</p>
-            <button className="upcoming-add-button" onClick={() => openEventEditor()} type="button">
-              <Plus size={15} /> Event
+            <button className="btn btn-secondary btn-compact btn-equal" onClick={() => openEventEditor()} type="button">
+              <Plus size={16} /> Add event
             </button>
           </div>
           <div className="timeline">

@@ -82,7 +82,7 @@ export function CalendarPage() {
           <p className="subtle">A gentle view of what’s ahead.</p>
         </div>
         <button
-          className="calendar-primary-button"
+          className="btn"
           onClick={() => openEventEditor(undefined, selectedDate)}
           type="button"
         >
@@ -97,11 +97,11 @@ export function CalendarPage() {
             <span>{events.length} {events.length === 1 ? 'event' : 'events'} saved</span>
           </div>
           <div className="calendar-toolbar-actions">
-            <button onClick={() => chooseMonth(subMonths(visibleMonth, 1))} type="button" aria-label="Previous month">
+            <button className="btn-icon" onClick={() => chooseMonth(subMonths(visibleMonth, 1))} type="button" aria-label="Previous month">
               <ChevronLeft size={20} />
             </button>
-            <button className="calendar-today-button" onClick={goToToday} type="button">Today</button>
-            <button onClick={() => chooseMonth(addMonths(visibleMonth, 1))} type="button" aria-label="Next month">
+            <button className="btn btn-secondary btn-compact" onClick={goToToday} type="button">Today</button>
+            <button className="btn-icon" onClick={() => chooseMonth(addMonths(visibleMonth, 1))} type="button" aria-label="Next month">
               <ChevronRight size={20} />
             </button>
           </div>
@@ -147,7 +147,7 @@ export function CalendarPage() {
             <p className="section-kicker">Selected day</p>
             <h2 id="selected-day-title">{format(parseISO(selectedDate), 'EEEE, MMMM d')}</h2>
           </div>
-          <button className="link-btn" onClick={() => openEventEditor(undefined, selectedDate)} type="button">
+          <button className="btn btn-secondary btn-compact" onClick={() => openEventEditor(undefined, selectedDate)} type="button">
             <Plus size={16} /> Add here
           </button>
         </div>
@@ -179,10 +179,11 @@ export function CalendarPage() {
                     {event.note && <p>{event.note}</p>}
                   </div>
                   <div className="calendar-event-actions">
-                    <button onClick={() => openEventEditor(event.id)} type="button" aria-label={`Edit ${event.title}`}>
+                    <button className="btn-icon" onClick={() => openEventEditor(event.id)} type="button" aria-label={`Edit ${event.title}`}>
                       <Pencil size={16} />
                     </button>
                     <button
+                      className="btn-icon"
                       onClick={() => {
                         if (window.confirm(`Delete “${event.title}”?`)) deleteEvent(event.id);
                       }}

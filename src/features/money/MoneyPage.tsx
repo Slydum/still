@@ -48,7 +48,7 @@ export function MoneyPage() {
   return (
     <main className="shell checkin-history-page">
       <header className="checkin-history-header">
-        <button className="checkin-back-button" onClick={() => navigate('/')} type="button" aria-label="Back to Life"><ArrowLeft size={20} /></button>
+        <button className="checkin-back-button btn-icon" onClick={() => navigate('/')} type="button" aria-label="Back to Life"><ArrowLeft size={20} /></button>
         <div>
           <p className="section-kicker">Your spending</p>
           <h1>Money</h1>
@@ -82,7 +82,7 @@ export function MoneyPage() {
       <section className="checkin-history-list-section" aria-labelledby="money-list-title">
         <div className="checkin-list-heading">
           <div><p className="section-kicker">All expenses</p><h2 id="money-list-title">History</h2></div>
-          <button className="link-btn" onClick={() => openQuickAdd('expense')} type="button"><Plus size={16} /> Add expense</button>
+          <button className="btn btn-secondary btn-compact" onClick={() => openQuickAdd('expense')} type="button"><Plus size={16} /> Add expense</button>
         </div>
         {sorted.length === 0 ? (
           <button className="checkin-history-empty" onClick={() => openQuickAdd('expense')} type="button">
@@ -105,7 +105,7 @@ export function MoneyPage() {
                     </div>
                   </div>
                   <div className="checkin-record-actions">
-                    <button onClick={() => remove(expense)} type="button" aria-label={`Delete ${expense.title}`}><Trash2 size={16} /></button>
+                    <button className="btn-icon" onClick={() => remove(expense)} type="button" aria-label={`Delete ${expense.title}`}><Trash2 size={16} /></button>
                   </div>
                 </article>
               );

@@ -58,7 +58,7 @@ export function JournalPage() {
           <h1>Journal</h1>
           <p className="subtle">A quiet place for what you’re noticing.</p>
         </div>
-        <button className="journal-primary-button" onClick={() => openJournalEditor()} type="button">
+        <button className="btn" onClick={() => openJournalEditor()} type="button">
           <Plus size={18} /> New entry
         </button>
       </header>
@@ -69,7 +69,7 @@ export function JournalPage() {
           <p className="section-kicker" id="journal-prompt-title">Today’s prompt</p>
           <blockquote>{dailyPrompt}</blockquote>
         </div>
-        <button onClick={() => openJournalEditor(undefined, todayKey)} type="button">Write</button>
+        <button className="btn btn-secondary btn-compact" onClick={() => openJournalEditor(undefined, todayKey)} type="button">Write</button>
       </section>
 
       <section className="journal-history" aria-labelledby="journal-history-title">
@@ -119,10 +119,11 @@ export function JournalPage() {
                           )}
                         </div>
                         <div className="journal-entry-actions">
-                          <button onClick={() => openJournalEditor(entry.id)} type="button" aria-label={`Edit ${entry.title || 'journal entry'}`}>
+                          <button className="btn-icon" onClick={() => openJournalEditor(entry.id)} type="button" aria-label={`Edit ${entry.title || 'journal entry'}`}>
                             <Pencil size={16} />
                           </button>
                           <button
+                            className="btn-icon"
                             onClick={() => {
                               if (window.confirm('Delete this journal entry?')) deleteJournalEntry(entry.id);
                             }}
