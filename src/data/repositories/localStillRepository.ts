@@ -15,6 +15,7 @@ import {
   type PermanentDataCache,
   type PermanentDataSnapshot,
   type StillRepository,
+  type SyncedCheckInRecord,
   type SyncedRecord,
 } from './types';
 
@@ -43,7 +44,7 @@ async function seedTable<T extends RepositoryEntity>(
   await table.bulkPut(reconcileCollection([], records));
 }
 
-function stripCheckInMetadata(record: Awaited<ReturnType<typeof stillDb.checkIns.get>> extends infer Row ? NonNullable<Row> : never): CheckInRecord {
+function stripCheckInMetadata(record: SyncedCheckInRecord): CheckInRecord {
   const {
     userId: _userId,
     schemaVersion: _schemaVersion,
@@ -152,9 +153,10 @@ export class LocalStillRepository implements StillRepository {
 
   async saveCheckIn(record: CheckInRecord) {
     const existing = await stillDb.checkIns.get(record.date);
+    const syncedRecord = withCheckInSyncMetadata(record);
     await stillDb.checkIns.put({
-      ...withCheckInSyncMetadata(record),
-      userId: existing?.userId ?? withCheckInSyncMetadata(record).userId,
+      ...syncedRecord,
+      userId: existing?.userId ?? syncedRecord.userId,
       deletedAt: undefined,
     });
   }
