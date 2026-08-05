@@ -8,6 +8,13 @@ import {
   mergeByKey,
 } from '../../src/data/cloudSyncCore.js';
 
+type MergeFixture = {
+  id: string;
+  updatedAt: number;
+  title: string;
+  deletedAt?: number;
+};
+
 describe('cloud sync core', () => {
   it('batches large pushes without dropping records', () => {
     const rows = Array.from({ length: 501 }, (_, index) => index);
@@ -33,12 +40,17 @@ describe('cloud sync core', () => {
   });
 
   it('uses latest-write-wins and lets deletion win timestamp ties', () => {
-    const local = [{ id: 'one', updatedAt: 20, title: 'local' }];
-    const remote = [{ id: 'one', updatedAt: 30, title: 'remote' }];
+    const local: MergeFixture[] = [{ id: 'one', updatedAt: 20, title: 'local' }];
+    const remote: MergeFixture[] = [{ id: 'one', updatedAt: 30, title: 'remote' }];
     const latest = mergeByKey(local, remote, (record) => record.id);
     assert.equal(latest[0].title, 'remote');
 
-    const deletion = [{ id: 'one', updatedAt: 30, title: 'remote', deletedAt: 30 }];
+    const deletion: MergeFixture[] = [{
+      id: 'one',
+      updatedAt: 30,
+      title: 'remote',
+      deletedAt: 30,
+    }];
     const tied = mergeByKey(remote, deletion, (record) => record.id);
     assert.equal(tied[0].deletedAt, 30);
   });
