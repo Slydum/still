@@ -28,6 +28,10 @@ import {
 import { useAppStore } from '../../stores/useAppStore';
 import { stillAssets } from '../../theme/stillAssets';
 import { createStillContext, getLocalDateKey } from '../../theme/stillContext';
+import {
+  createCheckInJournalDraft,
+  setPendingJournalDraftContext,
+} from '../journal/journalDraftContext';
 
 const moodOptions = [
   { asset: stillAssets.checkIn.mood.sad, label: 'Sad' },
@@ -330,6 +334,9 @@ export function CheckInHistoryPage() {
   };
 
   const openJournalForRecord = (record: CheckInRecord) => {
+    if (!record.mood || !record.energy) return;
+    const answer = answerForRecord(record);
+    setPendingJournalDraftContext(createCheckInJournalDraft(answer, record.mood, record.energy));
     setFlippedDate(undefined);
     openJournalEditor(undefined, record.date);
   };
@@ -480,6 +487,7 @@ export function CheckInHistoryPage() {
                           onClick={() => openJournalForRecord(record)}
                           type="button"
                           tabIndex={flipped ? 0 : -1}
+                          disabled={!record.mood || !record.energy}
                         >
                           <BookOpen size={16} />
                           Let it out
