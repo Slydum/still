@@ -16,7 +16,7 @@ export function BottomNav() {
   const openQuickAdd = useAppStore((s) => s.openQuickAdd);
   return <nav className="bottom-nav" aria-label="Primary navigation">
     {items.map(({ label, path, icon: Icon }) => label === 'Add' ? (
-      <button key={label} className="nav-item" onClick={openQuickAdd} aria-label="Quick add" type="button"><span className="add-button"><Plus size={26} /></span><span>{label}</span></button>
+      <button key={label} className="nav-item" onClick={() => openQuickAdd()} aria-label="Quick add" type="button"><span className="add-button"><Plus size={26} /></span><span>{label}</span></button>
     ) : (
       <button key={label} className={`nav-item ${location.pathname === path ? 'active' : ''}`} onClick={() => navigate(path)} type="button"><Icon size={21} /><span>{label}</span></button>
     ))}
