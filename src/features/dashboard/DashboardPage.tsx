@@ -16,8 +16,13 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSecondaryQuote, selectUpliftingCheckInQuote } from '../../content/quoteEngine';
+import { getSecondaryQuote } from '../../content/quoteEngine';
 import { saveCheckIn } from '../../data/stillDb';
+import {
+  checkInEnergyOptions,
+  checkInMoodOptions,
+  getCheckInAnswer,
+} from '../check-ins/checkInScale';
 import { useDailyQuote } from '../../hooks/useDailyQuote';
 import { useAppStore, type EventCategory } from '../../stores/useAppStore';
 import { eventTimeLabel, getEventOccurrences } from '../calendar/eventUtils';
@@ -33,22 +38,6 @@ import { stillAssets } from '../../theme/stillAssets';
 import { createStillContext, getGreeting, getLocalDateKey, type WeatherKey } from '../../theme/stillContext';
 import { buildStillTheme } from '../../theme/themeEngine';
 import '../../theme/hero-v3.css';
-
-const moods = [
-  { asset: stillAssets.checkIn.mood.sad, label: 'Sad' },
-  { asset: stillAssets.checkIn.mood.calm, label: 'Calm' },
-  { asset: stillAssets.checkIn.mood.content, label: 'Content' },
-  { asset: stillAssets.checkIn.mood.happy, label: 'Happy' },
-  { asset: stillAssets.checkIn.mood.excited, label: 'Excited' },
-];
-
-const energyLevels = [
-  { asset: stillAssets.checkIn.energy.exhausted, label: 'Exhausted' },
-  { asset: stillAssets.checkIn.energy.low, label: 'Low' },
-  { asset: stillAssets.checkIn.energy.balanced, label: 'Balanced' },
-  { asset: stillAssets.checkIn.energy.high, label: 'High' },
-  { asset: stillAssets.checkIn.energy.energized, label: 'Energized' },
-];
 
 const weatherOptions: Array<{ value: WeatherKey | ''; label: string }> = [
   { value: '', label: 'Set weather' },
@@ -337,8 +326,6 @@ export function DashboardPage() {
       return;
     }
 
-    // React Strict Mode replays effects in development. Avoid issuing two
-    // simultaneous geolocation prompts and weather requests during that replay.
     if (requestedLocationWeather.current) return;
     requestedLocationWeather.current = true;
 
@@ -347,8 +334,6 @@ export function DashboardPage() {
         LOCATION_WEATHER_KEY,
       ) === 'true';
 
-    // First visit: request permission.
-    // Later visits: refresh automatically using the saved permission.
     refreshWeatherFromLocation(!locationWeatherEnabled);
   }, [autoWeather, refreshWeatherFromLocation]);
 
@@ -369,7 +354,7 @@ export function DashboardPage() {
     () => createStillContext({ date: now, mood, energy, weather, occasion }),
     [now, mood, energy, weather, occasion],
   );
-  const checkInAnswer = useMemo(() => selectUpliftingCheckInQuote(context), [context]);
+  const checkInAnswer = useMemo(() => getCheckInAnswer(mood, energy), [energy, mood]);
   const heroCompanionKey = getCloudCompanionKey(context);
   const [heroCompanionArt, setHeroCompanionArt] = useState<string>();
   const heroConditionSymbol = context.weather
@@ -549,8 +534,8 @@ export function DashboardPage() {
               <div className="checkin-column">
                 <strong>Mood</strong>
                 <div className="emoji-row">
-                  {moods.map((item, index) => (
-                    <button key={item.label} className={`emoji-btn ${draftMood === index + 1 ? 'active' : ''}`} onClick={() => chooseMood(index + 1)} type="button" aria-label={`Mood: ${item.label}`} aria-pressed={draftMood === index + 1} title={item.label}>
+                  {checkInMoodOptions.map((item) => (
+                    <button key={item.key} className={`emoji-btn ${draftMood === item.value ? 'active' : ''}`} onClick={() => chooseMood(item.value)} type="button" aria-label={`Mood: ${item.label}`} aria-pressed={draftMood === item.value} title={item.label}>
                       <img src={item.asset} alt="" />
                     </button>
                   ))}
@@ -560,8 +545,8 @@ export function DashboardPage() {
               <div className="checkin-column">
                 <strong>Energy</strong>
                 <div className="emoji-row">
-                  {energyLevels.map((item, index) => (
-                    <button key={item.label} className={`emoji-btn ${draftEnergy === index + 1 ? 'active' : ''}`} onClick={() => chooseEnergy(index + 1)} type="button" aria-label={`Energy: ${item.label}`} aria-pressed={draftEnergy === index + 1} title={item.label}>
+                  {checkInEnergyOptions.map((item) => (
+                    <button key={item.key} className={`emoji-btn ${draftEnergy === item.value ? 'active' : ''}`} onClick={() => chooseEnergy(item.value)} type="button" aria-label={`Energy: ${item.label}`} aria-pressed={draftEnergy === item.value} title={item.label}>
                       <img src={item.asset} alt="" />
                     </button>
                   ))}
@@ -685,23 +670,21 @@ export function DashboardPage() {
         </div>
         <div className="life-garden-grid">
           {lifeAreas.map((area) => (
-            <button className={`card garden-card ${area.key}`} onClick={() => area.key === "work" ? navigate("/work") : area.key === "money" ? navigate("/money") : undefined} type="button" key={area.key}>
+            <button className={`card garden-card ${area.key}`} onClick={() => area.key === 'work' ? navigate('/work') : area.key === 'money' ? navigate('/money') : undefined} type="button" key={area.key}>
               <div className="garden-card-head"><img src={area.icon} alt="" /><strong>{area.label}</strong></div>
               <div
-                  className="garden-progress"
-                  role="img"
-                  aria-label={`${area.label}: ${area.progress} of 7`}
-                >
-                  {Array.from({ length: 7 }, (_, index) => (
-                    <span
-                      key={index}
-                      className={
-                        index < area.progress ? 'filled' : ''
-                      }
-                      aria-hidden="true"
-                    />
-                  ))}
-                </div>
+                className="garden-progress"
+                role="img"
+                aria-label={`${area.label}: ${area.progress} of 7`}
+              >
+                {Array.from({ length: 7 }, (_, index) => (
+                  <span
+                    key={index}
+                    className={index < area.progress ? 'filled' : ''}
+                    aria-hidden="true"
+                  />
+                ))}
+              </div>
               <span className="garden-status">{area.status}</span>
             </button>
           ))}
