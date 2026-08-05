@@ -13,26 +13,25 @@ import { createStillContext } from '../../src/theme/stillContext.js';
 
 describe('canonical check-in scale', () => {
   it('matches every visible mood and energy label to its internal key', () => {
-    assert.deepEqual(
-      checkInMoodOptions.map(({ value, key, label }) => ({ value, key, label })),
-      [
-        { value: 1, key: 'sad', label: 'Sad' },
-        { value: 2, key: 'calm', label: 'Calm' },
-        { value: 3, key: 'content', label: 'Content' },
-        { value: 4, key: 'happy', label: 'Happy' },
-        { value: 5, key: 'excited', label: 'Excited' },
-      ],
-    );
-    assert.deepEqual(
-      checkInEnergyOptions.map(({ value, key, label }) => ({ value, key, label })),
-      [
-        { value: 1, key: 'exhausted', label: 'Exhausted' },
-        { value: 2, key: 'low', label: 'Low' },
-        { value: 3, key: 'balanced', label: 'Balanced' },
-        { value: 4, key: 'high', label: 'High' },
-        { value: 5, key: 'energized', label: 'Energized' },
-      ],
-    );
+    const actualMoods = checkInMoodOptions.map(({ value, key, label }) => ({ value, key, label }));
+    const expectedMoods = [
+      { value: 1, key: 'sad', label: 'Sad' },
+      { value: 2, key: 'calm', label: 'Calm' },
+      { value: 3, key: 'content', label: 'Content' },
+      { value: 4, key: 'happy', label: 'Happy' },
+      { value: 5, key: 'excited', label: 'Excited' },
+    ];
+    const actualEnergy = checkInEnergyOptions.map(({ value, key, label }) => ({ value, key, label }));
+    const expectedEnergy = [
+      { value: 1, key: 'exhausted', label: 'Exhausted' },
+      { value: 2, key: 'low', label: 'Low' },
+      { value: 3, key: 'balanced', label: 'Balanced' },
+      { value: 4, key: 'high', label: 'High' },
+      { value: 5, key: 'energized', label: 'Energized' },
+    ];
+
+    assert.equal(JSON.stringify(actualMoods), JSON.stringify(expectedMoods));
+    assert.equal(JSON.stringify(actualEnergy), JSON.stringify(expectedEnergy));
   });
 
   it('provides a distinct first-person answer for all 25 combinations', () => {
@@ -70,6 +69,6 @@ describe('canonical check-in scale', () => {
     assert.equal(snapshot.answerSnapshot, getCheckInAnswer(2, 3));
     assert.equal(getCheckInMood(0), undefined);
     assert.equal(getCheckInEnergy(6), undefined);
-    assert.deepEqual(createCheckInSnapshot(undefined, 3), {});
+    assert.equal(JSON.stringify(createCheckInSnapshot(undefined, 3)), '{}');
   });
 });
