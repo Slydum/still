@@ -11,6 +11,7 @@ import { MorePage } from '../features/more/MorePage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
 import { WorkPage } from '../features/work/WorkPage';
 import { useAppStore } from '../stores/useAppStore';
+import { usePermanentDataRepository } from '../hooks/usePermanentDataRepository';
 import { useReminderEngine } from '../hooks/useReminderEngine';
 
 function ScrollToTop() {
@@ -33,6 +34,7 @@ function ScrollToTop() {
 }
 
 export default function App() {
+  usePermanentDataRepository();
   useReminderEngine();
   const appearanceTone = useAppStore((state) => state.appearanceTone);
   const reduceMotion = useAppStore((state) => state.reduceMotion);
