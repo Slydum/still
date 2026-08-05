@@ -1,0 +1,72 @@
+.sheet-backdrop { animation: still-backdrop-in 220ms ease both; }
+.sheet.task-sheet { animation: still-sheet-in 240ms cubic-bezier(.22,.8,.24,1) both; }
+.task-sheet > form,
+.task-sheet > .quick-grid,
+.task-sheet > .quick-secondary-row { animation: still-content-in 190ms ease both; }
+
+.still-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(104px + env(safe-area-inset-bottom));
+  z-index: 80;
+  min-height: 42px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(117, 103, 145, .16);
+  border-radius: 999px;
+  color: var(--text-strong);
+  font-size: 13px;
+  font-weight: 900;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 14px 34px rgba(53,45,74,.18);
+  opacity: 0;
+  transform: translate(-50%, 10px) scale(.98);
+  transition: opacity 200ms ease, transform 200ms ease;
+  pointer-events: none;
+}
+.still-toast.is-visible { opacity: 1; transform: translate(-50%, 0) scale(1); }
+
+.discard-confirm {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: inherit;
+  background: rgba(255,253,251,.97);
+  backdrop-filter: blur(10px);
+  animation: still-content-in 170ms ease both;
+}
+.discard-confirm h3 { margin: 0; color: var(--text-strong); font-family: var(--font-display); font-size: 24px; }
+.discard-confirm p { margin: 6px 0 18px; color: var(--muted); font-size: 13px; }
+.discard-confirm-actions { width: min(100%, 320px); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.discard-confirm-actions button { min-height: 42px; border-radius: var(--radius-md); font-weight: 900; }
+.discard-button { border: 1px solid rgba(192,92,112,.2); color: #b04f63; background: #fff0f3; }
+
+.task-sheet { position: relative; }
+.task-sheet .section-head .subtle:empty { display: none; }
+
+@keyframes still-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes still-sheet-in { from { opacity: 0; transform: translateY(24px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes still-content-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 430px) {
+  .still-toast { bottom: calc(96px + env(safe-area-inset-bottom)); max-width: calc(100vw - 32px); white-space: nowrap; }
+  .discard-confirm { padding: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-backdrop,
+  .sheet.task-sheet,
+  .task-sheet > form,
+  .task-sheet > .quick-grid,
+  .task-sheet > .quick-secondary-row,
+  .discard-confirm { animation: none; }
+  .still-toast { transition: none; }
+}
