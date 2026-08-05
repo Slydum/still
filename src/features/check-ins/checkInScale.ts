@@ -70,11 +70,11 @@ const answers: Record<CheckInMoodKey, Record<CheckInEnergyKey, string>> = {
 };
 
 export function isCheckInMoodValue(value?: number): value is CheckInMoodValue {
-  return Number.isInteger(value) && value !== undefined && value >= 1 && value <= 5;
+  return value !== undefined && Number.isInteger(value) && value >= 1 && value <= 5;
 }
 
 export function isCheckInEnergyValue(value?: number): value is CheckInEnergyValue {
-  return Number.isInteger(value) && value !== undefined && value >= 1 && value <= 5;
+  return value !== undefined && Number.isInteger(value) && value >= 1 && value <= 5;
 }
 
 export function getCheckInMood(value?: number) {
