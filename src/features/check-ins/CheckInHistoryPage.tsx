@@ -18,7 +18,6 @@ import {
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { selectUpliftingCheckInQuote } from '../../content/quoteEngine';
 import {
   deleteCheckIn,
   listCheckIns,
@@ -26,28 +25,17 @@ import {
   type CheckInRecord,
 } from '../../data/stillDb';
 import { useAppStore } from '../../stores/useAppStore';
-import { stillAssets } from '../../theme/stillAssets';
-import { createStillContext, getLocalDateKey } from '../../theme/stillContext';
+import { getLocalDateKey } from '../../theme/stillContext';
+import {
+  checkInEnergyOptions,
+  checkInMoodOptions,
+  getCheckInAnswer,
+  getCheckInMood,
+} from './checkInScale';
 import {
   createCheckInJournalDraft,
   setPendingJournalDraftContext,
 } from '../journal/journalDraftContext';
-
-const moodOptions = [
-  { asset: stillAssets.checkIn.mood.sad, label: 'Sad' },
-  { asset: stillAssets.checkIn.mood.calm, label: 'Calm' },
-  { asset: stillAssets.checkIn.mood.content, label: 'Content' },
-  { asset: stillAssets.checkIn.mood.happy, label: 'Happy' },
-  { asset: stillAssets.checkIn.mood.excited, label: 'Excited' },
-];
-
-const energyOptions = [
-  { asset: stillAssets.checkIn.energy.exhausted, label: 'Exhausted' },
-  { asset: stillAssets.checkIn.energy.low, label: 'Low' },
-  { asset: stillAssets.checkIn.energy.balanced, label: 'Balanced' },
-  { asset: stillAssets.checkIn.energy.high, label: 'High' },
-  { asset: stillAssets.checkIn.energy.energized, label: 'Energized' },
-];
 
 function average(records: CheckInRecord[], key: 'mood' | 'energy') {
   const values = records
@@ -66,23 +54,30 @@ function moodInsight(value?: number) {
     };
   }
 
-  if (value < 2.5) {
+  if (value < 1.5) {
     return {
-      title: 'Heavier days',
-      detail: 'You have been carrying more lately. Extra kindness may help.',
+      title: 'Tender days',
+      detail: 'Sadness has been present more often, asking for extra kindness.',
     };
   }
 
-  if (value < 3.75) {
+  if (value < 2.75) {
     return {
-      title: 'Finding balance',
-      detail: 'Your feelings have been settling around a steadier middle.',
+      title: 'Quieter feelings',
+      detail: 'Calm and tender moments have been shaping a softer emotional pace.',
+    };
+  }
+
+  if (value < 4) {
+    return {
+      title: 'Content moments',
+      detail: 'Your feelings have often rested around contentment and steady warmth.',
     };
   }
 
   return {
     title: 'Brighter moments',
-    detail: 'More warmth and lift have been showing up in your week.',
+    detail: 'Happiness and excitement have been showing up more often this week.',
   };
 }
 
@@ -103,7 +98,7 @@ function energyInsight(value?: number) {
 
   if (value < 3.75) {
     return {
-      title: 'Steady energy',
+      title: 'Balanced energy',
       detail: 'Your energy has stayed mostly grounded and manageable.',
     };
   }
@@ -119,11 +114,7 @@ function answerForRecord(record: CheckInRecord) {
     return "I left this check-in unfinished, and I can return when I'm ready.";
   }
 
-  return selectUpliftingCheckInQuote(createStillContext({
-    date: parseISO(record.date),
-    mood: record.mood,
-    energy: record.energy,
-  }));
+  return record.answerSnapshot ?? getCheckInAnswer(record.mood, record.energy);
 }
 
 function CheckInEditor({
@@ -156,11 +147,7 @@ function CheckInEditor({
   };
 
   const answer = completed
-    ? selectUpliftingCheckInQuote(createStillContext({
-        date: parseISO(record.date),
-        mood: completed.mood,
-        energy: completed.energy,
-      }))
+    ? getCheckInAnswer(completed.mood, completed.energy)
     : '';
 
   return (
@@ -204,14 +191,14 @@ function CheckInEditor({
             <div className="checkin-editor-section">
               <strong>Mood</strong>
               <div className="checkin-editor-options">
-                {moodOptions.map((option, index) => (
+                {checkInMoodOptions.map((option) => (
                   <button
-                    className={mood === index + 1 ? 'is-selected' : ''}
-                    key={option.label}
-                    onClick={() => chooseMood(index + 1)}
+                    className={mood === option.value ? 'is-selected' : ''}
+                    key={option.key}
+                    onClick={() => chooseMood(option.value)}
                     type="button"
                     aria-label={`Mood: ${option.label}`}
-                    aria-pressed={mood === index + 1}
+                    aria-pressed={mood === option.value}
                   >
                     <img src={option.asset} alt="" />
                     <span>{option.label}</span>
@@ -222,14 +209,14 @@ function CheckInEditor({
             <div className="checkin-editor-section">
               <strong>Energy</strong>
               <div className="checkin-editor-options">
-                {energyOptions.map((option, index) => (
+                {checkInEnergyOptions.map((option) => (
                   <button
-                    className={energy === index + 1 ? 'is-selected' : ''}
-                    key={option.label}
-                    onClick={() => chooseEnergy(index + 1)}
+                    className={energy === option.value ? 'is-selected' : ''}
+                    key={option.key}
+                    onClick={() => chooseEnergy(option.value)}
                     type="button"
                     aria-label={`Energy: ${option.label}`}
-                    aria-pressed={energy === index + 1}
+                    aria-pressed={energy === option.value}
                   >
                     <img src={option.asset} alt="" />
                     <span>{option.label}</span>
@@ -394,7 +381,7 @@ export function CheckInHistoryPage() {
           {trendDays.map((day) => {
             const key = format(day, 'yyyy-MM-dd');
             const record = recordsByDate.get(key);
-            const mood = record?.mood ? moodOptions[record.mood - 1] : undefined;
+            const mood = getCheckInMood(record?.mood);
 
             return (
               <div
