@@ -62,6 +62,14 @@ export function setPendingJournalDraftContext(context: JournalDraftContext) {
   pendingJournalDraftContext = context;
 }
 
+export function peekPendingJournalDraftContext() {
+  return pendingJournalDraftContext;
+}
+
+export function clearPendingJournalDraftContext() {
+  pendingJournalDraftContext = undefined;
+}
+
 export function takePendingJournalDraftContext() {
   const context = pendingJournalDraftContext;
   pendingJournalDraftContext = undefined;
