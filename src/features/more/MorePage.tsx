@@ -14,6 +14,7 @@ import {
 import { useEffect, useState, type FormEvent } from 'react';
 import { stillDb } from '../../data/stillDb';
 import { useAppStore, type AppearanceTone } from '../../stores/useAppStore';
+import { CloudSyncSettings } from './CloudSyncSettings';
 
 const LOCATION_WEATHER_KEY = 'still-location-weather-enabled-v2';
 
@@ -225,8 +226,10 @@ export function MorePage() {
         </div>
       </section>
 
+      <CloudSyncSettings />
+
       <section className="settings-section" aria-labelledby="data-settings-title">
-        <div className="settings-section-heading"><span><ShieldCheck size={19} /></span><div><h2 id="data-settings-title">Your data</h2><p>Still stores your personal content locally on this device.</p></div></div>
+        <div className="settings-section-heading"><span><ShieldCheck size={19} /></span><div><h2 id="data-settings-title">Your data</h2><p>Still keeps an offline copy on this device. Cloud sync is optional.</p></div></div>
         <div className="card settings-card settings-data-actions">
           <button onClick={() => void exportData()} type="button"><Download size={18} /><span><strong>Export my data</strong><small>Download a readable JSON backup.</small></span></button>
           <button className="is-danger" onClick={() => void resetData()} type="button"><Trash2 size={18} /><span><strong>Reset Still</strong><small>Delete all locally stored app data.</small></span></button>
@@ -235,7 +238,7 @@ export function MorePage() {
 
       <section className="settings-section" aria-labelledby="about-settings-title">
         <div className="settings-section-heading"><span><Info size={19} /></span><div><h2 id="about-settings-title">About</h2><p>A calm daily space built around your own rhythm.</p></div></div>
-        <div className="card settings-about-card"><div><strong>Still</strong><span>Version 0.1.0</span></div><p>Your tasks, calendar, journal, check-ins, and preferences remain in this browser unless you export or reset them.</p></div>
+        <div className="card settings-about-card"><div><strong>Still</strong><span>Version 0.1.0</span></div><p>Your tasks, calendar, journal, and check-ins remain available offline. Enable cloud sync to carry them between signed-in devices.</p></div>
       </section>
     </main>
   );
