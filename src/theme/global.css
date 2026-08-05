@@ -2295,6 +2295,8 @@ h1 {
 .checkin-history-empty strong { color: #62596f; }
 .checkin-history-empty span { margin-top: 5px; font-size: 12px; }
 
+.money-record-values > div:last-child { text-align: right; }
+
 .checkin-history-editor { max-width: 620px; }
 .checkin-editor-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
 .checkin-editor-heading h2 { margin: 2px 0 0; color: #574f65; font-family: Georgia, serif; font-size: 24px; }

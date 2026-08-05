@@ -597,7 +597,7 @@ export function DashboardPage() {
         </div>
         <div className="life-garden-grid">
           {lifeAreas.map((area) => (
-            <button className={`card garden-card ${area.key}`} onClick={() => area.key === "work" ? navigate("/work") : undefined} type="button" key={area.key}>
+            <button className={`card garden-card ${area.key}`} onClick={() => area.key === "work" ? navigate("/work") : area.key === "money" ? navigate("/money") : undefined} type="button" key={area.key}>
               <div className="garden-card-head"><img src={area.icon} alt="" /><strong>{area.label}</strong></div>
               <div
                   className="garden-progress"
