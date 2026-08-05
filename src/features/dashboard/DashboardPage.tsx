@@ -1,6 +1,7 @@
 import { addDays, format } from 'date-fns';
 import {
   Bell,
+  BookOpen,
   BriefcaseBusiness,
   CalendarDays,
   Heart,
@@ -15,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSecondaryQuote } from '../../content/quoteEngine';
+import { getSecondaryQuote, selectUpliftingCheckInQuote } from '../../content/quoteEngine';
 import { saveCheckIn } from '../../data/stillDb';
 import { useDailyQuote } from '../../hooks/useDailyQuote';
 import { useAppStore, type EventCategory } from '../../stores/useAppStore';
@@ -175,8 +176,7 @@ export function DashboardPage() {
   const notificationsEnabled = useAppStore((state) => state.notificationsEnabled);
   const hasUnreadNotifications = useAppStore((state) => state.notifications.some((notification) => !notification.read));
   const autoWeather = useAppStore((state) => state.autoWeather);
-  const setMood = useAppStore((state) => state.setMood);
-  const setEnergy = useAppStore((state) => state.setEnergy);
+  const replaceTodayCheckIn = useAppStore((state) => state.replaceTodayCheckIn);
   const setWeather = useAppStore((state) => state.setWeather);
   const setAutoWeather = useAppStore((state) => state.setAutoWeather);
   const hydrateForToday = useAppStore((state) => state.hydrateForToday);
@@ -186,10 +186,14 @@ export function DashboardPage() {
   const deleteTask = useAppStore((state) => state.deleteTask);
   const events = useAppStore((state) => state.events);
   const openEventEditor = useAppStore((state) => state.openEventEditor);
+  const openJournalEditor = useAppStore((state) => state.openJournalEditor);
   const [weatherStatus, setWeatherStatus] =
     useState<WeatherStatus>('idle');
   const [temperature, setTemperature] =
     useState<number | null>(null);
+  const [draftMood, setDraftMood] = useState<number>();
+  const [draftEnergy, setDraftEnergy] = useState<number>();
+  const [editingCheckIn, setEditingCheckIn] = useState(false);
   const requestedLocationWeather = useRef(false);
 
   const now = useCurrentTime();
@@ -197,6 +201,15 @@ export function DashboardPage() {
   const isTodaysCheckIn = checkInDate === getLocalDateKey(now);
   const mood = isTodaysCheckIn ? storedMood : undefined;
   const energy = isTodaysCheckIn ? storedEnergy : undefined;
+  const hasCompleteCheckIn = Boolean(mood && energy);
+  const showCheckInAnswer = hasCompleteCheckIn && !editingCheckIn;
+
+  useEffect(() => {
+    if (mood && energy) return;
+    setDraftMood(undefined);
+    setDraftEnergy(undefined);
+    setEditingCheckIn(true);
+  }, [energy, mood, todayKey]);
 
   const selectedWeather =
     weatherOptions.find((option) => option.value === (weather ?? '')) ??
@@ -350,6 +363,7 @@ export function DashboardPage() {
     () => createStillContext({ date: now, mood, energy, weather, occasion }),
     [now, mood, energy, weather, occasion],
   );
+  const checkInAnswer = useMemo(() => selectUpliftingCheckInQuote(context), [context]);
   const heroCompanionKey = getCloudCompanionKey(context);
   const [heroCompanionArt, setHeroCompanionArt] = useState<string>();
   const heroConditionSymbol = context.weather
@@ -396,8 +410,31 @@ export function DashboardPage() {
     format(addDays(now, 45), 'yyyy-MM-dd'),
   ).slice(0, 4), [events, now, todayKey]);
 
+  const completeCheckIn = (nextMood: number, nextEnergy: number) => {
+    replaceTodayCheckIn(nextMood, nextEnergy);
+    setDraftMood(undefined);
+    setDraftEnergy(undefined);
+    setEditingCheckIn(false);
+  };
+
+  const chooseMood = (value: number) => {
+    setDraftMood(value);
+    if (draftEnergy) completeCheckIn(value, draftEnergy);
+  };
+
+  const chooseEnergy = (value: number) => {
+    setDraftEnergy(value);
+    if (draftMood) completeCheckIn(draftMood, value);
+  };
+
+  const changeAnswer = () => {
+    setDraftMood(undefined);
+    setDraftEnergy(undefined);
+    setEditingCheckIn(true);
+  };
+
   useEffect(() => {
-    if (!mood && !energy) return;
+    if (!mood || !energy) return;
     void saveCheckIn({ date: context.dateKey, mood, energy, updatedAt: Date.now() }).catch(() => undefined);
   }, [context.dateKey, mood, energy]);
 
@@ -454,33 +491,45 @@ export function DashboardPage() {
           <button className="link-btn" onClick={() => navigate('/check-ins')} type="button">View history</button>
         </div>
 
-        <article className="card checkin-combined-card surface-checkin">
-          <div className="checkin-column">
-            <strong>Mood</strong>
-            <div className="emoji-row">
-              {moods.map((item, index) => (
-                <button key={item.label} className={`emoji-btn ${mood === index + 1 ? 'active' : ''}`} onClick={() => setMood(index + 1)} type="button" aria-label={`Mood: ${item.label}`} aria-pressed={mood === index + 1} title={item.label}>
-                  <img src={item.asset} alt="" />
+        <article className={`card checkin-combined-card surface-checkin ${showCheckInAnswer ? 'is-answered' : 'is-selecting'}`}>
+          {showCheckInAnswer ? (
+            <div className="checkin-answer" aria-live="polite">
+              <blockquote>{checkInAnswer}</blockquote>
+              <div className="checkin-answer-actions">
+                <button className="checkin-change-button" onClick={changeAnswer} type="button">
+                  <Pencil size={16} />
+                  Change answer
                 </button>
-              ))}
-            </div>
-          </div>
-          <div className="checkin-divider" />
-          <div className="checkin-column">
-            <strong>Energy</strong>
-            <div className="emoji-row">
-              {energyLevels.map((item, index) => (
-                <button key={item.label} className={`emoji-btn ${energy === index + 1 ? 'active' : ''}`} onClick={() => setEnergy(index + 1)} type="button" aria-label={`Energy: ${item.label}`} aria-pressed={energy === index + 1} title={item.label}>
-                  <img src={item.asset} alt="" />
+                <button className="checkin-journal-button" onClick={() => openJournalEditor(undefined, todayKey)} type="button">
+                  <BookOpen size={17} />
+                  Let it out
                 </button>
-              ))}
+              </div>
             </div>
-          </div>
-          {(mood || energy) && (
-            <div className="checkin-response-inline" aria-live="polite">
-              <img src={theme.checkInAsset} alt="" />
-              <p>{theme.checkInMessage}</p>
-            </div>
+          ) : (
+            <>
+              <div className="checkin-column">
+                <strong>Mood</strong>
+                <div className="emoji-row">
+                  {moods.map((item, index) => (
+                    <button key={item.label} className={`emoji-btn ${draftMood === index + 1 ? 'active' : ''}`} onClick={() => chooseMood(index + 1)} type="button" aria-label={`Mood: ${item.label}`} aria-pressed={draftMood === index + 1} title={item.label}>
+                      <img src={item.asset} alt="" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="checkin-divider" />
+              <div className="checkin-column">
+                <strong>Energy</strong>
+                <div className="emoji-row">
+                  {energyLevels.map((item, index) => (
+                    <button key={item.label} className={`emoji-btn ${draftEnergy === index + 1 ? 'active' : ''}`} onClick={() => chooseEnergy(index + 1)} type="button" aria-label={`Energy: ${item.label}`} aria-pressed={draftEnergy === index + 1} title={item.label}>
+                      <img src={item.asset} alt="" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
         </article>
       </section>
