@@ -154,49 +154,112 @@
 }
 
 .dashboard-shell .checkin-combined-card.is-answered {
-  min-height: 178px;
-  padding: 22px 24px;
+  min-height: 150px;
+  padding: 0;
   display: block;
+  overflow: hidden;
 }
 
-.dashboard-shell .checkin-answer {
-  min-height: 132px;
+.dashboard-shell .checkin-answer-flip {
+  min-height: 150px;
+  perspective: 1000px;
+}
+
+.dashboard-shell .checkin-answer-flip-inner {
+  position: relative;
+  min-height: 150px;
+  transform-style: preserve-3d;
+  transition: transform 520ms cubic-bezier(.2, .72, .24, 1);
+}
+
+.dashboard-shell .checkin-answer-flip.is-flipped .checkin-answer-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.dashboard-shell .checkin-answer-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 150px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.dashboard-shell .checkin-answer-front {
+  padding: 20px 28px 17px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  border: 0;
+  color: inherit;
+  background: transparent;
   text-align: center;
-  animation: checkin-answer-in 220ms ease both;
+  cursor: pointer;
 }
 
-.dashboard-shell .checkin-answer blockquote {
-  max-width: 760px;
+.dashboard-shell .checkin-answer-front:hover {
+  background: rgba(255, 255, 255, .2);
+}
+
+.dashboard-shell .checkin-answer-front:focus-visible {
+  outline: 3px solid rgba(140, 111, 201, .34);
+  outline-offset: -4px;
+}
+
+.dashboard-shell .checkin-answer-front blockquote {
+  max-width: 720px;
   margin: 0;
   color: var(--text-strong);
   font-family: var(--font-display);
-  font-size: clamp(20px, 3vw, 28px);
-  line-height: 1.4;
+  font-size: clamp(15px, 1.8vw, 18px);
+  line-height: 1.55;
 }
 
-.dashboard-shell .checkin-answer blockquote::before {
+.dashboard-shell .checkin-answer-front blockquote::before {
   content: "“";
 }
 
-.dashboard-shell .checkin-answer blockquote::after {
+.dashboard-shell .checkin-answer-front blockquote::after {
   content: "”";
+}
+
+.dashboard-shell .checkin-flip-hint {
+  margin-top: 10px;
+  color: var(--muted-soft);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.dashboard-shell .checkin-answer-back {
+  padding: 18px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: rotateY(180deg);
+  text-align: center;
+}
+
+.dashboard-shell .checkin-answer-back > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .dashboard-shell .checkin-answer-actions {
   width: min(100%, 430px);
-  margin-top: 20px;
+  margin-top: 12px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 9px;
 }
 
 .dashboard-shell .checkin-answer-actions button {
-  min-height: 42px;
-  padding: 9px 15px;
+  min-height: 40px;
+  padding: 8px 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -224,9 +287,15 @@
   transform: translateY(-1px);
 }
 
-@keyframes checkin-answer-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+.dashboard-shell .checkin-back-button {
+  margin-top: 10px;
+  padding: 4px 8px;
+  border: 0;
+  color: var(--muted-soft);
+  background: transparent;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 /* Life Garden becomes honest navigation rather than implied scoring. */
@@ -387,19 +456,33 @@
     height: 23px;
   }
 
-  .dashboard-shell .checkin-combined-card.is-answered {
-    min-height: 196px;
-    padding: 20px 16px;
+  .dashboard-shell .checkin-combined-card.is-answered,
+  .dashboard-shell .checkin-answer-flip,
+  .dashboard-shell .checkin-answer-flip-inner,
+  .dashboard-shell .checkin-answer-face {
+    min-height: 184px;
   }
 
-  .dashboard-shell .checkin-answer blockquote {
-    font-size: clamp(19px, 6.2vw, 24px);
-    line-height: 1.42;
+  .dashboard-shell .checkin-answer-front {
+    padding: 20px 16px 16px;
+  }
+
+  .dashboard-shell .checkin-answer-front blockquote {
+    font-size: clamp(15px, 4.5vw, 17px);
+    line-height: 1.52;
+  }
+
+  .dashboard-shell .checkin-answer-back {
+    padding: 17px 16px;
   }
 
   .dashboard-shell .checkin-answer-actions {
     grid-template-columns: 1fr;
-    margin-top: 18px;
+    gap: 7px;
+  }
+
+  .dashboard-shell .checkin-answer-actions button {
+    min-height: 38px;
   }
 
   .dashboard-shell .garden-card {
@@ -413,8 +496,8 @@
     scroll-behavior: auto;
   }
 
-  .dashboard-shell .checkin-answer {
-    animation: none;
+  .dashboard-shell .checkin-answer-flip-inner {
+    transition: none;
   }
 
   .dashboard-shell .checkin-answer-actions button:hover {
