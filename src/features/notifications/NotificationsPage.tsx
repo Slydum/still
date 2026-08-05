@@ -1,6 +1,7 @@
 import { ArrowLeft, Bell, CalendarClock, CheckCheck, CircleCheckBig, Sparkles, Trash2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CHECK_IN_FOCUS_EVENT } from '../check-ins/checkInReminder';
 import { useAppStore, type AppNotificationKind } from '../../stores/useAppStore';
 
 const notificationIcons = {
@@ -30,7 +31,10 @@ export function NotificationsPage() {
     return () => window.clearTimeout(timeout);
   }, [markAllNotificationsRead]);
 
-  const openCheckIn = () => navigate('/?checkin=now');
+  const openCheckIn = () => {
+    navigate('/');
+    window.requestAnimationFrame(() => window.dispatchEvent(new Event(CHECK_IN_FOCUS_EVENT)));
+  };
 
   return (
     <main className="shell notification-center-page">
