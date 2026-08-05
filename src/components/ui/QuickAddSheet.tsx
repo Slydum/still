@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   HeartPulse,
   ReceiptText,
+  Sparkles,
   Timer,
   X,
   type LucideIcon,
@@ -27,6 +28,10 @@ import {
   type TaskPriority,
   type TaskRepeat,
 } from '../../stores/useAppStore';
+import {
+  takePendingJournalDraftContext,
+  type JournalDraftContext,
+} from '../../features/journal/journalDraftContext';
 import { getLocalDateKey } from '../../theme/stillContext';
 import { CheckInEditor } from './quick-add/CheckInEditor';
 import { ExpenseEditor } from './quick-add/ExpenseEditor';
@@ -218,35 +223,79 @@ function EventEditor({ event, initialDate, onCancel, onSave }: {
   );
 }
 
-function JournalEditor({ entry, initialDate, onCancel, onSave }: {
+function JournalEditor({ entry, initialDate, draftContext, onCancel, onSave }: {
   entry?: JournalEntry;
   initialDate?: string;
+  draftContext?: JournalDraftContext;
   onCancel: () => void;
   onSave: (input: JournalInput) => void;
 }) {
+  const entryHasCheckInTag = entry?.tags.includes('check-in') ?? false;
   const [title, setTitle] = useState(entry?.title ?? '');
   const [body, setBody] = useState(entry?.body ?? '');
   const [entryDate, setEntryDate] = useState(entry?.entryDate ?? initialDate ?? getLocalDateKey());
-  const [mood, setMood] = useState<JournalMood | undefined>(entry?.mood);
-  const [tags, setTags] = useState(entry?.tags.join(', ') ?? '');
+  const [mood, setMood] = useState<JournalMood | undefined>(entry?.mood ?? draftContext?.suggestedMood);
+  const [tags, setTags] = useState(entry?.tags.filter((tag) => tag !== 'check-in').join(', ') ?? '');
+  const [includeCheckInTag, setIncludeCheckInTag] = useState(entryHasCheckInTag || Boolean(draftContext));
+  const suggestedMood = journalMoods.find((option) => option.value === draftContext?.suggestedMood);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!body.trim()) return;
-    onSave({ title, body, entryDate, mood, tags: tags.split(',') });
+    const nextTags = tags.split(',');
+    if (includeCheckInTag) nextTags.push('check-in');
+    onSave({ title, body, entryDate, mood, tags: nextTags });
   };
 
   return (
     <form className="task-editor journal-editor" onSubmit={submit}>
+      {!entry && draftContext && (
+        <aside className="journal-checkin-context" aria-labelledby="journal-checkin-context-title">
+          <div className="journal-checkin-context-label" id="journal-checkin-context-title">
+            <HeartPulse size={15} />
+            From your check-in
+          </div>
+          <blockquote>{draftContext.answer}</blockquote>
+          <p>{draftContext.prompt}</p>
+        </aside>
+      )}
+
       <label className="task-field compact-date-field">
         <span>Date</span>
         <input onChange={(event) => setEntryDate(event.target.value)} required type="date" value={entryDate} />
       </label>
       <label className="task-field">
         <span>Reflection</span>
-        <textarea autoFocus maxLength={5000} onChange={(event) => setBody(event.target.value)} placeholder="What’s on your mind?" required rows={6} value={body} />
+        <textarea
+          autoFocus
+          maxLength={5000}
+          onChange={(event) => setBody(event.target.value)}
+          placeholder={draftContext?.prompt ?? 'What’s on your mind?'}
+          required
+          rows={6}
+          value={body}
+        />
         <small className="journal-character-count">{body.length.toLocaleString()} / 5,000</small>
       </label>
+
+      {!entry && draftContext && (
+        <div className="journal-checkin-carryover">
+          {suggestedMood && (
+            <span className="journal-checkin-suggested-mood">
+              <span aria-hidden="true">{suggestedMood.emoji}</span>
+              Mood carried over: {suggestedMood.label}
+            </span>
+          )}
+          <label>
+            <input
+              checked={includeCheckInTag}
+              onChange={(event) => setIncludeCheckInTag(event.target.checked)}
+              type="checkbox"
+            />
+            Link this reflection to the check-in
+          </label>
+        </div>
+      )}
 
       <MoreOptions open={Boolean(entry?.title || entry?.mood || entry?.tags.length)}>
         <label className="task-field">
@@ -267,6 +316,16 @@ function JournalEditor({ entry, initialDate, onCancel, onSave }: {
           <span>Tags <small>(optional)</small></span>
           <input maxLength={160} onChange={(event) => setTags(event.target.value)} placeholder="gratitude, work, rest" type="text" value={tags} />
         </label>
+        {entry && entryHasCheckInTag && (
+          <label className="journal-checkin-tag-option">
+            <input
+              checked={includeCheckInTag}
+              onChange={(event) => setIncludeCheckInTag(event.target.checked)}
+              type="checkbox"
+            />
+            Keep linked to its check-in
+          </label>
+        )}
       </MoreOptions>
 
       <div className="task-editor-actions">
@@ -308,6 +367,23 @@ export function QuickAddSheet() {
   const editingTask = tasks.find((task) => task.id === editingTaskId);
   const editingEvent = events.find((event) => event.id === editingEventId);
   const editingJournalEntry = journalEntries.find((entry) => entry.id === editingJournalId);
+  const [journalDraftContext, setJournalDraftContext] = useState<JournalDraftContext>();
+  const [toast, setToast] = useState('');
+
+  useEffect(() => {
+    if (!open || mode !== 'journal' || editingJournalId) {
+      setJournalDraftContext(undefined);
+      return;
+    }
+
+    setJournalDraftContext(takePendingJournalDraftContext());
+  }, [editingJournalId, journalDraftDate, mode, open]);
+
+  useEffect(() => {
+    if (!toast) return undefined;
+    const timeout = window.setTimeout(() => setToast(''), 2600);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -321,11 +397,25 @@ export function QuickAddSheet() {
     };
   }, [close, open]);
 
-  if (!open) return null;
+  const toastElement = toast ? (
+    <div className="still-toast is-visible" role="status" aria-live="polite">
+      <Sparkles size={16} aria-hidden="true" />
+      {toast}
+    </div>
+  ) : null;
+
+  if (!open) return toastElement;
 
   const saveTask = (input: TaskInput) => { editingTask ? updateTask(editingTask.id, input) : addTask(input); close(); };
   const saveEvent = (input: EventInput) => { editingEvent ? updateEvent(editingEvent.id, input) : addEvent(input); close(); };
-  const saveJournalEntry = (input: JournalInput) => { editingJournalEntry ? updateJournalEntry(editingJournalEntry.id, input) : addJournalEntry(input); close(); };
+  const saveJournalEntry = (input: JournalInput) => {
+    editingJournalEntry ? updateJournalEntry(editingJournalEntry.id, input) : addJournalEntry(input);
+    setToast(journalDraftContext && !editingJournalEntry
+      ? 'You made space for this feeling.'
+      : 'Your reflection is saved.');
+    setJournalDraftContext(undefined);
+    close();
+  };
   const saveExpense = (input: ExpenseInput) => { addExpense(input); close(); };
   const saveCheckIn = (mood?: number, energy?: number) => { replaceTodayCheckIn(mood, energy); close(); };
   const openWork = () => { close(); navigate('/work'); };
@@ -340,42 +430,45 @@ export function QuickAddSheet() {
   };
 
   const editorTitle = mode === 'task' ? (editingTask ? 'Edit task' : 'Add a task') : mode === 'event' ? (editingEvent ? 'Edit event' : 'Add an event') : mode === 'journal' ? (editingJournalEntry ? 'Edit entry' : 'New journal entry') : mode === 'expense' ? 'Add an expense' : mode === 'check-in' ? 'Quick check-in' : 'Add something';
-  const editorSubtitle = mode === 'task' ? 'Start with the one thing that matters.' : mode === 'event' ? 'Add the essentials. Details can wait.' : mode === 'journal' ? 'A few honest words are enough.' : mode === 'expense' ? 'Capture the important part first.' : mode === 'check-in' ? 'Notice how you are.' : 'Choose what you want to capture.';
+  const editorSubtitle = mode === 'task' ? 'Start with the one thing that matters.' : mode === 'event' ? 'Add the essentials. Details can wait.' : mode === 'journal' ? (journalDraftContext ? 'Write what this feeling needs to say.' : 'A few honest words are enough.') : mode === 'expense' ? 'Capture the important part first.' : mode === 'check-in' ? 'Notice how you are.' : 'Choose what you want to capture.';
 
   return (
-    <div className="sheet-backdrop" onClick={close}>
-      <section className="sheet task-sheet" onClick={(event) => event.stopPropagation()} aria-modal="true" role="dialog" aria-labelledby="quick-add-title">
-        <div className="sheet-handle" />
-        <div className="section-head">
-          <div className="task-sheet-heading">
-            {mode !== 'menu' && !editingTask && !editingEvent && !editingJournalEntry && (
-              <button className="task-back-button" onClick={() => openQuickAdd()} aria-label="Back to quick add" type="button"><ChevronLeft size={20} /></button>
-            )}
-            <div><h2 className="section-title" id="quick-add-title">{editorTitle}</h2><p className="subtle">{editorSubtitle}</p></div>
+    <>
+      <div className="sheet-backdrop" onClick={close}>
+        <section className="sheet task-sheet" onClick={(event) => event.stopPropagation()} aria-modal="true" role="dialog" aria-labelledby="quick-add-title">
+          <div className="sheet-handle" />
+          <div className="section-head">
+            <div className="task-sheet-heading">
+              {mode !== 'menu' && !editingTask && !editingEvent && !editingJournalEntry && (
+                <button className="task-back-button" onClick={() => openQuickAdd()} aria-label="Back to quick add" type="button"><ChevronLeft size={20} /></button>
+              )}
+              <div><h2 className="section-title" id="quick-add-title">{editorTitle}</h2><p className="subtle">{editorSubtitle}</p></div>
+            </div>
+            <button className="link-btn" onClick={close} aria-label="Close" type="button"><X /></button>
           </div>
-          <button className="link-btn" onClick={close} aria-label="Close" type="button"><X /></button>
-        </div>
 
-        {mode === 'task' ? <TaskEditor key={editingTask?.id ?? 'new-task'} task={editingTask} onCancel={close} onSave={saveTask} />
-          : mode === 'event' ? <EventEditor key={editingEvent?.id ?? `new-event-${eventDraftDate ?? 'today'}`} event={editingEvent} initialDate={eventDraftDate} onCancel={close} onSave={saveEvent} />
-          : mode === 'journal' ? <JournalEditor key={editingJournalEntry?.id ?? `new-journal-${journalDraftDate ?? 'today'}`} entry={editingJournalEntry} initialDate={journalDraftDate} onCancel={close} onSave={saveJournalEntry} />
-          : mode === 'expense' ? <ExpenseEditor currency={expenseCurrency} onCancel={close} onSave={saveExpense} />
-          : mode === 'check-in' ? <CheckInEditor currentEnergy={currentEnergy} currentMood={currentMood} onCancel={close} onSave={saveCheckIn} />
-          : <>
-              <div className="quick-grid quick-grid-primary">
-                {primaryActions.map(({ label, icon: Icon, hint }) => (
-                  <button className="quick-action quick-action-primary" key={label} onClick={actionHandlers[label]} type="button">
-                    <Icon size={22} /><span><strong>{label}</strong><small>{hint}</small></span>
-                  </button>
-                ))}
-              </div>
-              <div className="quick-secondary-row">
-                {secondaryActions.map(({ label, icon: Icon }) => (
-                  <button key={label} onClick={actionHandlers[label]} type="button"><Icon size={17} />{label}</button>
-                ))}
-              </div>
-            </>}
-      </section>
-    </div>
+          {mode === 'task' ? <TaskEditor key={editingTask?.id ?? 'new-task'} task={editingTask} onCancel={close} onSave={saveTask} />
+            : mode === 'event' ? <EventEditor key={editingEvent?.id ?? `new-event-${eventDraftDate ?? 'today'}`} event={editingEvent} initialDate={eventDraftDate} onCancel={close} onSave={saveEvent} />
+            : mode === 'journal' ? <JournalEditor key={editingJournalEntry?.id ?? `new-journal-${journalDraftDate ?? 'today'}-${journalDraftContext?.answer ?? 'plain'}`} entry={editingJournalEntry} initialDate={journalDraftDate} draftContext={journalDraftContext} onCancel={close} onSave={saveJournalEntry} />
+            : mode === 'expense' ? <ExpenseEditor currency={expenseCurrency} onCancel={close} onSave={saveExpense} />
+            : mode === 'check-in' ? <CheckInEditor currentEnergy={currentEnergy} currentMood={currentMood} onCancel={close} onSave={saveCheckIn} />
+            : <>
+                <div className="quick-grid quick-grid-primary">
+                  {primaryActions.map(({ label, icon: Icon, hint }) => (
+                    <button className="quick-action quick-action-primary" key={label} onClick={actionHandlers[label]} type="button">
+                      <Icon size={22} /><span><strong>{label}</strong><small>{hint}</small></span>
+                    </button>
+                  ))}
+                </div>
+                <div className="quick-secondary-row">
+                  {secondaryActions.map(({ label, icon: Icon }) => (
+                    <button key={label} onClick={actionHandlers[label]} type="button"><Icon size={17} />{label}</button>
+                  ))}
+                </div>
+              </>}
+        </section>
+      </div>
+      {toastElement}
+    </>
   );
 }
