@@ -12,7 +12,9 @@
   "include": [
     "src/domain/**/*.ts",
     "src/data/cloudSyncCore.ts",
-    "src/data/repositories/**/*.ts",
+    "src/data/repositories/reconcile.ts",
+    "src/data/repositories/recordChanges.ts",
+    "src/data/repositories/types.ts",
     "tests/**/*.ts",
     "tests/**/*.d.ts"
   ]
