@@ -1,6 +1,8 @@
+const SHELL_CACHE = 'still-shell-v2';
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open('still-shell-v1').then((cache) => cache.addAll([
+    caches.open(SHELL_CACHE).then((cache) => cache.addAll([
       '/',
       '/manifest.webmanifest',
       '/icons/icon-192.png',
@@ -13,7 +15,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => Promise.all(
-      keys.filter((key) => key.startsWith('still-shell-') && key !== 'still-shell-v1').map((key) => caches.delete(key)),
+      keys.filter((key) => key.startsWith('still-shell-') && key !== SHELL_CACHE).map((key) => caches.delete(key)),
     )),
   );
   self.clients.claim();
@@ -27,7 +29,7 @@ self.addEventListener('fetch', (event) => {
       fetch(event.request)
         .then((response) => {
           const copy = response.clone();
-          caches.open('still-shell-v1').then((cache) => cache.put('/', copy));
+          caches.open(SHELL_CACHE).then((cache) => cache.put('/', copy));
           return response;
         })
         .catch(() => caches.match('/')),
@@ -39,7 +41,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
         const copy = response.clone();
-        caches.open('still-shell-v1').then((cache) => cache.put(event.request, copy));
+        caches.open(SHELL_CACHE).then((cache) => cache.put(event.request, copy));
         return response;
       })),
     );
@@ -48,7 +50,11 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data?.url || '/notifications';
+
+  let targetUrl = event.notification.data?.url || '/notifications';
+  if (event.action === 'check-in-now') targetUrl = '/?checkin=now';
+  if (event.action === 'snooze-check-in') targetUrl = '/?checkin=snooze';
+
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       const openClient = clients.find((client) => 'focus' in client);
