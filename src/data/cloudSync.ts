@@ -6,6 +6,7 @@ import { getCloudSession, getSupabaseClient } from './supabaseClient';
 
 const CLOUD_USER_META_KEY = 'supabase-user-id-v1';
 const SYNC_BATCH_SIZE = 250;
+const PULL_PAGE_SIZE = 500;
 
 type StillRecordType =
   | 'task'
@@ -124,13 +125,25 @@ async function pullRows(): Promise<RemoteRecord[]> {
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error('Cloud sync could not load on this device.');
 
-  const { data, error } = await supabase
-    .from('still_records')
-    .select('*')
-    .order('updated_at', { ascending: true });
+  const rows: RemoteRecord[] = [];
 
-  if (error) throw new Error(error.message);
-  return (data ?? []) as RemoteRecord[];
+  for (let from = 0; ; from += PULL_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('still_records')
+      .select('*')
+      .order('updated_at', { ascending: true })
+      .order('record_type', { ascending: true })
+      .order('record_id', { ascending: true })
+      .range(from, from + PULL_PAGE_SIZE - 1);
+
+    if (error) throw new Error(error.message);
+
+    const page = (data ?? []) as RemoteRecord[];
+    rows.push(...page);
+    if (page.length < PULL_PAGE_SIZE) break;
+  }
+
+  return rows;
 }
 
 function mergeByKey<T extends { updatedAt: number; deletedAt?: number }>(
