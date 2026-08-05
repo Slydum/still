@@ -30,6 +30,8 @@ export function NotificationsPage() {
     return () => window.clearTimeout(timeout);
   }, [markAllNotificationsRead]);
 
+  const openCheckIn = () => navigate('/?checkin=now');
+
   return (
     <main className="shell notification-center-page">
       <header className="notification-center-header">
@@ -47,7 +49,21 @@ export function NotificationsPage() {
       </section> : <section className="notification-center-list" aria-label="Recent notifications">
         {notifications.map((notification) => {
           const Icon = notificationIcons[notification.kind];
-          return <article className={`card notification-center-item${notification.read ? '' : ' is-unread'}`} key={notification.id}>
+          const actionable = notification.kind === 'check-in';
+
+          return <article
+            className={`card notification-center-item${notification.read ? '' : ' is-unread'}${actionable ? ' is-actionable' : ''}`}
+            key={notification.id}
+            onClick={actionable ? openCheckIn : undefined}
+            onKeyDown={actionable ? (event) => {
+              if (event.key !== 'Enter' && event.key !== ' ') return;
+              event.preventDefault();
+              openCheckIn();
+            } : undefined}
+            role={actionable ? 'button' : undefined}
+            tabIndex={actionable ? 0 : undefined}
+            aria-label={actionable ? `${notification.title}. Open today’s check-in.` : undefined}
+          >
             <span className={`notification-kind-icon is-${notification.kind}`}><Icon size={18} /></span>
             <div><div><strong>{notification.title}</strong><time dateTime={new Date(notification.createdAt).toISOString()}>{formatNotificationTime(notification.createdAt)}</time></div><p>{notification.body}</p></div>
           </article>;
