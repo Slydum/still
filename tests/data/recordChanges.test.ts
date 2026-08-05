@@ -24,6 +24,15 @@ describe('record-level repository changes', () => {
     assert.equal(changes.deletedIds.length, 0);
   });
 
+  it('detects an edited record that has no explicit timestamp', () => {
+    const unchanged = { id: 'shift-one', note: 'original' };
+    const edited = { id: 'shift-one', note: 'edited' };
+    const changes = diffCollectionChanges([unchanged], [edited]);
+
+    assert.equal(changes.upserts.length, 1);
+    assert.equal(changes.upserts[0].id, 'shift-one');
+  });
+
   it('creates a deletion only for a record removed from the current tab state', () => {
     const previous = [fixture('one', 10)];
     const changes = diffCollectionChanges(previous, []);
