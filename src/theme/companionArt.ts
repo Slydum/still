@@ -39,7 +39,7 @@ export function getCloudCompanionKey(
     return 'scarf';
   }
 
-  if (context.timeOfDay === 'night' && (context.energy === 'empty' || context.energy === 'low')) {
+  if (context.timeOfDay === 'night' && (context.energy === 'exhausted' || context.energy === 'low')) {
     return 'sleeping';
   }
 
@@ -47,9 +47,9 @@ export function getCloudCompanionKey(
     return 'lantern';
   }
 
-  if (context.energy === 'full') return 'stretching';
-  if (context.energy === 'bright') return 'waving';
-  if (context.mood === 'loved' || context.mood === 'good') return 'flower';
+  if (context.energy === 'energized') return 'stretching';
+  if (context.energy === 'high') return 'waving';
+  if (context.mood === 'happy' || context.mood === 'excited') return 'flower';
   if (context.timeOfDay === 'afternoon') return 'reading';
   return 'coffee';
 }
@@ -59,4 +59,3 @@ export async function loadCloudCompanionArt(key: CloudCompanionKey) {
   const module = await companionLoaders[key]();
   return module.default;
 }
-
