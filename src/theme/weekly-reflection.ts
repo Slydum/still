@@ -5,10 +5,10 @@ import {
   parseISO,
   startOfWeek,
 } from 'date-fns';
-import { selectUpliftingCheckInQuote } from '../content/quoteEngine';
+import { getCheckInAnswer } from '../features/check-ins/checkInScale';
 import { listCheckIns, type CheckInRecord } from '../data/stillDb';
 import { useAppStore, type JournalEntry } from '../stores/useAppStore';
-import { createStillContext, getLocalDateKey } from './stillContext';
+import { getLocalDateKey } from './stillContext';
 import './weekly-reflection.css';
 
 type WeeklyReflectionSource = {
@@ -61,11 +61,7 @@ function dateLabel(startDate: string, endDate: string) {
 
 function answerForRecord(record: CheckInRecord) {
   if (!record.mood || !record.energy) return '';
-  return selectUpliftingCheckInQuote(createStillContext({
-    date: parseISO(record.date),
-    mood: record.mood,
-    energy: record.energy,
-  }));
+  return record.answerSnapshot ?? getCheckInAnswer(record.mood, record.energy);
 }
 
 function checkInReflectionsWithin(entries: JournalEntry[], startDate: string, endDate: string) {
@@ -84,18 +80,21 @@ function moodObservation(records: CheckInRecord[]) {
   const overall = average(moods);
 
   if (early !== undefined && later !== undefined && later - early >= 0.7) {
-    return 'More ease appeared as the week moved forward.';
+    return 'More happiness or excitement appeared as the week moved forward.';
   }
   if (early !== undefined && later !== undefined && early - later >= 0.7) {
-    return 'The later part of the week carried a little more emotional weight.';
+    return 'The later part of the week felt quieter or more tender.';
   }
-  if (overall !== undefined && overall < 2.5) {
-    return 'Several days carried a heavier emotional tone, asking for extra gentleness.';
+  if (overall !== undefined && overall < 1.5) {
+    return 'Sadness was present across several days, asking for extra gentleness.';
   }
-  if (overall !== undefined && overall >= 3.75) {
-    return 'Warmth and brighter moments showed up more often this week.';
+  if (overall !== undefined && overall < 2.75) {
+    return 'Calmer and quieter feelings shaped much of the week.';
   }
-  return 'Your feelings moved around a steady middle without needing to be simplified.';
+  if (overall !== undefined && overall >= 4) {
+    return 'Happiness and excitement showed up more often this week.';
+  }
+  return 'Contentment and steady warmth appeared across much of the week.';
 }
 
 function energyObservation(records: CheckInRecord[]) {
@@ -117,23 +116,23 @@ function energyObservation(records: CheckInRecord[]) {
   if (overall !== undefined && overall >= 3.75) {
     return 'More momentum was available across much of the week.';
   }
-  return 'Your energy stayed fairly steady even as the days changed.';
+  return 'Your energy stayed fairly balanced even as the days changed.';
 }
 
 function answerThemeObservation(records: CheckInRecord[]) {
   const answers = records.map(answerForRecord).join(' ').toLowerCase();
   const themes = [
     {
-      score: ['rest', 'gentle', 'quiet', 'slow', 'empty'].filter((word) => answers.includes(word)).length,
+      score: ['rest', 'gentle', 'quiet', 'slow', 'exhausted'].filter((word) => answers.includes(word)).length,
       text: 'Across your answers, rest and gentleness kept returning as something worth protecting.',
     },
     {
-      score: ['steady', 'balance', 'grounded', 'manageable'].filter((word) => answers.includes(word)).length,
-      text: 'Across your answers, steadiness and balance kept returning as quiet anchors.',
+      score: ['calm', 'content', 'balanced', 'steady'].filter((word) => answers.includes(word)).length,
+      text: 'Across your answers, calm, contentment, and balance kept returning as quiet anchors.',
     },
     {
-      score: ['ready', 'energy', 'possibility', 'bright', 'beautiful'].filter((word) => answers.includes(word)).length,
-      text: 'Across your answers, possibility and forward movement kept finding their way in.',
+      score: ['excited', 'energized', 'momentum', 'happy', 'bright'].filter((word) => answers.includes(word)).length,
+      text: 'Across your answers, happiness, possibility, and forward movement kept finding their way in.',
     },
   ].sort((left, right) => right.score - left.score);
 
@@ -148,11 +147,13 @@ function summaryFor(records: CheckInRecord[]) {
 
   const feeling = mood === undefined
     ? 'still unfolding'
-    : mood < 2.5
+    : mood < 1.5
       ? 'emotionally tender'
-      : mood >= 3.75
-        ? 'warmer and brighter'
-        : 'mixed but mostly grounded';
+      : mood < 2.75
+        ? 'quieter and calmer'
+        : mood >= 4
+          ? 'happier and more excited'
+          : 'content and mostly grounded';
 
   const pace = energy === undefined
     ? 'still finding its rhythm'
@@ -160,7 +161,7 @@ function summaryFor(records: CheckInRecord[]) {
       ? 'asking for a slower pace'
       : energy >= 3.75
         ? 'carrying more momentum'
-        : 'moving at a steady pace';
+        : 'moving with balanced energy';
 
   return `Your check-ins held a week that felt ${feeling} while ${pace}. Nothing here needs to be graded—only noticed.`;
 }
