@@ -8,6 +8,17 @@ declare module 'node:assert/strict' {
 }
 
 declare module 'node:test' {
-  export function describe(name: string, fn: () => void): void;
-  export function it(name: string, fn: () => void): void;
+  export function describe(name: string, fn: () => void | Promise<void>): void;
+  export function it(name: string, fn: () => void | Promise<void>): void;
 }
+
+interface Storage {
+  readonly length: number;
+  clear(): void;
+  getItem(key: string): string | null;
+  key(index: number): string | null;
+  removeItem(key: string): void;
+  setItem(key: string, value: string): void;
+}
+
+declare var localStorage: Storage;

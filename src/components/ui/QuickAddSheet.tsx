@@ -19,6 +19,7 @@ import {
   type JournalEntry,
   type JournalInput,
   type JournalMood,
+  type ExpenseInput,
   type StillEvent,
   type StillTask,
   type TaskInput,
@@ -26,131 +27,20 @@ import {
   type TaskRepeat,
 } from '../../stores/useAppStore';
 import { getLocalDateKey } from '../../theme/stillContext';
+import { CheckInEditor } from './quick-add/CheckInEditor';
+import { ExpenseEditor } from './quick-add/ExpenseEditor';
+import { journalMoods } from './quick-add/quickAddOptions';
 
-const actions: Array<[label: string, icon: LucideIcon]> = [
-  ['Task', CheckSquare],
-  ['Event', CalendarPlus],
-  ['Expense', ReceiptText],
-  ['Work', Timer],
-  ['Check-in', HeartPulse],
-  ['Journal', BookOpen],
+type QuickActionLabel = 'Task' | 'Event' | 'Expense' | 'Work' | 'Check-in' | 'Journal';
+
+const actions: Array<{ label: QuickActionLabel; icon: LucideIcon }> = [
+  { label: 'Task', icon: CheckSquare },
+  { label: 'Event', icon: CalendarPlus },
+  { label: 'Expense', icon: ReceiptText },
+  { label: 'Work', icon: Timer },
+  { label: 'Check-in', icon: HeartPulse },
+  { label: 'Journal', icon: BookOpen },
 ];
-
-const journalMoods: Array<{ value: JournalMood; emoji: string; label: string }> = [
-  { value: 1, emoji: '🌧️', label: 'Heavy' },
-  { value: 2, emoji: '🌫️', label: 'Low' },
-  { value: 3, emoji: '🌿', label: 'Steady' },
-  { value: 4, emoji: '🌤️', label: 'Good' },
-  { value: 5, emoji: '✨', label: 'Bright' },
-];
-
-const energyLevels: Array<{ value: number; emoji: string; label: string }> = [
-  { value: 1, emoji: '🪫', label: 'Empty' },
-  { value: 2, emoji: '🕯️', label: 'Low' },
-  { value: 3, emoji: '🌿', label: 'Steady' },
-  { value: 4, emoji: '🌤️', label: 'Ready' },
-  { value: 5, emoji: '⚡', label: 'Bright' },
-];
-
-function ExpenseEditor({ onCancel, onSave }: { onCancel: () => void; onSave: (input: TaskInput) => void }) {
-  const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
-  const [note, setNote] = useState('');
-
-  const submit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!title.trim()) return;
-
-    const details = [
-      amount.trim() ? `Amount: ${amount.trim()}` : '',
-      category.trim() ? `Category: ${category.trim()}` : '',
-      note.trim(),
-    ].filter(Boolean).join('\n');
-
-    onSave({
-      title: `Review expense: ${title.trim()}`,
-      note: details,
-      dueDate: getLocalDateKey(),
-      priority: 'medium',
-      repeat: 'none',
-      areaId: 'money',
-    });
-  };
-
-  return (
-    <form className="task-editor" onSubmit={submit}>
-      <label className="task-field">
-        <span>Expense</span>
-        <input autoFocus maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="What did you spend on?" required type="text" value={title} />
-      </label>
-      <div className="task-form-row">
-        <label className="task-field">
-          <span>Amount <small>(optional)</small></span>
-          <input inputMode="decimal" maxLength={24} onChange={(event) => setAmount(event.target.value)} placeholder="24.50" type="text" value={amount} />
-        </label>
-        <label className="task-field">
-          <span>Category <small>(optional)</small></span>
-          <input maxLength={80} onChange={(event) => setCategory(event.target.value)} placeholder="Groceries" type="text" value={category} />
-        </label>
-      </div>
-      <label className="task-field">
-        <span>Note <small>(optional)</small></span>
-        <textarea maxLength={500} onChange={(event) => setNote(event.target.value)} placeholder="Anything to remember before you reconcile it" rows={3} value={note} />
-      </label>
-      <div className="task-editor-actions">
-        <button className="task-secondary-button" onClick={onCancel} type="button">Cancel</button>
-        <button className="task-primary-button" disabled={!title.trim()} type="submit">Add expense reminder</button>
-      </div>
-    </form>
-  );
-}
-
-function CheckInEditor({
-  currentEnergy,
-  currentMood,
-  onCancel,
-  onSave,
-}: {
-  currentEnergy?: number;
-  currentMood?: number;
-  onCancel: () => void;
-  onSave: (mood?: number, energy?: number) => void;
-}) {
-  const [mood, setMood] = useState<number | undefined>(currentMood);
-  const [energy, setEnergy] = useState<number | undefined>(currentEnergy);
-
-  return (
-    <div className="task-editor checkin-editor">
-      <fieldset className="journal-mood-field">
-        <legend>Mood</legend>
-        <div className="journal-mood-options">
-          {journalMoods.map((option) => (
-            <button aria-label={option.label} aria-pressed={mood === option.value} className={mood === option.value ? 'is-selected' : ''} key={option.value} onClick={() => setMood(mood === option.value ? undefined : option.value)} type="button">
-              <span>{option.emoji}</span>
-              <small>{option.label}</small>
-            </button>
-          ))}
-        </div>
-      </fieldset>
-      <fieldset className="journal-mood-field">
-        <legend>Energy</legend>
-        <div className="journal-mood-options">
-          {energyLevels.map((option) => (
-            <button aria-label={option.label} aria-pressed={energy === option.value} className={energy === option.value ? 'is-selected' : ''} key={option.value} onClick={() => setEnergy(energy === option.value ? undefined : option.value)} type="button">
-              <span>{option.emoji}</span>
-              <small>{option.label}</small>
-            </button>
-          ))}
-        </div>
-      </fieldset>
-      <div className="task-editor-actions">
-        <button className="task-secondary-button" onClick={onCancel} type="button">Cancel</button>
-        <button className="task-primary-button" disabled={!mood && !energy} onClick={() => onSave(mood, energy)} type="button">Save check-in</button>
-      </div>
-    </div>
-  );
-}
 
 function TaskEditor({
   task,
@@ -552,12 +442,14 @@ export function QuickAddSheet() {
   const currentMood = useAppStore((state) => state.mood);
   const currentEnergy = useAppStore((state) => state.energy);
   const replaceTodayCheckIn = useAppStore((state) => state.replaceTodayCheckIn);
+  const expenseCurrency = useAppStore((state) => state.workProfile.currency);
   const openQuickAdd = useAppStore((state) => state.openQuickAdd);
   const openTaskEditor = useAppStore((state) => state.openTaskEditor);
   const openEventEditor = useAppStore((state) => state.openEventEditor);
   const openJournalEditor = useAppStore((state) => state.openJournalEditor);
   const close = useAppStore((state) => state.closeQuickAdd);
   const addTask = useAppStore((state) => state.addTask);
+  const addExpense = useAppStore((state) => state.addExpense);
   const updateTask = useAppStore((state) => state.updateTask);
   const addEvent = useAppStore((state) => state.addEvent);
   const updateEvent = useAppStore((state) => state.updateEvent);
@@ -598,8 +490,8 @@ export function QuickAddSheet() {
     close();
   };
 
-  const saveExpense = (input: TaskInput) => {
-    addTask(input);
+  const saveExpense = (input: ExpenseInput) => {
+    addExpense(input);
     close();
   };
 
@@ -614,6 +506,15 @@ export function QuickAddSheet() {
   const openWork = () => {
     close();
     navigate('/work');
+  };
+
+  const actionHandlers: Record<QuickActionLabel, () => void> = {
+    Task: openTaskEditor,
+    Event: openEventEditor,
+    Expense: openExpenseEditor,
+    Work: openWork,
+    'Check-in': openCheckInEditor,
+    Journal: openJournalEditor,
   };
 
   const editorTitle = mode === 'task'
@@ -694,6 +595,7 @@ export function QuickAddSheet() {
           />
         ) : mode === 'expense' ? (
           <ExpenseEditor
+            currency={expenseCurrency}
             onCancel={close}
             onSave={saveExpense}
           />
@@ -706,18 +608,11 @@ export function QuickAddSheet() {
           />
         ) : (
           <div className="quick-grid">
-            {actions.map(([label, Icon]) => (
+            {actions.map(({ label, icon: Icon }) => (
               <button
                 className="quick-action"
                 key={label}
-                onClick={() => {
-                  if (label === 'Task') openTaskEditor();
-                  else if (label === 'Event') openEventEditor();
-                  else if (label === 'Expense') openExpenseEditor();
-                  else if (label === 'Work') openWork();
-                  else if (label === 'Check-in') openCheckInEditor();
-                  else if (label === 'Journal') openJournalEditor();
-                }}
+                onClick={actionHandlers[label]}
                 type="button"
               >
                 <Icon size={24} />
