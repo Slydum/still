@@ -194,6 +194,7 @@ export function DashboardPage() {
   const [draftMood, setDraftMood] = useState<number>();
   const [draftEnergy, setDraftEnergy] = useState<number>();
   const [editingCheckIn, setEditingCheckIn] = useState(false);
+  const [checkInFlipped, setCheckInFlipped] = useState(false);
   const requestedLocationWeather = useRef(false);
 
   const now = useCurrentTime();
@@ -209,6 +210,7 @@ export function DashboardPage() {
     setDraftMood(undefined);
     setDraftEnergy(undefined);
     setEditingCheckIn(true);
+    setCheckInFlipped(false);
   }, [energy, mood, todayKey]);
 
   const selectedWeather =
@@ -415,6 +417,7 @@ export function DashboardPage() {
     setDraftMood(undefined);
     setDraftEnergy(undefined);
     setEditingCheckIn(false);
+    setCheckInFlipped(false);
   };
 
   const chooseMood = (value: number) => {
@@ -431,6 +434,12 @@ export function DashboardPage() {
     setDraftMood(undefined);
     setDraftEnergy(undefined);
     setEditingCheckIn(true);
+    setCheckInFlipped(false);
+  };
+
+  const openCheckInJournal = () => {
+    setCheckInFlipped(false);
+    openJournalEditor(undefined, todayKey);
   };
 
   useEffect(() => {
@@ -493,17 +502,40 @@ export function DashboardPage() {
 
         <article className={`card checkin-combined-card surface-checkin ${showCheckInAnswer ? 'is-answered' : 'is-selecting'}`}>
           {showCheckInAnswer ? (
-            <div className="checkin-answer" aria-live="polite">
-              <blockquote>{checkInAnswer}</blockquote>
-              <div className="checkin-answer-actions">
-                <button className="checkin-change-button" onClick={changeAnswer} type="button">
-                  <Pencil size={16} />
-                  Change answer
+            <div className={`checkin-answer-flip ${checkInFlipped ? 'is-flipped' : ''}`} aria-live="polite">
+              <div className="checkin-answer-flip-inner">
+                <button
+                  className="checkin-answer-face checkin-answer-front"
+                  onClick={() => setCheckInFlipped(true)}
+                  type="button"
+                  aria-controls="checkin-answer-actions"
+                  aria-expanded={checkInFlipped}
+                  aria-label="Show options for this check-in"
+                  tabIndex={checkInFlipped ? -1 : 0}
+                >
+                  <blockquote>{checkInAnswer}</blockquote>
+                  <span className="checkin-flip-hint">Tap for options</span>
                 </button>
-                <button className="checkin-journal-button" onClick={() => openJournalEditor(undefined, todayKey)} type="button">
-                  <BookOpen size={17} />
-                  Let it out
-                </button>
+                <div
+                  className="checkin-answer-face checkin-answer-back"
+                  id="checkin-answer-actions"
+                  aria-hidden={!checkInFlipped}
+                >
+                  <p>What would help right now?</p>
+                  <div className="checkin-answer-actions">
+                    <button className="checkin-change-button" onClick={changeAnswer} type="button" tabIndex={checkInFlipped ? 0 : -1}>
+                      <Pencil size={16} />
+                      Change answer
+                    </button>
+                    <button className="checkin-journal-button" onClick={openCheckInJournal} type="button" tabIndex={checkInFlipped ? 0 : -1}>
+                      <BookOpen size={17} />
+                      Let it out
+                    </button>
+                  </div>
+                  <button className="checkin-back-button" onClick={() => setCheckInFlipped(false)} type="button" tabIndex={checkInFlipped ? 0 : -1}>
+                    Back to answer
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
