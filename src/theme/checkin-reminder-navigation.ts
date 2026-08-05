@@ -1,4 +1,8 @@
-import { snoozeCheckIn, CHECK_IN_SNOOZE_MINUTES } from '../features/check-ins/checkInReminder';
+import {
+  CHECK_IN_FOCUS_EVENT,
+  CHECK_IN_SNOOZE_MINUTES,
+  snoozeCheckIn,
+} from '../features/check-ins/checkInReminder';
 import { getLocalDateKey } from './stillContext';
 import './checkin-reminder-navigation.css';
 
@@ -72,4 +76,7 @@ function consumeReminderIntent() {
   }
 }
 
-if (typeof window !== 'undefined') consumeReminderIntent();
+if (typeof window !== 'undefined') {
+  window.addEventListener(CHECK_IN_FOCUS_EVENT, queueCheckInFocus);
+  consumeReminderIntent();
+}
