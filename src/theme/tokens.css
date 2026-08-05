@@ -9,7 +9,9 @@
   --surface: #ffffff;
   --surface-soft: #fdf5fb;
   --text: #4e496a;
+  --text-strong: #514961;
   --muted: #8b849d;
+  --muted-soft: #a39aa9;
   --lavender: #b8a7f7;
   --lavender-soft: #ece7ff;
   --pink: #f8c8d8;
@@ -19,8 +21,18 @@
   --peach: #ffd6a5;
   --peach-soft: #fff3e3;
   --border: #eee8f0;
+  --border-strong: #e4dce8;
+  --shadow-sm: 0 12px 34px rgba(78, 73, 106, 0.065);
   --shadow: 0 14px 40px rgba(78, 73, 106, 0.09);
+  --shadow-lg: 0 18px 44px rgba(78, 73, 106, 0.11);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
   --radius-card: 24px;
+  --radius-xl: 30px;
+  --radius-pill: 999px;
+  --font-display: Georgia, "Times New Roman", serif;
+  --accent-gradient: linear-gradient(135deg, #806cc2, #a08bd8);
 }
 
 :root[data-tone="warm"] {
@@ -28,6 +40,7 @@
   --lavender: #d5a27d;
   --lavender-soft: #f8e6d8;
   --surface-soft: #fff5ee;
+  --accent-gradient: linear-gradient(135deg, #c9895e, #e5ad83);
 }
 
 :root[data-tone="sage"] {
@@ -35,4 +48,5 @@
   --lavender: #87ad9b;
   --lavender-soft: #dfefe7;
   --surface-soft: #eff8f2;
+  --accent-gradient: linear-gradient(135deg, #628e78, #8db8a3);
 }
