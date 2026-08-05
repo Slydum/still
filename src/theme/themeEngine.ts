@@ -20,9 +20,6 @@ function hashString(value: string) {
     hash = (hash << 5) - hash + value.charCodeAt(index);
     hash |= 0;
   }
-  // Convert to an unsigned integer rather than using Math.abs. The absolute
-  // value of the smallest signed 32-bit integer is still outside the positive
-  // signed range, which could otherwise produce a negative array index.
   return hash >>> 0;
 }
 
@@ -93,7 +90,7 @@ function heroForContext(context: StillContext): [string, string, HeroKind] {
     stillAssets.cozy.window,
   ] as const;
 
-  if (context.energy === 'empty' || context.energy === 'low' || context.timeOfDay === 'night') {
+  if (context.energy === 'exhausted' || context.energy === 'low' || context.timeOfDay === 'night') {
     return [pick(restful, `${context.dateKey}:rest`), 'A cozy companion resting', 'companion'];
   }
 
@@ -111,12 +108,15 @@ function heroForContext(context: StillContext): [string, string, HeroKind] {
 
 function checkInAsset(context: StillContext) {
   if (context.mood === 'sad') return stillAssets.checkIn.mood.sad;
-  if (context.mood === 'overwhelmed') return stillAssets.checkIn.mood.calm;
-  if (context.mood === 'loved') return stillAssets.checkIn.mood.excited;
-  if (context.energy === 'empty') return stillAssets.checkIn.energy.exhausted;
+  if (context.mood === 'calm') return stillAssets.checkIn.mood.calm;
+  if (context.mood === 'content') return stillAssets.checkIn.mood.content;
+  if (context.mood === 'happy') return stillAssets.checkIn.mood.happy;
+  if (context.mood === 'excited') return stillAssets.checkIn.mood.excited;
+  if (context.energy === 'exhausted') return stillAssets.checkIn.energy.exhausted;
   if (context.energy === 'low') return stillAssets.checkIn.energy.low;
-  if (context.energy === 'bright') return stillAssets.checkIn.energy.high;
-  if (context.energy === 'full') return stillAssets.checkIn.energy.energized;
+  if (context.energy === 'balanced') return stillAssets.checkIn.energy.balanced;
+  if (context.energy === 'high') return stillAssets.checkIn.energy.high;
+  if (context.energy === 'energized') return stillAssets.checkIn.energy.energized;
   return stillAssets.checkIn.mood.content;
 }
 
