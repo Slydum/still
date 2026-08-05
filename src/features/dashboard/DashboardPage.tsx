@@ -22,6 +22,10 @@ import { useDailyQuote } from '../../hooks/useDailyQuote';
 import { useAppStore, type EventCategory } from '../../stores/useAppStore';
 import { eventTimeLabel, getEventOccurrences } from '../calendar/eventUtils';
 import {
+  createCheckInJournalDraft,
+  setPendingJournalDraftContext,
+} from '../journal/journalDraftContext';
+import {
   getCloudCompanionKey,
   loadCloudCompanionArt,
 } from '../../theme/companionArt';
@@ -438,6 +442,8 @@ export function DashboardPage() {
   };
 
   const openCheckInJournal = () => {
+    if (!mood || !energy || !checkInAnswer) return;
+    setPendingJournalDraftContext(createCheckInJournalDraft(checkInAnswer, mood, energy));
     setCheckInFlipped(false);
     openJournalEditor(undefined, todayKey);
   };
