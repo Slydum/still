@@ -10,7 +10,7 @@ export type CollectionChanges<T extends IdentifiedVersionedRecord> = {
 };
 
 function recordVersion(record: IdentifiedVersionedRecord) {
-  return record.updatedAt ?? record.createdAt ?? 0;
+  return record.updatedAt ?? record.createdAt;
 }
 
 export function diffCollectionChanges<T extends IdentifiedVersionedRecord>(
@@ -22,7 +22,12 @@ export function diffCollectionChanges<T extends IdentifiedVersionedRecord>(
 
   const upserts = next.filter((record) => {
     const existing = previousById.get(record.id);
-    return !existing || recordVersion(existing) !== recordVersion(record);
+    if (!existing) return true;
+
+    const existingVersion = recordVersion(existing);
+    const nextVersion = recordVersion(record);
+    return existingVersion !== nextVersion
+      || (existingVersion === undefined && existing !== record);
   });
 
   const deletedIds = previous
