@@ -1,4 +1,11 @@
 import type { Table } from 'dexie';
+import {
+  assertCloudUserCompatibility,
+  chunkRows,
+  collectPaginatedRows,
+  createSingleFlight,
+  mergeByKey,
+} from './cloudSyncCore';
 import { stillDb } from './localDb';
 import { localStillRepository } from './repositories/localStillRepository';
 import type { PermanentDataSnapshot } from './repositories/types';
@@ -114,8 +121,7 @@ async function pushRows(rows: RpcRecord[]) {
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error('Cloud sync could not load on this device.');
 
-  for (let index = 0; index < rows.length; index += SYNC_BATCH_SIZE) {
-    const batch = rows.slice(index, index + SYNC_BATCH_SIZE);
+  for (const batch of chunkRows(rows, SYNC_BATCH_SIZE)) {
     const { error } = await supabase.rpc('sync_still_records', { p_records: batch });
     if (error) throw new Error(error.message);
   }
@@ -125,48 +131,18 @@ async function pullRows(): Promise<RemoteRecord[]> {
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error('Cloud sync could not load on this device.');
 
-  const rows: RemoteRecord[] = [];
-
-  for (let from = 0; ; from += PULL_PAGE_SIZE) {
+  return collectPaginatedRows(async (from, to) => {
     const { data, error } = await supabase
       .from('still_records')
       .select('*')
       .order('updated_at', { ascending: true })
       .order('record_type', { ascending: true })
       .order('record_id', { ascending: true })
-      .range(from, from + PULL_PAGE_SIZE - 1);
+      .range(from, to);
 
     if (error) throw new Error(error.message);
-
-    const page = (data ?? []) as RemoteRecord[];
-    rows.push(...page);
-    if (page.length < PULL_PAGE_SIZE) break;
-  }
-
-  return rows;
-}
-
-function mergeByKey<T extends { updatedAt: number; deletedAt?: number }>(
-  local: T[],
-  remote: T[],
-  keyOf: (record: T) => string,
-) {
-  const merged = new Map<string, T>();
-
-  [...local, ...remote].forEach((record) => {
-    const key = keyOf(record);
-    const current = merged.get(key);
-    if (!current || record.updatedAt > current.updatedAt) {
-      merged.set(key, record);
-      return;
-    }
-
-    if (record.updatedAt === current.updatedAt && record.deletedAt && !current.deletedAt) {
-      merged.set(key, record);
-    }
-  });
-
-  return [...merged.values()];
+    return (data ?? []) as RemoteRecord[];
+  }, PULL_PAGE_SIZE);
 }
 
 function remoteEntityRecord(row: RemoteRecord, userId: string): LocalSyncedRecord {
@@ -250,11 +226,7 @@ async function applyRemoteRows(rows: RemoteRecord[], userId: string) {
 
 async function assertCloudUserBinding(userId: string) {
   const existing = await stillDb.repositoryMeta.get(CLOUD_USER_META_KEY);
-  if (existing && existing.value !== userId) {
-    throw new Error(
-      'This browser is already linked to another Still account. Export or reset the local data before connecting a different account.',
-    );
-  }
+  assertCloudUserCompatibility(existing?.value, userId);
 
   if (!existing) {
     await stillDb.repositoryMeta.put({
@@ -283,14 +255,4 @@ async function runCloudSync(): Promise<PermanentDataSnapshot> {
   return localStillRepository.load();
 }
 
-let activeSync: Promise<PermanentDataSnapshot> | undefined;
-
-export function synchronizeCloudData() {
-  if (activeSync) return activeSync;
-
-  activeSync = runCloudSync().finally(() => {
-    activeSync = undefined;
-  });
-
-  return activeSync;
-}
+export const synchronizeCloudData = createSingleFlight(runCloudSync);

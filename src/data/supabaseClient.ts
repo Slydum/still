@@ -1,85 +1,35 @@
-export const SUPABASE_PROJECT_URL = 'https://hkezdsmpdnpnwvmqgkrx.supabase.co';
-export const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_jFFuMaE4NEGZI7yc7SArRA_BVBIYlJH';
+import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 
-export type CloudUser = {
-  id: string;
-  email?: string;
-};
+const SUPABASE_PROJECT_URL = import.meta.env.VITE_SUPABASE_URL?.trim();
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
 
-export type CloudSession = {
-  user: CloudUser;
-};
+export type CloudSession = Session;
 
-type SupabaseError = {
-  message: string;
-};
+let client: SupabaseClient | undefined;
 
-type AuthResponse<T> = Promise<{
-  data: T;
-  error: SupabaseError | null;
-}>;
-
-type AuthSubscription = {
-  unsubscribe(): void;
-};
-
-export type SupabaseClientLike = {
-  auth: {
-    getSession(): AuthResponse<{ session: CloudSession | null }>;
-    signInWithOtp(input: {
-      email: string;
-      options?: {
-        emailRedirectTo?: string;
-        shouldCreateUser?: boolean;
-      };
-    }): AuthResponse<Record<string, unknown>>;
-    signOut(): AuthResponse<Record<string, unknown>>;
-    onAuthStateChange(
-      callback: (event: string, session: CloudSession | null) => void,
-    ): { data: { subscription: AuthSubscription } };
-  };
-  from(table: string): any;
-  rpc(functionName: string, args: Record<string, unknown>): Promise<{
-    data: unknown;
-    error: SupabaseError | null;
-  }>;
-};
-
-type SupabaseBrowserGlobal = {
-  createClient(
-    url: string,
-    publishableKey: string,
-    options?: Record<string, unknown>,
-  ): SupabaseClientLike;
-};
-
-declare global {
-  interface Window {
-    supabase?: SupabaseBrowserGlobal;
+export function getSupabaseConfigurationError() {
+  if (!SUPABASE_PROJECT_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    return 'Cloud sync is not configured for this deployment.';
   }
+
+  return undefined;
 }
 
-let client: SupabaseClientLike | undefined;
-
 export function isSupabaseAvailable() {
-  return typeof window !== 'undefined' && Boolean(window.supabase?.createClient);
+  return !getSupabaseConfigurationError();
 }
 
 export function getSupabaseClient() {
   if (client) return client;
-  if (!isSupabaseAvailable()) return undefined;
+  if (!SUPABASE_PROJECT_URL || !SUPABASE_PUBLISHABLE_KEY) return undefined;
 
-  client = window.supabase?.createClient(
-    SUPABASE_PROJECT_URL,
-    SUPABASE_PUBLISHABLE_KEY,
-    {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
+  client = createClient(SUPABASE_PROJECT_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
     },
-  );
+  });
 
   return client;
 }
@@ -95,7 +45,7 @@ export async function getCloudSession() {
 
 export async function requestCloudMagicLink(email: string) {
   const supabase = getSupabaseClient();
-  if (!supabase) throw new Error('Cloud sync could not load on this device.');
+  if (!supabase) throw new Error(getSupabaseConfigurationError() ?? 'Cloud sync could not load on this device.');
 
   const { error } = await supabase.auth.signInWithOtp({
     email,

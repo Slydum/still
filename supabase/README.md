@@ -10,6 +10,17 @@ Still uses Supabase as an optional cloud synchronization layer while keeping Dex
 
 The browser application uses only the project's publishable key. Never add a secret key or service-role key to frontend code.
 
+## Frontend environment
+
+Copy `.env.example` to `.env.local` for local development and set:
+
+```text
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+```
+
+Add the same variables to the Vercel project before deploying cloud sync. The application remains usable offline when they are missing, but cloud sync is disabled and shows a configuration message.
+
 ## Authentication URLs
 
 Magic-link sign-in redirects back to `/more#cloud-sync`. In Supabase Dashboard, open **Authentication → URL Configuration** and configure:
@@ -34,4 +45,6 @@ Add preview deployment origins only when they are trusted and needed.
 
 Cloud sync runs after sign-in, when the user taps **Sync now**, and when a signed-in account is restored on the More screen. Local editing remains available offline.
 
-The initial integration synchronizes tasks, events, journal entries, expenses, entity links, work shifts, and check-ins. Preferences and notifications remain device-local for now.
+The integration synchronizes tasks, events, journal entries, expenses, entity links, work shifts, and check-ins. Preferences and notifications remain device-local for now.
+
+Local persistence writes explicit record-level changes instead of treating every item missing from a full in-memory array as deleted. This prevents a stale tab from creating tombstones for records it never observed.
