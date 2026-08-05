@@ -1,12 +1,9 @@
+import { ChevronDown } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import type { ExpenseInput } from '../../../stores/useAppStore';
 import { getLocalDateKey } from '../../../theme/stillContext';
 
-export function ExpenseEditor({
-  currency,
-  onCancel,
-  onSave,
-}: {
+export function ExpenseEditor({ currency, onCancel, onSave }: {
   currency: string;
   onCancel: () => void;
   onSave: (input: ExpenseInput) => void;
@@ -20,18 +17,8 @@ export function ExpenseEditor({
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!title.trim()) return;
-
     const parsedAmount = amount.trim() ? Number(amount) : undefined;
-
-    onSave({
-      title,
-      amount: parsedAmount,
-      currency,
-      category,
-      note,
-      expenseDate,
-      areaId: 'money',
-    });
+    onSave({ title, amount: parsedAmount, currency, category, note, expenseDate, areaId: 'money' });
   };
 
   return (
@@ -42,7 +29,7 @@ export function ExpenseEditor({
       </label>
       <div className="task-form-row">
         <label className="task-field">
-          <span>Amount <small>(optional)</small></span>
+          <span>Amount</span>
           <input inputMode="decimal" min="0" onChange={(event) => setAmount(event.target.value)} placeholder="24.50" step="0.01" type="number" value={amount} />
         </label>
         <label className="task-field">
@@ -50,14 +37,21 @@ export function ExpenseEditor({
           <input onChange={(event) => setExpenseDate(event.target.value)} required type="date" value={expenseDate} />
         </label>
       </div>
-      <label className="task-field">
-        <span>Category <small>(optional)</small></span>
-        <input maxLength={80} onChange={(event) => setCategory(event.target.value)} placeholder="Groceries" type="text" value={category} />
-      </label>
-      <label className="task-field">
-        <span>Note <small>(optional)</small></span>
-        <textarea maxLength={500} onChange={(event) => setNote(event.target.value)} placeholder="Anything to remember before you reconcile it" rows={3} value={note} />
-      </label>
+
+      <details className="editor-more-options">
+        <summary><span>More options</span><ChevronDown size={16} aria-hidden="true" /></summary>
+        <div className="editor-more-options-content">
+          <label className="task-field">
+            <span>Category <small>(optional)</small></span>
+            <input maxLength={80} onChange={(event) => setCategory(event.target.value)} placeholder="Groceries" type="text" value={category} />
+          </label>
+          <label className="task-field">
+            <span>Note <small>(optional)</small></span>
+            <textarea maxLength={500} onChange={(event) => setNote(event.target.value)} placeholder="Anything worth remembering" rows={2} value={note} />
+          </label>
+        </div>
+      </details>
+
       <div className="task-editor-actions">
         <button className="task-secondary-button" onClick={onCancel} type="button">Cancel</button>
         <button className="task-primary-button" disabled={!title.trim()} type="submit">Save expense</button>
