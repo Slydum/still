@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": false,
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "noEmit": false,
+    "outDir": ".tmp/tests",
+    "rootDir": ".",
+    "types": []
+  },
+  "include": ["src/domain/**/*.ts", "tests/**/*.ts", "tests/**/*.d.ts"]
+}

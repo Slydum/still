@@ -98,7 +98,7 @@ export type JournalInput = Pick<
   'title' | 'body' | 'entryDate' | 'mood' | 'tags'
 > & LifeAreaRecord;
 
-type QuickAddMode = 'menu' | 'task' | 'event' | 'journal';
+type QuickAddMode = 'menu' | 'task' | 'event' | 'journal' | 'expense' | 'check-in';
 
 type AppState = {
   quickAddOpen: boolean;
@@ -131,7 +131,7 @@ type AppState = {
   reminderTime: string;
   eventReminderMinutes: number;
   autoWeather: boolean;
-  openQuickAdd: () => void;
+  openQuickAdd: (mode?: QuickAddMode) => void;
   openTaskEditor: (taskId?: string) => void;
   openEventEditor: (eventId?: string, initialDate?: string) => void;
   openJournalEditor: (entryId?: string, initialDate?: string) => void;
@@ -271,9 +271,9 @@ export const useAppStore = create<AppState>()(
       reminderTime: '09:00',
       eventReminderMinutes: 30,
       autoWeather: true,
-      openQuickAdd: () => set({
+      openQuickAdd: (quickAddMode = 'menu') => set({
         quickAddOpen: true,
-        quickAddMode: 'menu',
+        quickAddMode,
         editingTaskId: undefined,
         editingEventId: undefined,
         editingJournalId: undefined,
