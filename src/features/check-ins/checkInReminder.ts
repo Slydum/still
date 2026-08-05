@@ -1,5 +1,6 @@
 const CHECK_IN_SNOOZE_KEY = 'still-checkin-snooze-v1';
 export const CHECK_IN_SNOOZE_MINUTES = 30;
+export const CHECK_IN_FOCUS_EVENT = 'still:focus-check-in';
 
 type CheckInSnooze = {
   date: string;
