@@ -14,6 +14,9 @@ const DELIVERY_WINDOW_MS = 15 * 60_000;
 const SNOOZE_DELIVERY_WINDOW_MS = 60 * 60_000;
 
 type ReminderKind = 'task' | 'event' | 'check-in';
+type ActionableNotificationOptions = NotificationOptions & {
+  actions?: Array<{ action: string; title: string }>;
+};
 
 function readSentReminders() {
   try {
@@ -32,7 +35,7 @@ function saveSentReminders(sent: Set<string>) {
 
 async function displayReminder(title: string, body: string, tag: string, kind: ReminderKind) {
   const isCheckIn = kind === 'check-in';
-  const options: NotificationOptions = {
+  const options: ActionableNotificationOptions = {
     body,
     tag,
     data: {
