@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { selectQuote } from '../../../content/quoteEngine';
+import { selectUpliftingCheckInQuote } from '../../../content/quoteEngine';
 import { createStillContext } from '../../../theme/stillContext';
 import { energyLevels, journalMoods } from './quickAddOptions';
 
@@ -26,19 +26,12 @@ export function CheckInEditor({
   const resultQuote = useMemo(() => {
     if (!completedCheckIn) return undefined;
 
-    // The fifth UI mood is “Bright,” not “Loved.” Normalize it to the
-    // positive mood bucket so the quote stays aligned with the selected label.
-    const quoteMood = completedCheckIn.mood === 5 ? 4 : completedCheckIn.mood;
     const context = createStillContext({
-      mood: quoteMood,
+      mood: completedCheckIn.mood,
       energy: completedCheckIn.energy,
     });
 
-    return selectQuote(
-      context,
-      [],
-      `${context.dateKey}:check-in:${completedCheckIn.mood}:${completedCheckIn.energy}`,
-    );
+    return selectUpliftingCheckInQuote(context);
   }, [completedCheckIn]);
 
   const chooseMood = (value: number) => {
@@ -60,13 +53,9 @@ export function CheckInEditor({
   };
 
   if (completedCheckIn && resultQuote) {
-    const moodLabel = journalMoods.find((option) => option.value === completedCheckIn.mood)?.label;
-    const energyLabel = energyLevels.find((option) => option.value === completedCheckIn.energy)?.label;
-
     return (
       <div className="checkin-quote-result" aria-live="polite">
-        <p className="checkin-quote-context">{moodLabel} mood · {energyLabel} energy</p>
-        <blockquote>{resultQuote.text}</blockquote>
+        <blockquote>{resultQuote}</blockquote>
         <div className="task-editor-actions checkin-quote-actions">
           <button className="task-secondary-button" onClick={() => setCompletedCheckIn(undefined)} type="button">Change</button>
           <button className="task-primary-button" onClick={() => onSave(completedCheckIn.mood, completedCheckIn.energy)} type="button">Save check-in</button>
