@@ -11,6 +11,7 @@ import './theme/modal-interactions.css';
 import './theme/quick-add-interactions';
 import './theme/dashboard-hierarchy.css';
 import './theme/checkin-history.css';
+import './theme/journal-checkin-links';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
