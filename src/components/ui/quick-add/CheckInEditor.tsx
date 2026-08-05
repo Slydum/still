@@ -1,5 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { selectQuote } from '../../../content/quoteEngine';
+import { createStillContext } from '../../../theme/stillContext';
 import { energyLevels, journalMoods } from './quickAddOptions';
+
+type CompletedCheckIn = {
+  mood: number;
+  energy: number;
+};
 
 export function CheckInEditor({
   currentEnergy,
@@ -14,6 +21,59 @@ export function CheckInEditor({
 }) {
   const [mood, setMood] = useState<number | undefined>(currentMood);
   const [energy, setEnergy] = useState<number | undefined>(currentEnergy);
+  const [completedCheckIn, setCompletedCheckIn] = useState<CompletedCheckIn>();
+
+  const resultQuote = useMemo(() => {
+    if (!completedCheckIn) return undefined;
+
+    // The fifth UI mood is “Bright,” not “Loved.” Normalize it to the
+    // positive mood bucket so the quote stays aligned with the selected label.
+    const quoteMood = completedCheckIn.mood === 5 ? 4 : completedCheckIn.mood;
+    const context = createStillContext({
+      mood: quoteMood,
+      energy: completedCheckIn.energy,
+    });
+
+    return selectQuote(
+      context,
+      [],
+      `${context.dateKey}:check-in:${completedCheckIn.mood}:${completedCheckIn.energy}`,
+    );
+  }, [completedCheckIn]);
+
+  const chooseMood = (value: number) => {
+    const nextMood = mood === value ? undefined : value;
+    setMood(nextMood);
+
+    if (nextMood && energy) {
+      setCompletedCheckIn({ mood: nextMood, energy });
+    }
+  };
+
+  const chooseEnergy = (value: number) => {
+    const nextEnergy = energy === value ? undefined : value;
+    setEnergy(nextEnergy);
+
+    if (mood && nextEnergy) {
+      setCompletedCheckIn({ mood, energy: nextEnergy });
+    }
+  };
+
+  if (completedCheckIn && resultQuote) {
+    const moodLabel = journalMoods.find((option) => option.value === completedCheckIn.mood)?.label;
+    const energyLabel = energyLevels.find((option) => option.value === completedCheckIn.energy)?.label;
+
+    return (
+      <div className="checkin-quote-result" aria-live="polite">
+        <p className="checkin-quote-context">{moodLabel} mood · {energyLabel} energy</p>
+        <blockquote>{resultQuote.text}</blockquote>
+        <div className="task-editor-actions checkin-quote-actions">
+          <button className="task-secondary-button" onClick={() => setCompletedCheckIn(undefined)} type="button">Change</button>
+          <button className="task-primary-button" onClick={() => onSave(completedCheckIn.mood, completedCheckIn.energy)} type="button">Save check-in</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="task-editor checkin-editor">
@@ -21,7 +81,7 @@ export function CheckInEditor({
         <legend>Mood</legend>
         <div className="journal-mood-options">
           {journalMoods.map((option) => (
-            <button aria-label={option.label} aria-pressed={mood === option.value} className={mood === option.value ? 'is-selected' : ''} key={option.value} onClick={() => setMood(mood === option.value ? undefined : option.value)} type="button">
+            <button aria-label={option.label} aria-pressed={mood === option.value} className={mood === option.value ? 'is-selected' : ''} key={option.value} onClick={() => chooseMood(option.value)} type="button">
               <span>{option.emoji}</span>
               <small>{option.label}</small>
             </button>
@@ -32,7 +92,7 @@ export function CheckInEditor({
         <legend>Energy</legend>
         <div className="journal-mood-options">
           {energyLevels.map((option) => (
-            <button aria-label={option.label} aria-pressed={energy === option.value} className={energy === option.value ? 'is-selected' : ''} key={option.value} onClick={() => setEnergy(energy === option.value ? undefined : option.value)} type="button">
+            <button aria-label={option.label} aria-pressed={energy === option.value} className={energy === option.value ? 'is-selected' : ''} key={option.value} onClick={() => chooseEnergy(option.value)} type="button">
               <span>{option.emoji}</span>
               <small>{option.label}</small>
             </button>
@@ -41,7 +101,6 @@ export function CheckInEditor({
       </fieldset>
       <div className="task-editor-actions">
         <button className="task-secondary-button" onClick={onCancel} type="button">Cancel</button>
-        <button className="task-primary-button" disabled={!mood && !energy} onClick={() => onSave(mood, energy)} type="button">Save check-in</button>
       </div>
     </div>
   );

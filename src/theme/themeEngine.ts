@@ -1,3 +1,4 @@
+import { selectQuote } from '../content/quoteEngine';
 import type { StillContext, WeatherKey } from './stillContext';
 import { stillAssets } from './stillAssets';
 
@@ -120,13 +121,19 @@ function checkInAsset(context: StillContext) {
 }
 
 function checkInMessage(context: StillContext) {
-  if (context.mood === 'sad') return 'You do not have to carry the whole day at once.';
-  if (context.mood === 'overwhelmed') return 'Let the next step be very small.';
-  if (context.energy === 'empty') return 'Low energy is information, not a failure.';
-  if (context.energy === 'low') return 'A slower pace still counts as moving.';
-  if (context.mood === 'loved') return 'Hold on to the warmth that found you today.';
-  if (context.energy === 'bright' || context.energy === 'full') return 'Use the energy gently; you do not have to spend it all.';
-  return 'Noticing how you feel is already a kind act.';
+  if (!context.mood || !context.energy) return '';
+
+  // The fifth check-in mood is displayed as “Excited”/“Bright” in the UI.
+  // Keep it in the positive mood bucket instead of returning relationship quotes.
+  const quoteContext: StillContext = context.mood === 'loved'
+    ? { ...context, mood: 'good' }
+    : context;
+
+  return selectQuote(
+    quoteContext,
+    [],
+    `${context.dateKey}:check-in:${context.mood}:${context.energy}`,
+  ).text;
 }
 
 export function buildStillTheme(context: StillContext): StillTheme {
