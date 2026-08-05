@@ -1,0 +1,229 @@
+/* Graphics uniformity pass
+   Keeps existing component behavior intact while normalizing visual sizing. */
+
+/* Dashboard compact actions */
+.task-add-button,
+.upcoming-add-button {
+  width: 112px;
+  min-width: 112px;
+  min-height: 38px;
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--lavender);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  background: var(--surface-soft);
+  box-shadow: none;
+}
+
+.task-add-button svg,
+.upcoming-add-button svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  stroke-width: 2.2;
+}
+
+/* Keep the visual label consistent without changing feature behavior. */
+.upcoming-add-button {
+  font-size: 0;
+}
+
+.upcoming-add-button::after {
+  content: "Add event";
+  font-size: 12px;
+}
+
+/* Page-level primary actions */
+.calendar-primary-button,
+.journal-primary-button,
+.task-primary-button,
+.settings-primary-action,
+.work-clock-button,
+.work-save-button {
+  min-height: 44px;
+  padding: 10px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  background: var(--accent-gradient);
+}
+
+.calendar-primary-button svg,
+.journal-primary-button svg,
+.task-primary-button svg,
+.settings-primary-action svg,
+.work-clock-button svg,
+.work-save-button svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+/* Secondary action vocabulary */
+.task-secondary-button,
+.settings-secondary-action,
+.settings-test-notification,
+.calendar-today-button {
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  background: var(--surface-soft);
+}
+
+/* Icon-only actions */
+.task-record-actions button,
+.calendar-event-actions button,
+.journal-entry-actions button,
+.checkin-record-actions button,
+.still-work-row-actions button,
+.task-back-button,
+.checkin-back-button,
+.still-work-header > button {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.task-record-actions button svg,
+.calendar-event-actions button svg,
+.journal-entry-actions button svg,
+.checkin-record-actions button svg,
+.still-work-row-actions button svg,
+.task-back-button svg,
+.checkin-back-button svg,
+.still-work-header > button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Empty-state surfaces */
+.task-empty-state,
+.upcoming-empty,
+.journal-empty,
+.calendar-empty-day,
+.checkin-history-empty {
+  min-height: 154px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow: none;
+}
+
+.task-empty-state {
+  padding: 22px 100px 22px 18px;
+}
+
+.upcoming-empty,
+.journal-empty,
+.calendar-empty-day,
+.checkin-history-empty {
+  padding: 22px;
+}
+
+.task-empty-state > span,
+.upcoming-empty > svg,
+.journal-empty > svg,
+.calendar-empty-day > svg {
+  width: 48px;
+  height: 48px;
+  padding: 11px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  color: var(--lavender);
+  background: var(--lavender-soft);
+}
+
+.task-empty-state > span {
+  font-size: 22px;
+}
+
+.task-empty-state strong,
+.upcoming-empty strong,
+.journal-empty strong,
+.calendar-empty-day strong,
+.checkin-history-empty strong {
+  color: var(--text-strong);
+}
+
+/* Life Garden optical frames */
+.garden-card-head {
+  min-height: 48px;
+}
+
+.garden-card-head img {
+  width: 48px;
+  height: 48px;
+  padding: 6px;
+  flex: none;
+  border: 1px solid rgba(117, 103, 145, 0.1);
+  border-radius: 15px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+/* Quick-add tiles */
+.quick-action {
+  min-height: 96px;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+  background: var(--surface-soft);
+}
+
+.quick-action svg {
+  width: 22px;
+  height: 22px;
+  color: var(--lavender);
+}
+
+@media (max-width: 390px) {
+  .task-add-button,
+  .upcoming-add-button {
+    width: 104px;
+    min-width: 104px;
+    padding-inline: 10px;
+  }
+
+  .garden-card-head img {
+    width: 44px;
+    height: 44px;
+    padding: 5px;
+  }
+}
