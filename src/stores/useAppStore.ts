@@ -98,7 +98,26 @@ export type JournalInput = Pick<
   'title' | 'body' | 'entryDate' | 'mood' | 'tags'
 > & LifeAreaRecord;
 
-type QuickAddMode = 'menu' | 'task' | 'event' | 'journal';
+export type StillExpense = {
+  id: string;
+  title: string;
+  amount?: number;
+  currency: string;
+  category?: string;
+  note?: string;
+  expenseDate: string;
+  createdAt: number;
+  updatedAt: number;
+  areaId?: LifeAreaId;
+  links?: LifeEntityRef[];
+};
+
+export type ExpenseInput = Pick<
+  StillExpense,
+  'title' | 'amount' | 'currency' | 'category' | 'note' | 'expenseDate'
+> & LifeAreaRecord;
+
+type QuickAddMode = 'menu' | 'task' | 'event' | 'journal' | 'expense' | 'check-in';
 
 type AppState = {
   quickAddOpen: boolean;
@@ -111,6 +130,7 @@ type AppState = {
   tasks: StillTask[];
   events: StillEvent[];
   journalEntries: JournalEntry[];
+  expenses: StillExpense[];
   notifications: AppNotification[];
   entityLinks: LifeEntityLink[];
   workProfile: WorkProfile;
@@ -131,7 +151,7 @@ type AppState = {
   reminderTime: string;
   eventReminderMinutes: number;
   autoWeather: boolean;
-  openQuickAdd: () => void;
+  openQuickAdd: (mode?: QuickAddMode) => void;
   openTaskEditor: (taskId?: string) => void;
   openEventEditor: (eventId?: string, initialDate?: string) => void;
   openJournalEditor: (entryId?: string, initialDate?: string) => void;
@@ -146,6 +166,9 @@ type AppState = {
   addJournalEntry: (input: JournalInput) => void;
   updateJournalEntry: (id: string, input: JournalInput) => void;
   deleteJournalEntry: (id: string) => void;
+  addExpense: (input: ExpenseInput) => void;
+  updateExpense: (id: string, input: ExpenseInput) => void;
+  deleteExpense: (id: string) => void;
   setName: (value: string) => void;
   setMood: (value: number) => void;
   setEnergy: (value: number) => void;
@@ -231,6 +254,24 @@ function normalizedEventInput(input: EventInput): EventInput {
   };
 }
 
+
+function normalizedExpenseInput(input: ExpenseInput): ExpenseInput {
+  const amount = input.amount === undefined || Number.isNaN(input.amount)
+    ? undefined
+    : Math.max(0, input.amount);
+
+  return {
+    title: input.title.trim(),
+    amount,
+    currency: input.currency.trim() || 'PHP',
+    category: input.category?.trim() || undefined,
+    note: input.note?.trim() || undefined,
+    expenseDate: input.expenseDate || getLocalDateKey(),
+    areaId: input.areaId ?? 'money',
+    links: input.links,
+  };
+}
+
 function normalizedJournalInput(input: JournalInput): JournalInput {
   return {
     title: input.title?.trim() || undefined,
@@ -256,6 +297,7 @@ export const useAppStore = create<AppState>()(
       tasks: [],
       events: [],
       journalEntries: [],
+      expenses: [],
       notifications: [],
       entityLinks: [],
       workProfile: DEFAULT_WORK_PROFILE,
@@ -271,9 +313,9 @@ export const useAppStore = create<AppState>()(
       reminderTime: '09:00',
       eventReminderMinutes: 30,
       autoWeather: true,
-      openQuickAdd: () => set({
+      openQuickAdd: (quickAddMode = 'menu') => set({
         quickAddOpen: true,
-        quickAddMode: 'menu',
+        quickAddMode,
         editingTaskId: undefined,
         editingEventId: undefined,
         editingJournalId: undefined,
@@ -442,6 +484,36 @@ export const useAppStore = create<AppState>()(
       deleteJournalEntry: (id) => set((state) => ({
         journalEntries: state.journalEntries.filter((entry) => entry.id !== id),
       })),
+      addExpense: (input) => set((state) => {
+        const normalized = normalizedExpenseInput(input);
+        if (!normalized.title) return state;
+
+        const now = Date.now();
+        return {
+          expenses: [
+            ...state.expenses,
+            {
+              id: createTaskId(),
+              ...normalized,
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+        };
+      }),
+      updateExpense: (id, input) => set((state) => {
+        const normalized = normalizedExpenseInput(input);
+        if (!normalized.title) return state;
+
+        return {
+          expenses: state.expenses.map((expense) => expense.id === id
+            ? { ...expense, ...normalized, updatedAt: Date.now() }
+            : expense),
+        };
+      }),
+      deleteExpense: (id) => set((state) => ({
+        expenses: state.expenses.filter((expense) => expense.id !== id),
+      })),
       setName: (name) => set({ name }),
       setMood: (mood) => set((state) => {
         const today = getLocalDateKey();
@@ -595,6 +667,7 @@ export const useAppStore = create<AppState>()(
         tasks: state.tasks,
         events: state.events,
         journalEntries: state.journalEntries,
+        expenses: state.expenses,
         notifications: state.notifications,
         entityLinks: state.entityLinks,
         workProfile: state.workProfile,

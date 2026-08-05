@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "test": "rm -rf .tmp/tests && tsc -p tsconfig.test.json && find .tmp/tests/src -name '*.js' -exec sh -c 'cp \"$1\" \"${1%.js}\"' sh {} \\; && node --test .tmp/tests/tests/**/*.test.js"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",

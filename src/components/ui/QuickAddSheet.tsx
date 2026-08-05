@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   useAppStore,
   type EventCategory,
@@ -18,6 +19,7 @@ import {
   type JournalEntry,
   type JournalInput,
   type JournalMood,
+  type ExpenseInput,
   type StillEvent,
   type StillTask,
   type TaskInput,
@@ -25,22 +27,19 @@ import {
   type TaskRepeat,
 } from '../../stores/useAppStore';
 import { getLocalDateKey } from '../../theme/stillContext';
+import { CheckInEditor } from './quick-add/CheckInEditor';
+import { ExpenseEditor } from './quick-add/ExpenseEditor';
+import { journalMoods } from './quick-add/quickAddOptions';
 
-const actions: Array<[label: string, icon: LucideIcon]> = [
-  ['Task', CheckSquare],
-  ['Event', CalendarPlus],
-  ['Expense', ReceiptText],
-  ['Work', Timer],
-  ['Check-in', HeartPulse],
-  ['Journal', BookOpen],
-];
+type QuickActionLabel = 'Task' | 'Event' | 'Expense' | 'Work' | 'Check-in' | 'Journal';
 
-const journalMoods: Array<{ value: JournalMood; emoji: string; label: string }> = [
-  { value: 1, emoji: '🌧️', label: 'Heavy' },
-  { value: 2, emoji: '🌫️', label: 'Low' },
-  { value: 3, emoji: '🌿', label: 'Steady' },
-  { value: 4, emoji: '🌤️', label: 'Good' },
-  { value: 5, emoji: '✨', label: 'Bright' },
+const actions: Array<{ label: QuickActionLabel; icon: LucideIcon }> = [
+  { label: 'Task', icon: CheckSquare },
+  { label: 'Event', icon: CalendarPlus },
+  { label: 'Expense', icon: ReceiptText },
+  { label: 'Work', icon: Timer },
+  { label: 'Check-in', icon: HeartPulse },
+  { label: 'Journal', icon: BookOpen },
 ];
 
 function TaskEditor({
@@ -429,6 +428,7 @@ function JournalEditor({
 }
 
 export function QuickAddSheet() {
+  const navigate = useNavigate();
   const open = useAppStore((state) => state.quickAddOpen);
   const mode = useAppStore((state) => state.quickAddMode);
   const editingTaskId = useAppStore((state) => state.editingTaskId);
@@ -439,12 +439,17 @@ export function QuickAddSheet() {
   const tasks = useAppStore((state) => state.tasks);
   const events = useAppStore((state) => state.events);
   const journalEntries = useAppStore((state) => state.journalEntries);
+  const currentMood = useAppStore((state) => state.mood);
+  const currentEnergy = useAppStore((state) => state.energy);
+  const replaceTodayCheckIn = useAppStore((state) => state.replaceTodayCheckIn);
+  const expenseCurrency = useAppStore((state) => state.workProfile.currency);
   const openQuickAdd = useAppStore((state) => state.openQuickAdd);
   const openTaskEditor = useAppStore((state) => state.openTaskEditor);
   const openEventEditor = useAppStore((state) => state.openEventEditor);
   const openJournalEditor = useAppStore((state) => state.openJournalEditor);
   const close = useAppStore((state) => state.closeQuickAdd);
   const addTask = useAppStore((state) => state.addTask);
+  const addExpense = useAppStore((state) => state.addExpense);
   const updateTask = useAppStore((state) => state.updateTask);
   const addEvent = useAppStore((state) => state.addEvent);
   const updateEvent = useAppStore((state) => state.updateEvent);
@@ -485,13 +490,44 @@ export function QuickAddSheet() {
     close();
   };
 
+  const saveExpense = (input: ExpenseInput) => {
+    addExpense(input);
+    close();
+  };
+
+  const saveCheckIn = (mood?: number, energy?: number) => {
+    replaceTodayCheckIn(mood, energy);
+    close();
+  };
+
+  const openExpenseEditor = () => openQuickAdd('expense');
+  const openCheckInEditor = () => openQuickAdd('check-in');
+
+  const openWork = () => {
+    close();
+    navigate('/work');
+  };
+
+  const actionHandlers: Record<QuickActionLabel, () => void> = {
+    Task: openTaskEditor,
+    Event: openEventEditor,
+    Expense: openExpenseEditor,
+    Work: openWork,
+    'Check-in': openCheckInEditor,
+    Journal: openJournalEditor,
+  };
+
   const editorTitle = mode === 'task'
     ? (editingTask ? 'Edit task' : 'Add a task')
     : mode === 'event'
       ? (editingEvent ? 'Edit event' : 'Add an event')
       : mode === 'journal'
         ? (editingJournalEntry ? 'Edit entry' : 'New journal entry')
-      : 'Add something';
+        : mode === 'expense'
+          ? 'Add an expense'
+          : mode === 'check-in'
+            ? 'Quick check-in'
+            : 'Add something';
 
   const editorSubtitle = mode === 'task'
     ? 'Make space for what matters next.'
@@ -499,7 +535,11 @@ export function QuickAddSheet() {
       ? 'Keep the moments that shape your day close.'
       : mode === 'journal'
         ? 'There is no right way to put this moment into words.'
-      : 'What would you like to remember?';
+        : mode === 'expense'
+          ? 'Capture it now and review it gently later.'
+          : mode === 'check-in'
+            ? 'Notice how you are without making it a project.'
+            : 'What would you like to remember?';
 
   return (
     <div className="sheet-backdrop" onClick={close}>
@@ -514,7 +554,7 @@ export function QuickAddSheet() {
         <div className="section-head">
           <div className="task-sheet-heading">
             {mode !== 'menu' && !editingTask && !editingEvent && !editingJournalEntry && (
-              <button className="task-back-button" onClick={openQuickAdd} aria-label="Back to quick add" type="button">
+              <button className="task-back-button" onClick={() => openQuickAdd()} aria-label="Back to quick add" type="button">
                 <ChevronLeft size={20} />
               </button>
             )}
@@ -553,18 +593,26 @@ export function QuickAddSheet() {
             onCancel={close}
             onSave={saveJournalEntry}
           />
+        ) : mode === 'expense' ? (
+          <ExpenseEditor
+            currency={expenseCurrency}
+            onCancel={close}
+            onSave={saveExpense}
+          />
+        ) : mode === 'check-in' ? (
+          <CheckInEditor
+            currentEnergy={currentEnergy}
+            currentMood={currentMood}
+            onCancel={close}
+            onSave={saveCheckIn}
+          />
         ) : (
           <div className="quick-grid">
-            {actions.map(([label, Icon]) => (
+            {actions.map(({ label, icon: Icon }) => (
               <button
                 className="quick-action"
                 key={label}
-                onClick={() => {
-                  if (label === 'Task') openTaskEditor();
-                  else if (label === 'Event') openEventEditor();
-                  else if (label === 'Journal') openJournalEditor();
-                  else window.alert(`${label} form comes next.`);
-                }}
+                onClick={actionHandlers[label]}
                 type="button"
               >
                 <Icon size={24} />
