@@ -123,8 +123,14 @@ function checkInAsset(context: StillContext) {
 function checkInMessage(context: StillContext) {
   if (!context.mood || !context.energy) return '';
 
+  // The fifth check-in mood is displayed as “Excited”/“Bright” in the UI.
+  // Keep it in the positive mood bucket instead of returning relationship quotes.
+  const quoteContext: StillContext = context.mood === 'loved'
+    ? { ...context, mood: 'good' }
+    : context;
+
   return selectQuote(
-    context,
+    quoteContext,
     [],
     `${context.dateKey}:check-in:${context.mood}:${context.energy}`,
   ).text;
