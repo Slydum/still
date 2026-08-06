@@ -158,11 +158,14 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
           <div className="auth-brand" aria-label="Still">Still</div>
           <div className="auth-art" aria-hidden="true">
             <img
+              alt=""
               className="auth-mascot"
               decoding="async"
+              draggable={false}
               fetchPriority="high"
-              src="/assets/auth/still-cloud-mascot.webp"
-              alt=""
+              height="360"
+              src="/assets/auth/still-cloud-mascot.svg"
+              width="640"
             />
           </div>
           <div className="auth-hero-copy">
