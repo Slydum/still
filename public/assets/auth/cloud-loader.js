@@ -39,3 +39,5 @@
   observer.observe(document.documentElement, { childList: true, subtree: true });
   applyCloud();
 })();
+
+// Preview rebuild marker: 2026-08-06T19:27+08:00
