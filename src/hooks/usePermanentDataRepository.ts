@@ -26,6 +26,11 @@ function reportRepositoryError(error: unknown) {
   console.error('Still could not synchronize its permanent data repository:', error);
 }
 
+export function initializePermanentDataRepository() {
+  bootstrapPromise ??= stillRepository.bootstrap(cacheFromStore());
+  return bootstrapPromise;
+}
+
 export function usePermanentDataRepository() {
   useEffect(() => {
     let disposed = false;
@@ -46,8 +51,7 @@ export function usePermanentDataRepository() {
     };
 
     const start = async () => {
-      bootstrapPromise ??= stillRepository.bootstrap(cacheFromStore());
-      const snapshot = await bootstrapPromise;
+      const snapshot = await initializePermanentDataRepository();
       if (disposed) return;
 
       useAppStore.setState({

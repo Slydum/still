@@ -15,6 +15,7 @@
     "src/data/repositories/reconcile.ts",
     "src/data/repositories/recordChanges.ts",
     "src/data/repositories/types.ts",
+    "src/features/auth/authValidation.ts",
     "tests/**/*.ts",
     "tests/**/*.d.ts"
   ]

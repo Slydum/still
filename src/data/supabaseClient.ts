@@ -1,15 +1,21 @@
-import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
+import {
+  createClient,
+  type AuthChangeEvent,
+  type Session,
+  type SupabaseClient,
+} from '@supabase/supabase-js';
 
 const SUPABASE_PROJECT_URL = import.meta.env.VITE_SUPABASE_URL?.trim();
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
 
 export type CloudSession = Session;
+export type CloudAuthEvent = AuthChangeEvent;
 
 let client: SupabaseClient | undefined;
 
 export function getSupabaseConfigurationError() {
   if (!SUPABASE_PROJECT_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    return 'Cloud sync is not configured for this deployment.';
+    return 'Account access is not configured for this deployment.';
   }
 
   return undefined;
@@ -34,6 +40,14 @@ export function getSupabaseClient() {
   return client;
 }
 
+function requireSupabaseClient() {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    throw new Error(getSupabaseConfigurationError() ?? 'Account access could not load on this device.');
+  }
+  return supabase;
+}
+
 export async function getCloudSession() {
   const supabase = getSupabaseClient();
   if (!supabase) return null;
@@ -43,19 +57,40 @@ export async function getCloudSession() {
   return data.session;
 }
 
-export async function requestCloudMagicLink(email: string) {
-  const supabase = getSupabaseClient();
-  if (!supabase) throw new Error(getSupabaseConfigurationError() ?? 'Cloud sync could not load on this device.');
+export async function signInCloudAccount(email: string, password: string) {
+  const supabase = requireSupabaseClient();
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(error.message);
+  return data;
+}
 
-  const { error } = await supabase.auth.signInWithOtp({
+export async function signUpCloudAccount(email: string, password: string, displayName: string) {
+  const supabase = requireSupabaseClient();
+  const { data, error } = await supabase.auth.signUp({
     email,
+    password,
     options: {
-      emailRedirectTo: `${window.location.origin}/more#cloud-sync`,
-      shouldCreateUser: true,
+      data: { display_name: displayName },
+      emailRedirectTo: `${window.location.origin}/auth/confirmed`,
     },
   });
-
   if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function requestCloudPasswordReset(email: string) {
+  const supabase = requireSupabaseClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth/recovery`,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function updateCloudPassword(password: string) {
+  const supabase = requireSupabaseClient();
+  const { data, error } = await supabase.auth.updateUser({ password });
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 export async function signOutCloud() {
@@ -67,13 +102,13 @@ export async function signOutCloud() {
 }
 
 export function subscribeToCloudSession(
-  listener: (session: CloudSession | null) => void,
+  listener: (event: CloudAuthEvent, session: CloudSession | null) => void,
 ) {
   const supabase = getSupabaseClient();
   if (!supabase) return () => undefined;
 
-  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-    listener(session);
+  const { data } = supabase.auth.onAuthStateChange((event, session) => {
+    listener(event, session);
   });
 
   return () => data.subscription.unsubscribe();
