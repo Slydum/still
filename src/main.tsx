@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './app/App';
 import './theme/tokens.css';
 import './theme/global.css';
+import './theme/auth.css';
 import './theme/uniformity.css';
 import './theme/ios-form-fix.css';
 import './theme/quick-add-disclosure.css';
