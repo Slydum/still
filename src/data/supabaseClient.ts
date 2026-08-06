@@ -71,7 +71,7 @@ export async function signUpCloudAccount(email: string, password: string, displa
     password,
     options: {
       data: { display_name: displayName },
-      emailRedirectTo: `${window.location.origin}/auth?confirmed=1`,
+      emailRedirectTo: `${window.location.origin}/auth/confirmed`,
     },
   });
   if (error) throw new Error(error.message);
@@ -81,7 +81,7 @@ export async function signUpCloudAccount(email: string, password: string, displa
 export async function requestCloudPasswordReset(email: string) {
   const supabase = requireSupabaseClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth?mode=recovery`,
+    redirectTo: `${window.location.origin}/auth/recovery`,
   });
   if (error) throw new Error(error.message);
 }
