@@ -1,5 +1,7 @@
 import {
   ArrowLeft,
+  Eye,
+  EyeOff,
   KeyRound,
   LockKeyhole,
   Mail,
@@ -29,29 +31,25 @@ type AuthPageProps = {
   onRecoveryComplete?: () => void;
 };
 
-const modeCopy: Record<AuthMode, { eyebrow: string; title: string; subtitle: string; action: string }> = {
+const modeCopy: Record<AuthMode, { title: string; subtitle: string; action: string }> = {
   login: {
-    eyebrow: 'Welcome back',
-    title: 'Return to your quiet space.',
-    subtitle: 'Log in to keep your Still data connected across your devices.',
+    title: 'Welcome back',
+    subtitle: 'Good to see you again.',
     action: 'Log in',
   },
   signup: {
-    eyebrow: 'Create your space',
-    title: 'A calmer day starts here.',
-    subtitle: 'Create an account so your tasks, journal, and calendar stay yours.',
+    title: 'Create your space',
+    subtitle: 'A gentle place for everything that matters.',
     action: 'Create account',
   },
   forgot: {
-    eyebrow: 'Reset your password',
-    title: 'We will help you return.',
-    subtitle: 'Enter your email and we will send a secure password reset link.',
+    title: 'Find your way back',
+    subtitle: 'We will send a secure password reset link.',
     action: 'Send reset email',
   },
   recovery: {
-    eyebrow: 'Choose a new password',
-    title: 'Make your account secure again.',
-    subtitle: 'Use a password with at least 8 characters.',
+    title: 'Choose a new password',
+    subtitle: 'Make it something only you know.',
     action: 'Save new password',
   },
 };
@@ -62,6 +60,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(initialNotice);
   const [error, setError] = useState('');
@@ -80,6 +79,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
     setMode(nextMode);
     setPassword('');
     setConfirmation('');
+    setShowPassword(false);
     setError('');
     setMessage('');
   };
@@ -149,64 +149,41 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
     }
   };
 
+  const passwordType = showPassword ? 'text' : 'password';
+
   return (
-    <main className="auth-page">
-      <div className="auth-shell">
-        <section className="auth-intro" aria-label="About Still">
-          <div className="auth-brand">Still.</div>
-          <div className="auth-intro-copy">
-            <p className="section-kicker">A private place for your days</p>
-            <h1>Everything important, held gently together.</h1>
-            <p>Your tasks, journal, calendar, money notes, and check-ins stay available offline and can follow you across signed-in devices.</p>
-          </div>
+    <main className={`auth-page auth-page--${mode}`}>
+      <div className="auth-native-shell">
+        <header className="auth-hero">
+          <div className="auth-brand" aria-label="Still">Still</div>
           <div className="auth-art" aria-hidden="true">
-            <img src="/assets/cozy/shared-little-house.png" alt="" />
+            <img
+              className="auth-mascot"
+              decoding="async"
+              fetchPriority="high"
+              src="/assets/auth/still-cloud-mascot.webp"
+              alt=""
+            />
           </div>
-          <div className="auth-assurance"><ShieldCheck size={17} /><span>Your account owns its cloud records. Still also keeps a local copy on this device.</span></div>
-        </section>
+          <div className="auth-hero-copy">
+            <h1 id="auth-title">{copy.title}</h1>
+            <p>{copy.subtitle}</p>
+          </div>
+        </header>
 
         <section className="auth-card" aria-labelledby="auth-title">
-          {!recoveryMode && mode !== 'forgot' && (
-            <div className="auth-tabs" role="tablist" aria-label="Account access">
-              <button
-                aria-selected={mode === 'login'}
-                className={mode === 'login' ? 'is-active' : ''}
-                onClick={() => changeMode('login')}
-                role="tab"
-                type="button"
-              >
-                Log in
-              </button>
-              <button
-                aria-selected={mode === 'signup'}
-                className={mode === 'signup' ? 'is-active' : ''}
-                onClick={() => changeMode('signup')}
-                role="tab"
-                type="button"
-              >
-                Sign up
-              </button>
-            </div>
-          )}
-
           {(mode === 'forgot' || mode === 'recovery') && (
             <button className="auth-back" onClick={() => changeMode('login')} type="button">
-              <ArrowLeft size={16} /> Back to login
+              <ArrowLeft size={17} /> Back to login
             </button>
           )}
-
-          <header className="auth-card-header">
-            <p className="section-kicker">{copy.eyebrow}</p>
-            <h2 id="auth-title">{copy.title}</h2>
-            <p>{copy.subtitle}</p>
-          </header>
 
           <form className="auth-form" onSubmit={submit}>
             {mode === 'signup' && (
               <label>
                 <span>Your name</span>
                 <div className="auth-input-wrap">
-                  <UserRound size={18} />
+                  <UserRound size={20} />
                   <input
                     autoComplete="name"
                     disabled={busy}
@@ -223,16 +200,16 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
 
             {mode !== 'recovery' && (
               <label>
-                <span>Email address</span>
+                <span>Email</span>
                 <div className="auth-input-wrap">
-                  <Mail size={18} />
+                  <Mail size={20} />
                   <input
                     autoCapitalize="none"
                     autoComplete="email"
                     disabled={busy}
                     inputMode="email"
                     onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@example.com"
+                    placeholder="you@still.app"
                     required
                     spellCheck={false}
                     type="email"
@@ -246,17 +223,26 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
               <label>
                 <span>{mode === 'recovery' ? 'New password' : 'Password'}</span>
                 <div className="auth-input-wrap">
-                  <LockKeyhole size={18} />
+                  <LockKeyhole size={20} />
                   <input
                     autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                     disabled={busy}
                     minLength={8}
                     onChange={(event) => setPassword(event.target.value)}
-                    placeholder="At least 8 characters"
+                    placeholder="Enter your password"
                     required
-                    type="password"
+                    type={passwordType}
                     value={password}
                   />
+                  <button
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="auth-password-toggle"
+                    disabled={busy}
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    type="button"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
                 </div>
               </label>
             )}
@@ -265,7 +251,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
               <label>
                 <span>Confirm password</span>
                 <div className="auth-input-wrap">
-                  <KeyRound size={18} />
+                  <KeyRound size={20} />
                   <input
                     autoComplete="new-password"
                     disabled={busy}
@@ -273,7 +259,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
                     onChange={(event) => setConfirmation(event.target.value)}
                     placeholder="Type it again"
                     required
-                    type="password"
+                    type={passwordType}
                     value={confirmation}
                   />
                 </div>
@@ -281,9 +267,12 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
             )}
 
             {mode === 'login' && (
-              <button className="auth-text-action" onClick={() => changeMode('forgot')} type="button">
-                Forgot password?
-              </button>
+              <div className="auth-login-tools">
+                <span>Securely remembered on this device</span>
+                <button className="auth-text-action" onClick={() => changeMode('forgot')} type="button">
+                  Forgot password?
+                </button>
+              </div>
             )}
 
             {!available && (
@@ -298,11 +287,27 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
               {busy ? 'Please wait…' : copy.action}
             </button>
           </form>
-
-          {mode === 'login' && (
-            <p className="auth-help">Used the old email-link login? Choose <strong>Forgot password</strong> once to create a password for the same account.</p>
-          )}
         </section>
+
+        {mode === 'login' && (
+          <p className="auth-switch">
+            Don’t have an account?{' '}
+            <button onClick={() => changeMode('signup')} type="button">Create account</button>
+          </p>
+        )}
+
+        {mode === 'signup' && (
+          <p className="auth-switch">
+            Already have an account?{' '}
+            <button onClick={() => changeMode('login')} type="button">Log in</button>
+          </p>
+        )}
+
+        {mode === 'login' && (
+          <p className="auth-help">Used the old email-link login? Choose <strong>Forgot password</strong> once to create a password for the same account.</p>
+        )}
+
+        <p className="auth-privacy"><ShieldCheck size={16} /> Your Still data stays private to your account.</p>
       </div>
     </main>
   );
