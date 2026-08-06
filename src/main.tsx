@@ -5,6 +5,7 @@ import App from './app/App';
 import './theme/tokens.css';
 import './theme/global.css';
 import './theme/auth.css';
+import './theme/auth-selected-fidelity.css';
 import './theme/uniformity.css';
 import './theme/ios-form-fix.css';
 import './theme/quick-add-disclosure.css';
