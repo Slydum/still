@@ -2,9 +2,9 @@
   "name": "Still — Your quiet daily space",
   "short_name": "Still",
   "description": "A calm place for tasks, reflections, check-ins, and the things that make up your life.",
-  "id": "/",
-  "start_url": "/",
-  "scope": "/",
+  "id": ".",
+  "start_url": ".",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#fff9f4",
@@ -12,19 +12,19 @@
   "categories": ["lifestyle", "productivity", "health"],
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-maskable-512.png",
+      "src": "icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

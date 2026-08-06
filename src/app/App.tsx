@@ -25,9 +25,10 @@ import {
   usePermanentDataRepository,
 } from '../hooks/usePermanentDataRepository';
 import { useReminderEngine } from '../hooks/useReminderEngine';
+import { getAppRoutePathname, toAppPath } from './appLocation';
 
 function replaceBrowserRoute(path: string) {
-  window.history.replaceState({}, '', path);
+  window.history.replaceState({}, '', toAppPath(path));
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
@@ -161,10 +162,10 @@ export default function App() {
   const [session, setSession] = useState<CloudSession | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [recoveryMode, setRecoveryMode] = useState(() => (
-    window.location.pathname === '/auth/recovery'
+    getAppRoutePathname() === '/auth/recovery'
   ));
   const [initialNotice] = useState(() => (
-    window.location.pathname === '/auth/confirmed'
+    getAppRoutePathname() === '/auth/confirmed'
       ? 'Your email is confirmed. Log in with the password you created.'
       : ''
   ));
@@ -212,9 +213,10 @@ export default function App() {
 
   useEffect(() => {
     if (authLoading || recoveryMode) return;
-    if (!session && !window.location.pathname.startsWith('/auth')) {
+    const routePathname = getAppRoutePathname();
+    if (!session && !routePathname.startsWith('/auth')) {
       replaceBrowserRoute('/auth');
-    } else if (session && window.location.pathname.startsWith('/auth')) {
+    } else if (session && routePathname.startsWith('/auth')) {
       replaceBrowserRoute('/');
     }
   }, [authLoading, recoveryMode, session]);
