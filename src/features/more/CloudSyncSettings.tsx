@@ -1,16 +1,10 @@
-import { Cloud, LogOut, RefreshCw, Send } from 'lucide-react';
-import {
-  useCallback,
-  useEffect,
-  useState,
-  type FormEvent,
-} from 'react';
+import { Cloud, LogOut, RefreshCw } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { synchronizeCloudData } from '../../data/cloudSync';
 import {
   getCloudSession,
   getSupabaseConfigurationError,
   isSupabaseAvailable,
-  requestCloudMagicLink,
   signOutCloud,
   subscribeToCloudSession,
   type CloudSession,
@@ -18,7 +12,6 @@ import {
 import { useAppStore } from '../../stores/useAppStore';
 
 export function CloudSyncSettings() {
-  const [email, setEmail] = useState('');
   const [session, setSession] = useState<CloudSession | null>(null);
   const [available, setAvailable] = useState(isSupabaseAvailable());
   const [loading, setLoading] = useState(true);
@@ -67,59 +60,33 @@ export function CloudSyncSettings() {
       };
     }
 
-    const initialize = async () => {
-      try {
-        const currentSession = await getCloudSession();
-        if (disposed) return;
-        setSession(currentSession);
-        if (currentSession) void syncNow(true);
-      } catch (error) {
-        if (!disposed) {
-          setMessage(error instanceof Error ? error.message : 'Cloud sync could not initialize.');
-        }
-      } finally {
+    void getCloudSession()
+      .then((currentSession) => {
+        if (!disposed) setSession(currentSession);
+      })
+      .catch((error) => {
+        if (!disposed) setMessage(error instanceof Error ? error.message : 'Account details could not load.');
+      })
+      .finally(() => {
         if (!disposed) setLoading(false);
-      }
-    };
+      });
 
-    void initialize();
-    const unsubscribe = subscribeToCloudSession((nextSession) => {
-      if (disposed) return;
-      setSession(nextSession);
-      if (nextSession) void syncNow();
+    const unsubscribe = subscribeToCloudSession((_event, nextSession) => {
+      if (!disposed) setSession(nextSession);
     });
 
     return () => {
       disposed = true;
       unsubscribe();
     };
-  }, [syncNow]);
-
-  const sendMagicLink = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!email.trim()) return;
-
-    setLoading(true);
-    setMessage('');
-    try {
-      await requestCloudMagicLink(email.trim());
-      setMessage('Check your email and open the secure sign-in link on this device.');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Still could not send the sign-in link.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, []);
 
   const disconnect = async () => {
     setLoading(true);
     try {
       await signOutCloud();
-      setSession(null);
-      setMessage('Cloud sync is disconnected. Your local data remains on this device.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Still could not sign out right now.');
-    } finally {
       setLoading(false);
     }
   };
@@ -129,22 +96,24 @@ export function CloudSyncSettings() {
       <div className="settings-section-heading">
         <span><Cloud size={19} /></span>
         <div>
-          <h2 id="cloud-sync-title">Cloud sync</h2>
-          <p>Keep your Still data available across signed-in devices.</p>
+          <h2 id="cloud-sync-title">Account & cloud sync</h2>
+          <p>Manage the account that keeps your Still data connected.</p>
         </div>
       </div>
 
       <div className="card settings-card">
         {!available ? (
           <p className="settings-message" role="status">
-            {message || 'Cloud sync is not configured for this deployment.'}
+            {message || 'Account access is not configured for this deployment.'}
           </p>
+        ) : loading ? (
+          <p className="settings-message" role="status">Loading your account…</p>
         ) : session ? (
           <>
             <div className="settings-action-row">
               <span>
                 <strong>{session.user.email ?? 'Still account'}</strong>
-                <small>{lastSyncedAt ? `Last synced ${lastSyncedAt.toLocaleString()}` : 'Connected securely with Supabase.'}</small>
+                <small>{lastSyncedAt ? `Last synced ${lastSyncedAt.toLocaleString()}` : 'Signed in securely with Supabase.'}</small>
               </span>
               <button
                 className="settings-primary-action"
@@ -161,32 +130,16 @@ export function CloudSyncSettings() {
               onClick={() => void disconnect()}
               type="button"
             >
-              <LogOut size={15} /> Disconnect cloud sync
+              <LogOut size={15} /> Log out of Still
             </button>
           </>
         ) : (
-          <form className="settings-profile-form" onSubmit={sendMagicLink}>
-            <label>
-              <span>Email address</span>
-              <input
-                autoComplete="email"
-                inputMode="email"
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@example.com"
-                required
-                type="email"
-                value={email}
-              />
-            </label>
-            <button disabled={loading || !email.trim()} type="submit">
-              <Send size={15} /> {loading ? 'Loading…' : 'Email sign-in link'}
-            </button>
-          </form>
+          <p className="settings-message" role="status">Your account session ended. Return to the login screen to continue.</p>
         )}
 
         {available && message && <p className="settings-message" role="status">{message}</p>}
         <p className="settings-footnote">
-          Cloud sync is optional. Still keeps an offline copy on this device and only lets the signed-in account access its rows.
+          Still keeps an offline copy on this device. Only this signed-in account can read its cloud records.
         </p>
       </div>
     </section>
