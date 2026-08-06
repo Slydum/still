@@ -48,71 +48,69 @@
 }
 
 .auth-hero {
-  text-align: center;
+  position: relative;
+  isolation: isolate;
   padding: 6px 8px 0;
+  text-align: center;
 }
 
 .auth-brand {
+  position: relative;
+  z-index: 3;
   color: #51436f;
   font-family: var(--font-display);
-  font-size: clamp(58px, 17vw, 76px);
+  font-size: clamp(54px, 15vw, 68px);
   font-weight: 700;
-  letter-spacing: -3.4px;
+  letter-spacing: -3px;
   line-height: .95;
   text-shadow: 0 10px 32px rgba(91, 67, 132, .08);
 }
 
 .auth-art {
-  height: 178px;
-  margin: -2px -30px -8px;
+  width: 100%;
+  height: 168px;
+  margin: 7px auto 10px;
+  position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
-  position: relative;
-  overflow: visible;
+  overflow: hidden;
 }
-
-.auth-art::before,
-.auth-art::after {
-  content: "";
-  position: absolute;
-  width: 180px;
-  height: 92px;
-  bottom: 10px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, .72);
-  filter: blur(12px);
-  z-index: -1;
-}
-
-.auth-art::before { left: -54px; }
-.auth-art::after { right: -54px; }
 
 .auth-mascot {
-  width: min(92vw, 340px);
+  display: block;
+  width: auto;
   height: auto;
+  max-width: min(76vw, 290px);
+  max-height: 164px;
   object-fit: contain;
-  filter: drop-shadow(0 18px 24px rgba(111, 86, 164, .12));
-  animation: auth-float 5.2s ease-in-out infinite;
+  image-rendering: auto;
+  filter: drop-shadow(0 9px 14px rgba(111, 86, 164, .08));
+}
+
+.auth-hero-copy {
+  position: relative;
+  z-index: 4;
 }
 
 .auth-hero-copy h1 {
   margin: 0;
   color: #4c3f68;
   font-family: var(--font-display);
-  font-size: clamp(42px, 12vw, 56px);
-  letter-spacing: -1.8px;
-  line-height: 1;
+  font-size: clamp(38px, 10.5vw, 48px);
+  letter-spacing: -1.4px;
+  line-height: 1.04;
 }
 
 .auth-hero-copy p {
-  margin: 10px 0 0;
+  margin: 9px 0 0;
   color: #8f879f;
   font-size: 16px;
   line-height: 1.45;
 }
 
 .auth-card {
-  margin-top: 20px;
+  margin-top: 18px;
   padding: 25px 20px 22px;
   border: 1px solid rgba(130, 112, 160, .12);
   border-radius: 30px;
@@ -318,19 +316,21 @@
 .auth-page--signup .auth-art,
 .auth-page--forgot .auth-art,
 .auth-page--recovery .auth-art {
-  height: 112px;
-  margin-bottom: -4px;
+  height: 94px;
+  margin-top: 5px;
+  margin-bottom: 7px;
 }
 
 .auth-page--signup .auth-mascot,
 .auth-page--forgot .auth-mascot,
 .auth-page--recovery .auth-mascot {
-  width: min(72vw, 255px);
+  max-width: min(60vw, 205px);
+  max-height: 90px;
 }
 
 .auth-page--signup .auth-card,
 .auth-page--recovery .auth-card {
-  margin-top: 16px;
+  margin-top: 15px;
 }
 
 .auth-loading {
@@ -363,10 +363,6 @@
 }
 
 @keyframes auth-spin { to { transform: rotate(360deg); } }
-@keyframes auth-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
 
 @media (min-width: 700px) {
   .auth-native-shell {
@@ -379,18 +375,18 @@
 
 @media (max-height: 760px) {
   .auth-native-shell { padding-top: max(10px, env(safe-area-inset-top)); }
-  .auth-brand { font-size: 54px; }
-  .auth-art { height: 126px; margin-bottom: -14px; }
-  .auth-mascot { width: min(78vw, 285px); }
-  .auth-hero-copy h1 { font-size: 40px; }
-  .auth-hero-copy p { margin-top: 7px; font-size: 14px; }
-  .auth-card { margin-top: 14px; padding-top: 21px; }
+  .auth-brand { font-size: 50px; }
+  .auth-art { height: 118px; margin: 4px auto 5px; }
+  .auth-mascot { max-width: min(66vw, 230px); max-height: 114px; }
+  .auth-hero-copy h1 { font-size: 37px; }
+  .auth-hero-copy p { margin-top: 6px; font-size: 14px; }
+  .auth-card { margin-top: 13px; padding-top: 21px; }
   .auth-page--signup .auth-art,
   .auth-page--forgot .auth-art,
-  .auth-page--recovery .auth-art { height: 80px; }
+  .auth-page--recovery .auth-art { height: 70px; }
   .auth-page--signup .auth-mascot,
   .auth-page--forgot .auth-mascot,
-  .auth-page--recovery .auth-mascot { width: 205px; }
+  .auth-page--recovery .auth-mascot { max-width: 165px; max-height: 66px; }
 }
 
 @media (max-width: 360px) {
@@ -398,8 +394,4 @@
   .auth-card { padding-inline: 17px; border-radius: 26px; }
   .auth-login-tools > span { display: none; }
   .auth-login-tools { justify-content: flex-end; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .auth-mascot { animation: none; }
 }
