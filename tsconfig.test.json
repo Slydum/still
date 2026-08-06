@@ -7,7 +7,7 @@
     "noEmit": false,
     "outDir": ".tmp/tests",
     "rootDir": ".",
-    "types": []
+    "types": ["vite/client"]
   },
   "include": [
     "src/domain/**/*.ts",
