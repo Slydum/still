@@ -4,6 +4,7 @@ import {
   type Session,
   type SupabaseClient,
 } from '@supabase/supabase-js';
+import { toAppUrl } from '../app/appLocation';
 
 const SUPABASE_PROJECT_URL = import.meta.env.VITE_SUPABASE_URL?.trim();
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
@@ -71,7 +72,7 @@ export async function signUpCloudAccount(email: string, password: string, displa
     password,
     options: {
       data: { display_name: displayName },
-      emailRedirectTo: `${window.location.origin}/auth/confirmed`,
+      emailRedirectTo: toAppUrl('/auth/confirmed'),
     },
   });
   if (error) throw new Error(error.message);
@@ -81,7 +82,7 @@ export async function signUpCloudAccount(email: string, password: string, displa
 export async function requestCloudPasswordReset(email: string) {
   const supabase = requireSupabaseClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth/recovery`,
+    redirectTo: toAppUrl('/auth/recovery'),
   });
   if (error) throw new Error(error.message);
 }

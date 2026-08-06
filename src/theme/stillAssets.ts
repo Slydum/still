@@ -1,4 +1,4 @@
-const base = '/assets/illustrations';
+const base = `${import.meta.env.BASE_URL}assets/illustrations`;
 
 export const stillAssets = {
   cats: {

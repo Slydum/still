@@ -3,9 +3,14 @@
   hiddenUntilReady.textContent = '.auth-mascot:not([data-cloud-ready="true"]){visibility:hidden!important}';
   document.head.appendChild(hiddenUntilReady);
 
+  const loaderScript = document.currentScript;
+  const assetRoot = loaderScript instanceof HTMLScriptElement
+    ? new URL('./', loaderScript.src)
+    : new URL('./assets/auth/', window.location.origin);
+
   const cloudSource = Promise.all(
     [1, 2, 3, 4].map((part) =>
-      fetch(`/assets/auth/cloud.part${part}.txt`, { cache: 'force-cache' }).then((response) => {
+      fetch(new URL(`cloud.part${part}.txt`, assetRoot), { cache: 'force-cache' }).then((response) => {
         if (!response.ok) throw new Error(`Cloud asset part ${part} failed to load`);
         return response.text();
       }),
@@ -39,5 +44,3 @@
   observer.observe(document.documentElement, { childList: true, subtree: true });
   applyCloud();
 })();
-
-// Preview rebuild marker: 2026-08-06T19:27+08:00
