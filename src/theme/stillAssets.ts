@@ -1,4 +1,7 @@
-const base = `${import.meta.env.BASE_URL}assets/illustrations`;
+const appBase = typeof document === 'undefined'
+  ? '/'
+  : new URL('.', document.baseURI).pathname;
+const base = `${appBase}assets/illustrations`;
 
 export const stillAssets = {
   cats: {
