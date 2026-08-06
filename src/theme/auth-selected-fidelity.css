@@ -23,7 +23,6 @@
 }
 
 .auth-page--login .auth-mascot {
-  content: url('/assets/auth/still-cloud-mascot.webp');
   display: block;
   width: 100%;
   height: 100%;
