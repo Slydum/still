@@ -161,10 +161,10 @@ export default function App() {
   const [session, setSession] = useState<CloudSession | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [recoveryMode, setRecoveryMode] = useState(() => (
-    new URLSearchParams(window.location.search).get('mode') === 'recovery'
+    window.location.pathname === '/auth/recovery'
   ));
   const [initialNotice] = useState(() => (
-    new URLSearchParams(window.location.search).get('confirmed') === '1'
+    window.location.pathname === '/auth/confirmed'
       ? 'Your email is confirmed. Log in with the password you created.'
       : ''
   ));
@@ -212,9 +212,9 @@ export default function App() {
 
   useEffect(() => {
     if (authLoading || recoveryMode) return;
-    if (!session && window.location.pathname !== '/auth') {
+    if (!session && !window.location.pathname.startsWith('/auth')) {
       replaceBrowserRoute('/auth');
-    } else if (session && window.location.pathname === '/auth') {
+    } else if (session && window.location.pathname.startsWith('/auth')) {
       replaceBrowserRoute('/');
     }
   }, [authLoading, recoveryMode, session]);
