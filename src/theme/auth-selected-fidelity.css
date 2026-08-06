@@ -2,8 +2,8 @@
 
 .auth-page--login .auth-art {
   width: calc(100% + 64px);
-  height: clamp(224px, 61vw, 286px);
-  margin: -2px -32px -30px;
+  height: clamp(204px, 54vw, 252px);
+  margin: -18px -32px -42px;
   overflow: hidden;
   isolation: isolate;
   -webkit-mask-image: linear-gradient(
@@ -29,7 +29,7 @@
   max-width: none;
   max-height: none;
   object-fit: cover;
-  object-position: center 50%;
+  object-position: center 46%;
   filter: none;
   transform: translateZ(0);
   image-rendering: auto;
@@ -47,18 +47,22 @@
 }
 
 .auth-page--login .auth-card {
-  margin-top: 19px;
+  margin-top: 8px;
 }
 
 @media (max-height: 760px) {
   .auth-page--login .auth-art {
-    height: 178px;
-    margin-top: -4px;
-    margin-bottom: -20px;
+    height: 158px;
+    margin-top: -18px;
+    margin-bottom: -30px;
   }
 
   .auth-page--login .auth-hero-copy h1 {
     font-size: 38px;
+  }
+
+  .auth-page--login .auth-card {
+    margin-top: 4px;
   }
 }
 
