@@ -2,24 +2,27 @@
 
 .auth-page--login .auth-art {
   width: calc(100% + 64px);
-  height: clamp(204px, 54vw, 252px);
-  margin: -18px -32px -42px;
+  height: clamp(282px, 74vw, 332px);
+  margin: -104px -32px -46px;
   overflow: hidden;
   isolation: isolate;
   -webkit-mask-image: linear-gradient(
     to bottom,
-    transparent 0%,
-    #000 8%,
-    #000 82%,
+    #000 0%,
+    #000 84%,
     transparent 100%
   );
   mask-image: linear-gradient(
     to bottom,
-    transparent 0%,
-    #000 8%,
-    #000 82%,
+    #000 0%,
+    #000 84%,
     transparent 100%
   );
+}
+
+.auth-page--login .auth-brand {
+  position: relative;
+  z-index: 5;
 }
 
 .auth-page--login .auth-mascot {
@@ -29,7 +32,7 @@
   max-width: none;
   max-height: none;
   object-fit: cover;
-  object-position: center 46%;
+  object-position: center 42%;
   filter: none;
   transform: translateZ(0);
   image-rendering: auto;
@@ -52,9 +55,13 @@
 
 @media (max-height: 760px) {
   .auth-page--login .auth-art {
-    height: 158px;
-    margin-top: -18px;
-    margin-bottom: -30px;
+    height: 232px;
+    margin-top: -82px;
+    margin-bottom: -38px;
+  }
+
+  .auth-page--login .auth-mascot {
+    object-position: center 43%;
   }
 
   .auth-page--login .auth-hero-copy h1 {
