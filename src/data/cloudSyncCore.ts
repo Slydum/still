@@ -2,6 +2,8 @@ export type VersionedRecord = {
   syncCounter: number;
   mutationId: string;
   deletedAt?: number;
+  serverRevision?: number;
+  dirty?: boolean;
 };
 
 export function chunkRows<T>(rows: T[], batchSize: number) {
@@ -51,7 +53,24 @@ export function mergeByKey<T extends VersionedRecord>(
   for (const record of [...local, ...remote]) {
     const key = keyOf(record);
     const current = merged.get(key);
-    if (!current || compareVersion(record, current) > 0) merged.set(key, record);
+    if (!current) {
+      merged.set(key, record);
+      continue;
+    }
+
+    const comparison = compareVersion(record, current);
+    if (comparison > 0) {
+      merged.set(key, record);
+      continue;
+    }
+
+    if (
+      comparison === 0
+      && (record.serverRevision ?? 0) >= (current.serverRevision ?? 0)
+      && record.dirty === false
+    ) {
+      merged.set(key, record);
+    }
   }
 
   return [...merged.values()];
