@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { accountSettingsFromState, accountSettingsStatePatch } from '../data/accountSettings';
 import { stillRepository, type PermanentDataCache } from '../data/repositories';
 import {
   diffCollectionChanges,
@@ -10,6 +11,22 @@ import { useAppStore } from '../stores/useAppStore';
 
 let bootstrapPromise: ReturnType<typeof stillRepository.bootstrap> | undefined;
 
+function accountSettingsFromStore() {
+  const state = useAppStore.getState();
+  return accountSettingsFromState({
+    name: state.name,
+    appearanceTone: state.appearanceTone,
+    reduceMotion: state.reduceMotion,
+    taskReminders: state.taskReminders,
+    eventReminders: state.eventReminders,
+    dailyCheckInReminder: state.dailyCheckInReminder,
+    reminderTime: state.reminderTime,
+    eventReminderMinutes: state.eventReminderMinutes,
+    workProfile: state.workProfile,
+    workPrivacyBlur: state.workPrivacyBlur,
+  });
+}
+
 function cacheFromStore(): PermanentDataCache {
   const state = useAppStore.getState();
   return {
@@ -19,6 +36,7 @@ function cacheFromStore(): PermanentDataCache {
     expenses: state.expenses,
     entityLinks: state.entityLinks,
     workShifts: state.workShifts,
+    accountSettings: accountSettingsFromStore(),
   };
 }
 
@@ -61,6 +79,7 @@ export function usePermanentDataRepository() {
         expenses: snapshot.expenses,
         entityLinks: snapshot.entityLinks,
         workShifts: snapshot.workShifts,
+        ...accountSettingsStatePatch(snapshot.accountSettings),
       });
 
       unsubscribe = useAppStore.subscribe((state, previousState) => {
@@ -93,6 +112,22 @@ export function usePermanentDataRepository() {
             state.workShifts,
             (changes) => stillRepository.persistWorkShifts(changes),
           );
+        }
+
+        const accountSettingsChanged =
+          state.name !== previousState.name
+          || state.appearanceTone !== previousState.appearanceTone
+          || state.reduceMotion !== previousState.reduceMotion
+          || state.taskReminders !== previousState.taskReminders
+          || state.eventReminders !== previousState.eventReminders
+          || state.dailyCheckInReminder !== previousState.dailyCheckInReminder
+          || state.reminderTime !== previousState.reminderTime
+          || state.eventReminderMinutes !== previousState.eventReminderMinutes
+          || state.workProfile !== previousState.workProfile
+          || state.workPrivacyBlur !== previousState.workPrivacyBlur;
+
+        if (accountSettingsChanged) {
+          enqueue(() => stillRepository.persistAccountSettings(accountSettingsFromStore()));
         }
       });
     };
