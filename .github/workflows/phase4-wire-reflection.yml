@@ -1,0 +1,157 @@
+name: Phase 4 wire weekly reflection
+
+on:
+  push:
+    branches:
+      - v0.2-phase-4-weekly-reflection
+
+permissions:
+  contents: write
+
+jobs:
+  wire-reflection:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: v0.2-phase-4-weekly-reflection
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Wire reflection route and entry point
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          app = Path('src/app/App.tsx')
+          text = app.read_text()
+          text = text.replace(
+              "import { NotificationsPage } from '../features/notifications/NotificationsPage';",
+              "import { NotificationsPage } from '../features/notifications/NotificationsPage';\nimport { WeeklyReflectionPage } from '../features/reflection/WeeklyReflectionPage';",
+          )
+          text = text.replace(
+              '        <Route path="/notifications" element={<NotificationsPage />} />',
+              '        <Route path="/notifications" element={<NotificationsPage />} />\n        <Route path="/reflection" element={<WeeklyReflectionPage />} />',
+          )
+          app.write_text(text)
+
+          dashboard = Path('src/features/dashboard/DashboardPage.tsx')
+          text = dashboard.read_text()
+          marker = '''      <section className="section closing-note closing-note-v2">'''
+          insertion = '''      <section className="section weekly-reflection-entry">
+        <button className="card weekly-reflection-entry-card" onClick={() => navigate('/reflection')} type="button">
+          <span className="weekly-reflection-entry-icon"><Sparkles size={20} /></span>
+          <span className="weekly-reflection-entry-copy">
+            <span className="section-kicker">Weekly reflection</span>
+            <strong>See the week in your own records</strong>
+            <small>Tasks, events, reflections, spending, work, check-ins, and Life Areas — summarized without guessing what they mean.</small>
+          </span>
+          <span className="weekly-reflection-entry-action">Look back</span>
+        </button>
+      </section>
+
+'''
+          if marker not in text:
+              raise SystemExit('Dashboard insertion marker not found')
+          text = text.replace(marker, insertion + marker, 1)
+          dashboard.write_text(text)
+
+          css = Path('src/features/reflection/weekly-reflection.css')
+          text = css.read_text()
+          text += '''
+
+.weekly-reflection-entry-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.05rem 1.15rem;
+  border: 0;
+  color: inherit;
+  text-align: left;
+}
+
+.weekly-reflection-entry-icon {
+  width: 2.55rem;
+  height: 2.55rem;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 0.9rem;
+  background: rgba(124, 111, 167, 0.1);
+}
+
+.weekly-reflection-entry-copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.22rem;
+  flex: 1;
+}
+
+.weekly-reflection-entry-copy strong {
+  font-size: 1.02rem;
+}
+
+.weekly-reflection-entry-copy small {
+  line-height: 1.4;
+  opacity: 0.62;
+}
+
+.weekly-reflection-entry-action {
+  font-size: 0.8rem;
+  font-weight: 700;
+  opacity: 0.62;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .weekly-reflection-entry-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .weekly-reflection-entry-action {
+    margin-left: 3.45rem;
+  }
+}
+'''
+          css.write_text(text)
+
+          smoke = Path('scripts/e2e-live-pages.mjs')
+          text = smoke.read_text()
+          marker = "  await cdp.send('Page.navigate', { url: liveUrl.toString() });"
+          insertion = '''  const reflectionUrl = new URL('reflection', liveUrl).toString();
+  await cdp.send('Page.navigate', { url: reflectionUrl });
+  await poll(
+    cdp,
+    "document.body.innerText.includes('Weekly reflection') && document.body.innerText.includes('Week rhythm') && Boolean(navigator.serviceWorker.controller)",
+    'controlled direct live /reflection route',
+  );
+
+'''
+          if marker not in text:
+              raise SystemExit('Live smoke insertion marker not found')
+          text = text.replace(marker, insertion + marker, 1)
+          smoke.write_text(text)
+
+          Path('.github/workflows/phase4-wire-reflection.yml').unlink()
+          PY
+      - name: Validate Phase 4
+        run: |
+          npm run format:check
+          npm run lint
+          npm test
+          npm run security:audit
+          npm run build
+          npm run build:budget
+      - name: Commit wired reflection
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/App.tsx src/features/dashboard/DashboardPage.tsx src/features/reflection/weekly-reflection.css scripts/e2e-live-pages.mjs .github/workflows/phase4-wire-reflection.yml
+          git commit -m "Phase 4: connect weekly reflection UI"
+          git push
