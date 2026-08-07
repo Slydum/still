@@ -11,6 +11,7 @@
   },
   "include": [
     "src/app/basePathCore.ts",
+    "src/app/demoMode.ts",
     "src/domain/**/*.ts",
     "src/data/accountLifecycleCore.ts",
     "src/data/accountSettings.ts",
