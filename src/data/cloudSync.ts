@@ -10,6 +10,7 @@ import {
 import { stillDb } from './localDb';
 import { localStillRepository } from './repositories/localStillRepository';
 import type { PermanentDataSnapshot } from './repositories/types';
+import { flushRepositoryWrites } from './repositoryWriteQueue';
 import { getCloudSession, getSupabaseClient } from './supabaseClient';
 
 const CLOUD_USER_META_KEY = 'supabase-user-id-v1';
@@ -271,6 +272,7 @@ async function runCloudSync(): Promise<PermanentDataSnapshot> {
   const session = await getCloudSession();
   if (!session) throw new Error('Sign in before synchronizing Still.');
 
+  await flushRepositoryWrites();
   await assertCloudUserBinding(session.user.id);
   const cursor = await readPullCursor();
 
