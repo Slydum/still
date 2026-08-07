@@ -249,12 +249,45 @@ async function readTaskSyncState(browser) {
   })()`);
 }
 
-async function localDataWasCleared(browser) {
+async function clearedLocalDataState(browser) {
   return evaluate(browser, `(async () => {
-    const databases = await indexedDB.databases();
     const localKeys = ['still-app-state-v1', 'still-location-weather-enabled-v2', 'still-sent-reminders-v1', 'still-checkin-snooze-v1'];
-    return !databases.some((database) => database.name === 'still-local')
-      && localKeys.every((key) => localStorage.getItem(key) === null);
+    const storedKeys = Object.fromEntries(localKeys.map((key) => [key, localStorage.getItem(key)]));
+    const databases = await indexedDB.databases();
+    if (!databases.some((database) => database.name === 'still-local')) {
+      return { storedKeys, totalRows: 0, rowsByStore: {}, databasePresent: false };
+    }
+
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('still-local');
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const names = [...db.objectStoreNames];
+        if (!names.length) {
+          db.close();
+          resolve({ storedKeys, totalRows: 0, rowsByStore: {}, databasePresent: true });
+          return;
+        }
+        const tx = db.transaction(names, 'readonly');
+        const rowsByStore = {};
+        let remaining = names.length;
+        let totalRows = 0;
+        for (const name of names) {
+          const count = tx.objectStore(name).count();
+          count.onerror = () => reject(count.error);
+          count.onsuccess = () => {
+            rowsByStore[name] = count.result;
+            totalRows += count.result;
+            remaining -= 1;
+            if (remaining === 0) {
+              db.close();
+              resolve({ storedKeys, totalRows, rowsByStore, databasePresent: true });
+            }
+          };
+        }
+      };
+    });
   })()`);
 }
 
@@ -322,7 +355,11 @@ try {
   await evaluate(deviceA, "window.prompt = () => 'CLEAR'; true");
   await clickText(deviceA, 'button', 'Log out — clear local data');
   await poll(deviceA, "Boolean(document.querySelector('input[autocomplete=current-password]'))", 'login after clear-local logout');
-  if (!(await localDataWasCleared(deviceA))) throw new Error('Clear-local logout left Still-managed primary data behind.');
+  const clearedState = await clearedLocalDataState(deviceA);
+  const lingeringKey = Object.values(clearedState.storedKeys).some((value) => value !== null);
+  if (lingeringKey || clearedState.totalRows !== 0) {
+    throw new Error(`Clear-local logout left Still-managed data behind: ${JSON.stringify(clearedState)}`);
+  }
 
   await signIn(deviceA, secondEmail, secondPassword);
   await poll(deviceA, "Boolean(document.querySelector('.app')) && !document.body.innerText.includes('another account')", 'second account after local clear');
