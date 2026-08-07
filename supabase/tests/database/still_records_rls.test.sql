@@ -37,25 +37,35 @@ select throws_ok(
   $$insert into public.still_records (user_id, record_type, record_id, payload, updated_at, mutation_id)
     values ('22222222-2222-2222-2222-222222222222', 'task', 'forbidden', '{}', 2, 'cross-user-insert')$$,
   '42501',
+  'new row violates row-level security policy for table "still_records"',
   'users cannot insert records for another user'
 );
 
+update public.still_records
+set payload = '{"changed":true}'
+where user_id = '22222222-2222-2222-2222-222222222222';
+
+reset role;
 select is(
-  (with changed as (
-    update public.still_records set payload = '{"changed":true}' where user_id = '22222222-2222-2222-2222-222222222222' returning 1
-  ) select count(*)::integer from changed),
-  0,
+  (select payload->>'owner' from public.still_records where record_id = 'other'),
+  'two',
   'users cannot update another users rows'
 );
 
+set local role authenticated;
+set local "request.jwt.claims" = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
+delete from public.still_records
+where user_id = '22222222-2222-2222-2222-222222222222';
+
+reset role;
 select is(
-  (with removed as (
-    delete from public.still_records where user_id = '22222222-2222-2222-2222-222222222222' returning 1
-  ) select count(*)::integer from removed),
-  0,
+  (select count(*)::integer from public.still_records where record_id = 'other'),
+  1,
   'users cannot delete another users rows'
 );
 
+set local role authenticated;
+set local "request.jwt.claims" = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
 select is(
   (select count(*)::integer from public.sync_still_records('[{"record_type":"task","record_id":"rpc-owned","schema_version":1,"payload":{"ok":true},"updated_at":3,"sync_counter":1,"mutation_id":"rls-test"}]'::jsonb)),
   1,
@@ -68,6 +78,7 @@ set local "request.jwt.claims" = '{}';
 select throws_ok(
   $$select count(*) from public.still_records$$,
   '42501',
+  'permission denied for table still_records',
   'anonymous API role cannot read Still records'
 );
 
