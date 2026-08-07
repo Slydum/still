@@ -166,7 +166,14 @@ try {
   const body = await evaluate(cdp, 'document.body.innerText');
   if (!body.includes('Reset demo data') || !body.includes('Exit demo')) throw new Error('Demo reset/exit controls are missing.');
 
-  console.log('Browser demo isolation and IndexedDB migration checks passed.');
+  await cdp.send('Page.navigate', { url: appOrigin + '/reflection' });
+  await poll(
+    cdp,
+    "document.querySelector('.weekly-reflection-page h1')?.textContent === 'Weekly reflection' && document.querySelector('#weekly-rhythm-title')?.textContent === 'Recorded activity by day'",
+    'weekly reflection route',
+  );
+
+  console.log('Browser demo isolation, IndexedDB migration, and weekly reflection route checks passed.');
 } finally {
   cdp?.close();
   chrome?.kill('SIGTERM');
