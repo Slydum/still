@@ -2,6 +2,7 @@ const DEMO_SESSION_KEY = 'still-demo-mode-v1';
 const APP_STATE_KEY = 'still-app-state-v1';
 const DEMO_STATE_KEY = 'still-demo-app-state-v1';
 const PRIMARY_BACKUP_KEY = 'still-demo-primary-backup-v1';
+const PRIMARY_EMPTY_SENTINEL = '__STILL_EMPTY_PRIMARY__';
 
 export const DEMO_DATABASE_NAME = 'still-demo-local';
 export const PRIMARY_DATABASE_NAME = 'still-local';
@@ -23,7 +24,7 @@ export function beginDemoSession() {
   const storage = window.localStorage;
   if (storage.getItem(PRIMARY_BACKUP_KEY) === null) {
     const primary = storage.getItem(APP_STATE_KEY);
-    if (primary !== null) storage.setItem(PRIMARY_BACKUP_KEY, primary);
+    storage.setItem(PRIMARY_BACKUP_KEY, primary ?? PRIMARY_EMPTY_SENTINEL);
   }
 
   const demo = storage.getItem(DEMO_STATE_KEY);
@@ -39,7 +40,7 @@ export function endDemoSession() {
   else storage.setItem(DEMO_STATE_KEY, demo);
 
   const primary = storage.getItem(PRIMARY_BACKUP_KEY);
-  if (primary === null) storage.removeItem(APP_STATE_KEY);
+  if (primary === null || primary === PRIMARY_EMPTY_SENTINEL) storage.removeItem(APP_STATE_KEY);
   else storage.setItem(APP_STATE_KEY, primary);
   storage.removeItem(PRIMARY_BACKUP_KEY);
   window.sessionStorage.removeItem(DEMO_SESSION_KEY);
