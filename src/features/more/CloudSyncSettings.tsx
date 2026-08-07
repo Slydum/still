@@ -40,15 +40,15 @@ function DemoSandboxSettings() {
     <section className="settings-section" id="cloud-sync" aria-labelledby="cloud-sync-title">
       <div className="settings-section-heading">
         <span><Cloud size={19} /></span>
-        <div><h2 id="cloud-sync-title">Demo sandbox</h2><p>This space is isolated from your real account and Supabase.</p></div>
+        <div><h2 id="cloud-sync-title">Demo sandbox</h2><p>Demo records use a separate local database and never sync to Supabase.</p></div>
       </div>
       <div className="card settings-card">
-        <p className="settings-message" role="status">Demo mode is active. Nothing here is uploaded to the cloud.</p>
+        <p className="settings-message" role="status">Demo mode is active. Records you create here stay in the demo database on this browser.</p>
         <div className="settings-reminder-options">
           <button className="settings-test-notification" disabled={busy} onClick={() => void resetDemo()} type="button"><RotateCcw size={15} /> Reset demo data</button>
           <button className="settings-test-notification" disabled={busy} onClick={leaveDemo} type="button"><LogOut size={15} /> Exit demo</button>
         </div>
-        <p className="settings-footnote">Your normal local database and signed-in account data remain untouched. The demo keeps its own local database so you can freely add, edit, delete, and reload while testing.</p>
+        <p className="settings-footnote">Your normal Still record database is not merged into the demo database. Browser-level permissions and device-level notification/weather state still belong to the browser, so resetting demo records does not reset those browser controls.</p>
       </div>
     </section>
   );
@@ -85,12 +85,12 @@ export function CloudSyncSettings() {
 
   const syncNow = useCallback(async () => {
     setSyncing(true);
-    setMessage('Synchronizing your local and cloud data…');
+    setMessage('Syncing local changes and checking for cloud updates…');
     try {
       const completedAt = await performSync();
       setMessage(`Synced at ${completedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Still could not synchronize right now.');
+      setMessage(error instanceof Error ? error.message : 'Still could not synchronize right now. Your local copy has not been cleared.');
     } finally {
       setSyncing(false);
     }
@@ -120,7 +120,7 @@ export function CloudSyncSettings() {
 
   const disconnect = async () => {
     setLoading(true);
-    setMessage('Syncing before logout…');
+    setMessage('Trying one cloud sync before logout…');
     try {
       await signOutKeepingLocalCopy({ sync: async () => { await performSync(); }, signOut: signOutCloud });
     } catch (error) {
@@ -130,31 +130,32 @@ export function CloudSyncSettings() {
   };
 
   const disconnectAndClear = async () => {
-    const confirmation = window.prompt('Still will sync your cloud-backed records and account preferences first, then remove all Still data and device-only state from this browser. Type CLEAR to continue.');
+    const confirmation = window.prompt('Still will require a successful cloud sync first, then sign out and remove this account’s Still-managed local database and device preferences from this browser. Browser-granted permissions and cached app files are controlled by the browser and may remain. Type CLEAR to continue.');
     if (confirmation !== 'CLEAR') return;
     setLoading(true);
-    setMessage('Syncing before clearing this device…');
+    setMessage('Syncing before clearing this browser…');
     try {
       await signOutAndClearDevice({ sync: async () => { await performSync(); }, signOut: signOutCloud, clearLocal: clearLocalStillData });
       window.location.reload();
     } catch (error) {
-      setMessage(error instanceof Error ? `This device was not cleared because Still could not safely finish the operation: ${error.message}` : 'This device was not cleared because Still could not safely finish the operation.');
+      setMessage(error instanceof Error ? `Local data was not cleared because Still could not safely finish the operation: ${error.message}` : 'Local data was not cleared because Still could not safely finish the operation.');
       setLoading(false);
     }
   };
 
   return (
     <section className="settings-section" id="cloud-sync" aria-labelledby="cloud-sync-title">
-      <div className="settings-section-heading"><span><Cloud size={19} /></span><div><h2 id="cloud-sync-title">Account & cloud sync</h2><p>Supabase is the durable copy of your synced Still records and account preferences.</p></div></div>
+      <div className="settings-section-heading"><span><Cloud size={19} /></span><div><h2 id="cloud-sync-title">Account & cloud sync</h2><p>Still saves locally first. Records reach Supabase only after a successful cloud sync.</p></div></div>
       <div className="card settings-card">
         {!available ? <p className="settings-message" role="status">{message || 'Account access is not configured for this deployment.'}</p>
           : loading ? <p className="settings-message" role="status">Loading your account…</p>
             : session ? <>
-              <div className="settings-action-row"><span><strong>{session.user.email ?? 'Still account'}</strong><small>{lastSyncedAt ? `Last synced ${lastSyncedAt.toLocaleString()}` : 'Signed in securely with Supabase.'}</small></span><button className="settings-primary-action" disabled={syncing} onClick={() => void syncNow()} type="button"><RefreshCw size={15} /> {syncing ? 'Syncing…' : 'Sync now'}</button></div>
-              <div className="settings-reminder-options"><button className="settings-test-notification" disabled={loading || syncing} onClick={() => void disconnect()} type="button"><LogOut size={15} /> Log out and keep offline copy</button><button className="settings-test-notification" disabled={loading || syncing} onClick={() => void disconnectAndClear()} type="button"><ShieldCheck size={15} /> Log out and clear this device</button></div>
+              <div className="settings-action-row"><span><strong>{session.user.email ?? 'Still account'}</strong><small>{lastSyncedAt ? `Last successful sync ${lastSyncedAt.toLocaleString()}` : 'Signed in. Still also attempts cloud sync when the signed-in app starts.'}</small></span><button className="settings-primary-action" disabled={syncing} onClick={() => void syncNow()} type="button"><RefreshCw size={15} /> {syncing ? 'Syncing…' : 'Sync now'}</button></div>
+              <div className="settings-reminder-options"><button className="settings-test-notification" disabled={loading || syncing} onClick={() => void disconnect()} type="button"><LogOut size={15} /> Log out — keep local copy</button><button className="settings-test-notification" disabled={loading || syncing} onClick={() => void disconnectAndClear()} type="button"><ShieldCheck size={15} /> Log out — clear local data</button></div>
             </> : <p className="settings-message" role="status">Your account session ended. Return to the login screen to continue.</p>}
         {available && message && <p className="settings-message" role="status">{message}</p>}
-        <p className="settings-footnote">Your profile name, appearance, reminder preferences, work profile, and work privacy preference sync with your account. Browser notification permission, local notification history, location/weather state, and reminder bookkeeping remain specific to this device.</p>
+        <p className="settings-footnote">Profile name, appearance, reminder schedule choices, work profile, and work privacy preference sync with your account. Browser notification permission, whether reminders are enabled on this browser, notification history, location/weather state, and reminder delivery bookkeeping stay device-specific.</p>
+        <p className="settings-footnote">Ordinary logout tries to sync first but can still log out if cloud sync is unavailable; any unsynced changes remain only in this browser until the same account signs in and syncs successfully. Clearing local data is stricter and will not proceed unless sync succeeds.</p>
       </div>
     </section>
   );
