@@ -8,6 +8,7 @@ import {
   type IdentifiedVersionedRecord,
 } from '../data/repositories/recordChanges';
 import { useAppStore } from '../stores/useAppStore';
+import { usePersistenceStatus } from '../stores/usePersistenceStatus';
 
 let bootstrapPromise: ReturnType<typeof stillRepository.bootstrap> | undefined;
 
@@ -41,11 +42,25 @@ function cacheFromStore(): PermanentDataCache {
 }
 
 function reportRepositoryError(error: unknown) {
+  usePersistenceStatus.getState().setFailure(error);
   console.error('Still could not synchronize its permanent data repository:', error);
 }
 
+function reportRepositorySuccess() {
+  usePersistenceStatus.getState().clearFailure();
+}
+
 export function initializePermanentDataRepository() {
-  bootstrapPromise ??= stillRepository.bootstrap(cacheFromStore());
+  bootstrapPromise ??= stillRepository.bootstrap(cacheFromStore())
+    .then((snapshot) => {
+      reportRepositorySuccess();
+      return snapshot;
+    })
+    .catch((error) => {
+      reportRepositoryError(error);
+      bootstrapPromise = undefined;
+      throw error;
+    });
   return bootstrapPromise;
 }
 
@@ -56,7 +71,12 @@ export function usePermanentDataRepository() {
     let writeQueue = Promise.resolve();
 
     const enqueue = (write: () => Promise<void>) => {
-      writeQueue = writeQueue.then(write).catch(reportRepositoryError);
+      writeQueue = writeQueue
+        .then(async () => {
+          await write();
+          reportRepositorySuccess();
+        })
+        .catch(reportRepositoryError);
     };
 
     const persistCollection = <T extends IdentifiedVersionedRecord>(
