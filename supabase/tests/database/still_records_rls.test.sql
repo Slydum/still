@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(8);
+select plan(10);
 
 insert into auth.users (id) values
   ('11111111-1111-1111-1111-111111111111'),
@@ -67,9 +67,21 @@ select is(
 set local role authenticated;
 set local "request.jwt.claims" = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
 select is(
-  (select count(*)::integer from public.sync_still_records('[{"record_type":"task","record_id":"rpc-owned","schema_version":1,"payload":{"ok":true},"updated_at":3,"sync_counter":1,"mutation_id":"rls-test"}]'::jsonb)),
+  (select count(*)::integer from public.sync_still_records('[{"record_type":"task","record_id":"rpc-owned","schema_version":1,"payload":{"stage":"inserted"},"updated_at":3,"sync_counter":1,"mutation_id":"rls-test"}]'::jsonb)),
   1,
-  'sync RPC writes through the authenticated users RLS context'
+  'sync RPC returns a newly inserted authoritative row'
+);
+
+select is(
+  (select payload->>'stage' from public.sync_still_records('[{"record_type":"task","record_id":"rpc-owned","schema_version":1,"payload":{"stage":"accepted-update"},"updated_at":4,"sync_counter":2,"mutation_id":"rls-test-update"}]'::jsonb)),
+  'accepted-update',
+  'sync RPC returns the accepted update rather than the pre-update snapshot'
+);
+
+select is(
+  (select payload->>'stage' from public.sync_still_records('[{"record_type":"task","record_id":"rpc-owned","schema_version":1,"payload":{"stage":"losing-update"},"updated_at":5,"sync_counter":1,"mutation_id":"older-loser"}]'::jsonb)),
+  'accepted-update',
+  'sync RPC returns the existing authoritative row when a mutation loses conflict resolution'
 );
 
 reset role;
