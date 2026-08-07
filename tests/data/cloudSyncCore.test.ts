@@ -5,14 +5,18 @@ import {
   chunkRows,
   collectPaginatedRows,
   createSingleFlight,
+  maxServerRevision,
   mergeByKey,
 } from '../../src/data/cloudSyncCore.js';
 
 type MergeFixture = {
   id: string;
-  updatedAt: number;
+  syncCounter: number;
+  mutationId: string;
   title: string;
   deletedAt?: number;
+  serverRevision?: number;
+  dirty?: boolean;
 };
 
 describe('cloud sync core', () => {
@@ -39,20 +43,39 @@ describe('cloud sync core', () => {
     assert.equal(calls.join(','), '0-499,500-999,1000-1499');
   });
 
-  it('uses latest-write-wins and lets deletion win timestamp ties', () => {
-    const local: MergeFixture[] = [{ id: 'one', updatedAt: 20, title: 'local' }];
-    const remote: MergeFixture[] = [{ id: 'one', updatedAt: 30, title: 'remote' }];
+  it('uses logical counters instead of device clocks for conflict ordering', () => {
+    const local: MergeFixture[] = [{ id: 'one', syncCounter: 2, mutationId: 'a', title: 'local' }];
+    const remote: MergeFixture[] = [{ id: 'one', syncCounter: 3, mutationId: 'a', title: 'remote' }];
     const latest = mergeByKey(local, remote, (record) => record.id);
     assert.equal(latest[0].title, 'remote');
+  });
 
-    const deletion: MergeFixture[] = [{
-      id: 'one',
-      updatedAt: 30,
-      title: 'remote',
-      deletedAt: 30,
+  it('resolves concurrent equal-counter writes deterministically by mutation id', () => {
+    const left: MergeFixture[] = [{ id: 'one', syncCounter: 5, mutationId: 'device-a', title: 'left' }];
+    const right: MergeFixture[] = [{ id: 'one', syncCounter: 5, mutationId: 'device-z', title: 'right' }];
+    assert.equal(mergeByKey(left, right, (record) => record.id)[0].title, 'right');
+    assert.equal(mergeByKey(right, left, (record) => record.id)[0].title, 'right');
+  });
+
+  it('lets an acknowledged server row clear dirty state on an exact version tie', () => {
+    const local: MergeFixture[] = [{ id: 'one', syncCounter: 4, mutationId: 'same', title: 'value', dirty: true }];
+    const acknowledged: MergeFixture[] = [{
+      id: 'one', syncCounter: 4, mutationId: 'same', title: 'value', dirty: false, serverRevision: 42,
     }];
-    const tied = mergeByKey(remote, deletion, (record) => record.id);
-    assert.equal(tied[0].deletedAt, 30);
+    const merged = mergeByKey(local, acknowledged, (record) => record.id);
+    assert.equal(merged[0].dirty, false);
+    assert.equal(merged[0].serverRevision, 42);
+  });
+
+  it('lets deletion win an otherwise exact logical-version tie', () => {
+    const active: MergeFixture[] = [{ id: 'one', syncCounter: 4, mutationId: 'same', title: 'value' }];
+    const deletion: MergeFixture[] = [{ id: 'one', syncCounter: 4, mutationId: 'same', title: 'value', deletedAt: 30 }];
+    assert.equal(mergeByKey(active, deletion, (record) => record.id)[0].deletedAt, 30);
+  });
+
+  it('advances a server cursor only to the highest observed server revision', () => {
+    assert.equal(maxServerRevision([{ server_revision: 12 }, { server_revision: 19 }], 8), 19);
+    assert.equal(maxServerRevision([], 8), 8);
   });
 
   it('blocks a different account from reusing linked local data', () => {
@@ -70,9 +93,7 @@ describe('cloud sync core', () => {
   it('deduplicates simultaneous syncs and recovers after a network failure', async () => {
     let attempts = 0;
     let release: (() => void) | undefined;
-    const firstRun = new Promise<void>((resolve) => {
-      release = resolve;
-    });
+    const firstRun = new Promise<void>((resolve) => { release = resolve; });
 
     const synchronize = createSingleFlight(async () => {
       attempts += 1;
@@ -89,11 +110,7 @@ describe('cloud sync core', () => {
     release?.();
 
     let rejected = false;
-    try {
-      await first;
-    } catch {
-      rejected = true;
-    }
+    try { await first; } catch { rejected = true; }
     assert.equal(rejected, true);
 
     const recovered = await synchronize();
