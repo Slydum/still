@@ -11,6 +11,7 @@
   },
   "include": [
     "src/domain/**/*.ts",
+    "src/data/accountLifecycleCore.ts",
     "src/data/cloudSyncCore.ts",
     "src/data/repositories/reconcile.ts",
     "src/data/repositories/recordChanges.ts",
