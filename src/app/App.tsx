@@ -2,7 +2,11 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { BottomNav } from '../components/navigation/BottomNav';
 import { QuickAddSheet } from '../components/ui/QuickAddSheet';
-import { accountSettingsStatePatch, displayNameFromUserMetadata } from '../data/accountSettings';
+import {
+  accountSettingsStatePatch,
+  displayNameFromUserMetadata,
+  shouldSeedSignupDisplayName,
+} from '../data/accountSettings';
 import { synchronizeCloudData } from '../data/cloudSync';
 import { stillDb } from '../data/localDb';
 import {
@@ -77,10 +81,27 @@ function applyCloudSnapshot(snapshot: Awaited<ReturnType<typeof synchronizeCloud
   });
 }
 
+function createSeedMutationId() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
+  return `profile-seed-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 async function seedDisplayNameForNewAccount(session: CloudSession) {
-  if (await stillDb.accountSettings.count() > 0) return;
   const displayName = displayNameFromUserMetadata(session.user.user_metadata);
-  if (displayName) useAppStore.setState({ name: displayName });
+  if (!displayName) return;
+
+  const existing = await stillDb.accountSettings.get('account');
+  if (!existing || !shouldSeedSignupDisplayName(existing.name, existing.serverRevision)) return;
+
+  useAppStore.setState({ name: displayName });
+  await stillDb.accountSettings.put({
+    ...existing,
+    name: displayName,
+    updatedAt: Date.now(),
+    syncCounter: existing.syncCounter + 1,
+    mutationId: createSeedMutationId(),
+    dirty: true,
+  });
 }
 
 function AuthenticatedApp({ session }: { session: CloudSession }) {
@@ -95,8 +116,8 @@ function AuthenticatedApp({ session }: { session: CloudSession }) {
 
     const prepare = async () => {
       try {
-        await seedDisplayNameForNewAccount(session);
         await initializePermanentDataRepository();
+        await seedDisplayNameForNewAccount(session);
         const snapshot = await synchronizeCloudData();
         if (!disposed) applyCloudSnapshot(snapshot);
       } catch (error) {
