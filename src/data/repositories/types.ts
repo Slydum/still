@@ -6,6 +6,7 @@ import type {
   StillExpense,
   StillTask,
 } from '../../stores/useAppStore';
+import type { AccountSettings } from '../accountSettings';
 import type { CheckInRecord } from '../records';
 import type { CollectionChanges } from './recordChanges';
 
@@ -27,6 +28,7 @@ export type SyncMetadata = {
 
 export type SyncedRecord<T extends { id: string }> = T & SyncMetadata;
 export type SyncedCheckInRecord = CheckInRecord & SyncMetadata;
+export type SyncedAccountSettings = SyncedRecord<AccountSettings>;
 
 export type PermanentDataCache = {
   tasks: StillTask[];
@@ -35,6 +37,7 @@ export type PermanentDataCache = {
   expenses: StillExpense[];
   entityLinks: LifeEntityLink[];
   workShifts: WorkShift[];
+  accountSettings: AccountSettings;
 };
 
 export type PermanentDataSnapshot = PermanentDataCache & {
@@ -54,6 +57,7 @@ export interface StillRepository {
   persistExpenses(changes: CollectionChanges<StillExpense>): Promise<void>;
   persistEntityLinks(changes: CollectionChanges<LifeEntityLink>): Promise<void>;
   persistWorkShifts(changes: CollectionChanges<WorkShift>): Promise<void>;
+  persistAccountSettings(settings: AccountSettings): Promise<void>;
 
   listCheckIns(): Promise<CheckInRecord[]>;
   saveCheckIn(record: CheckInRecord): Promise<void>;

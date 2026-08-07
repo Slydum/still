@@ -4,6 +4,7 @@ import {
   signOutAndClearDevice,
   signOutKeepingLocalCopy,
 } from '../../data/accountLifecycleCore';
+import { accountSettingsStatePatch } from '../../data/accountSettings';
 import { synchronizeCloudData } from '../../data/cloudSync';
 import { clearLocalStillData } from '../../data/localDataLifecycle';
 import {
@@ -32,6 +33,7 @@ export function CloudSyncSettings() {
       expenses: snapshot.expenses,
       entityLinks: snapshot.entityLinks,
       workShifts: snapshot.workShifts,
+      ...accountSettingsStatePatch(snapshot.accountSettings),
     });
   }, []);
 
@@ -110,7 +112,7 @@ export function CloudSyncSettings() {
 
   const disconnectAndClear = async () => {
     const confirmation = window.prompt(
-      'Still will sync your cloud-backed records first, then remove all Still data and device-only preferences from this browser. Type CLEAR to continue.',
+      'Still will sync your cloud-backed records and account preferences first, then remove all Still data and device-only state from this browser. Type CLEAR to continue.',
     );
     if (confirmation !== 'CLEAR') return;
 
@@ -142,7 +144,7 @@ export function CloudSyncSettings() {
         <span><Cloud size={19} /></span>
         <div>
           <h2 id="cloud-sync-title">Account & cloud sync</h2>
-          <p>Supabase is the durable copy of your synced Still records.</p>
+          <p>Supabase is the durable copy of your synced Still records and account preferences.</p>
         </div>
       </div>
 
@@ -195,7 +197,7 @@ export function CloudSyncSettings() {
 
         {available && message && <p className="settings-message" role="status">{message}</p>}
         <p className="settings-footnote">
-          Ordinary logout attempts a final sync and keeps this browser's offline copy even if the network is unavailable. Clearing this device requires a successful sync first, then removes both synced local records and device-only preferences such as appearance and reminders.
+          Your profile name, appearance, reminder preferences, work profile, and work privacy preference sync with your account. Browser notification permission, local notification history, location/weather state, and reminder bookkeeping remain specific to this device.
         </p>
       </div>
     </section>

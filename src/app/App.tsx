@@ -2,7 +2,13 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { BottomNav } from '../components/navigation/BottomNav';
 import { QuickAddSheet } from '../components/ui/QuickAddSheet';
+import {
+  accountSettingsStatePatch,
+  displayNameFromUserMetadata,
+  shouldSeedSignupDisplayName,
+} from '../data/accountSettings';
 import { synchronizeCloudData } from '../data/cloudSync';
+import { stillDb } from '../data/localDb';
 import {
   getCloudSession,
   isSupabaseAvailable,
@@ -71,6 +77,30 @@ function applyCloudSnapshot(snapshot: Awaited<ReturnType<typeof synchronizeCloud
     expenses: snapshot.expenses,
     entityLinks: snapshot.entityLinks,
     workShifts: snapshot.workShifts,
+    ...accountSettingsStatePatch(snapshot.accountSettings),
+  });
+}
+
+function createSeedMutationId() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
+  return `profile-seed-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+async function seedDisplayNameForNewAccount(session: CloudSession) {
+  const displayName = displayNameFromUserMetadata(session.user.user_metadata);
+  if (!displayName) return;
+
+  const existing = await stillDb.accountSettings.get('account');
+  if (!existing || !shouldSeedSignupDisplayName(existing.name, existing.serverRevision)) return;
+
+  useAppStore.setState({ name: displayName });
+  await stillDb.accountSettings.put({
+    ...existing,
+    name: displayName,
+    updatedAt: Date.now(),
+    syncCounter: existing.syncCounter + 1,
+    mutationId: createSeedMutationId(),
+    dirty: true,
   });
 }
 
@@ -87,6 +117,7 @@ function AuthenticatedApp({ session }: { session: CloudSession }) {
     const prepare = async () => {
       try {
         await initializePermanentDataRepository();
+        await seedDisplayNameForNewAccount(session);
         const snapshot = await synchronizeCloudData();
         if (!disposed) applyCloudSnapshot(snapshot);
       } catch (error) {
@@ -119,7 +150,7 @@ function AuthenticatedApp({ session }: { session: CloudSession }) {
             <h2>This device belongs to another Still account.</h2>
             <p>{accountConflict}</p>
           </header>
-          <p className="auth-status is-error">Sign back into the original account, or export and reset this device's local data before using a different account.</p>
+          <p className="auth-status is-error">Sign back into the original account, or clear this device from that account before using a different account.</p>
           <button
             className="auth-submit"
             disabled={signingOut}
