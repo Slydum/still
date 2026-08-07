@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { toAppPath } from '../app/appLocation';
 import { getEventOccurrences } from '../features/calendar/eventUtils';
 import {
   clearCheckInSnooze,
@@ -83,7 +84,7 @@ async function dismissCheckInNotifications() {
 export function useReminderEngine() {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      void navigator.serviceWorker.register('/reminder-sw.js');
+      void navigator.serviceWorker.register(toAppPath('/reminder-sw.js'));
     }
   }, []);
 
