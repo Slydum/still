@@ -45,7 +45,7 @@ export function CloudSyncSettings() {
     } catch (error) {
       const syncMessage = error instanceof Error ? error.message : 'Still could not synchronize right now.';
       setMessage(syncMessage);
-      throw error;
+      return undefined;
     } finally {
       setSyncing(false);
     }
@@ -105,16 +105,22 @@ export function CloudSyncSettings() {
     setLoading(true);
     setMessage('Syncing before clearing this device…');
 
+    const snapshot = await syncNow(true);
+    if (!snapshot) {
+      setMessage('This device was not cleared because Still could not confirm a cloud sync. Your offline copy is unchanged.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      await syncNow(true);
       await signOutCloud();
       await clearLocalStillData();
       window.location.reload();
     } catch (error) {
       setMessage(
         error instanceof Error
-          ? `This device was not cleared because Still could not confirm a cloud sync: ${error.message}`
-          : 'This device was not cleared because Still could not confirm a cloud sync.',
+          ? `This device could not finish clearing: ${error.message}`
+          : 'This device could not finish clearing.',
       );
       setLoading(false);
     }
