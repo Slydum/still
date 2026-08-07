@@ -25,7 +25,8 @@ type StillRecordType =
   | 'expense'
   | 'entity_link'
   | 'work_shift'
-  | 'check_in';
+  | 'check_in'
+  | 'settings';
 
 type RpcRecord = {
   record_type: StillRecordType;
@@ -101,7 +102,7 @@ function toRpcRecords(
 }
 
 async function readDirtyRows(): Promise<RpcRecord[]> {
-  const [tasks, events, journalEntries, expenses, entityLinks, workShifts, checkIns] = await Promise.all([
+  const [tasks, events, journalEntries, expenses, entityLinks, workShifts, checkIns, accountSettings] = await Promise.all([
     stillDb.tasks.toArray(),
     stillDb.events.toArray(),
     stillDb.journalEntries.toArray(),
@@ -109,6 +110,7 @@ async function readDirtyRows(): Promise<RpcRecord[]> {
     stillDb.entityLinks.toArray(),
     stillDb.workShifts.toArray(),
     stillDb.checkIns.toArray(),
+    stillDb.accountSettings.toArray(),
   ]);
 
   return [
@@ -119,6 +121,7 @@ async function readDirtyRows(): Promise<RpcRecord[]> {
     ...toRpcRecords('entity_link', entityLinks as unknown as Array<Record<string, unknown>>, 'id'),
     ...toRpcRecords('work_shift', workShifts as unknown as Array<Record<string, unknown>>, 'id'),
     ...toRpcRecords('check_in', checkIns as unknown as Array<Record<string, unknown>>, 'date'),
+    ...toRpcRecords('settings', accountSettings as unknown as Array<Record<string, unknown>>, 'id'),
   ];
 }
 
@@ -217,7 +220,7 @@ async function applyRemoteRows(rows: RemoteRecord[], userId: string) {
   if (!rows.length) return;
   await stillDb.transaction(
     'rw',
-    [stillDb.tasks, stillDb.events, stillDb.journalEntries, stillDb.expenses, stillDb.entityLinks, stillDb.workShifts, stillDb.checkIns],
+    [stillDb.tasks, stillDb.events, stillDb.journalEntries, stillDb.expenses, stillDb.entityLinks, stillDb.workShifts, stillDb.checkIns, stillDb.accountSettings],
     async () => {
       await mergeEntityTable(stillDb.tasks, rows, 'task', userId);
       await mergeEntityTable(stillDb.events, rows, 'event', userId);
@@ -226,6 +229,7 @@ async function applyRemoteRows(rows: RemoteRecord[], userId: string) {
       await mergeEntityTable(stillDb.entityLinks, rows, 'entity_link', userId);
       await mergeEntityTable(stillDb.workShifts, rows, 'work_shift', userId);
       await mergeCheckIns(stillDb.checkIns, rows, userId);
+      await mergeEntityTable(stillDb.accountSettings, rows, 'settings', userId);
     },
   );
 }
