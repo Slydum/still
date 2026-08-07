@@ -19,6 +19,10 @@ export type SyncMetadata = {
   schemaVersion: number;
   updatedAt: number;
   deletedAt?: number;
+  syncCounter: number;
+  mutationId: string;
+  serverRevision?: number;
+  dirty: boolean;
 };
 
 export type SyncedRecord<T extends { id: string }> = T & SyncMetadata;
