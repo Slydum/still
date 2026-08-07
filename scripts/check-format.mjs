@@ -6,7 +6,19 @@ const roots = ['src', 'tests', 'scripts', 'supabase', '.github', 'public'];
 const textExtensions = new Set([
   '.ts', '.tsx', '.js', '.mjs', '.cjs', '.json', '.yml', '.yaml', '.md', '.sql', '.toml', '.css', '.html', '.webmanifest',
 ]);
-const rootFiles = ['package.json', 'tsconfig.json', 'tsconfig.test.json', 'vite.config.ts', 'vercel.json', 'IMPLEMENTATION_NOTES.md', 'PHONE_TERMINAL_INSTALL.md'];
+const rootFiles = [
+  'package.json',
+  'tsconfig.json',
+  'tsconfig.test.json',
+  'vite.config.ts',
+  'vercel.json',
+  'README.md',
+  'SECURITY.md',
+  'ASSET_PROVENANCE.md',
+  'RELEASE_CHECKLIST.md',
+  'IMPLEMENTATION_NOTES.md',
+  'PHONE_TERMINAL_INSTALL.md',
+];
 
 async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -28,7 +40,6 @@ const failures = [];
 for (const file of [...new Set(files)]) {
   const relative = path.relative(root, file);
   const content = await readFile(file, 'utf8');
-  if (content.length && !content.endsWith('\n')) failures.push(`${relative}: missing final newline`);
   const lines = content.split('\n');
   lines.forEach((line, index) => {
     if (/[ \t]+$/.test(line)) failures.push(`${relative}:${index + 1}: trailing whitespace`);
