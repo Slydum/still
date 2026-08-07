@@ -1,6 +1,7 @@
-import { Cloud, LogOut, RefreshCw } from 'lucide-react';
+import { Cloud, LogOut, RefreshCw, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { synchronizeCloudData } from '../../data/cloudSync';
+import { clearLocalStillData } from '../../data/localDataLifecycle';
 import {
   getCloudSession,
   getSupabaseConfigurationError,
@@ -40,8 +41,11 @@ export function CloudSyncSettings() {
       const completedAt = new Date();
       setLastSyncedAt(completedAt);
       setMessage(`Synced at ${completedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`);
+      return snapshot;
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Still could not synchronize right now.');
+      const syncMessage = error instanceof Error ? error.message : 'Still could not synchronize right now.';
+      setMessage(syncMessage);
+      throw error;
     } finally {
       setSyncing(false);
     }
@@ -83,10 +87,35 @@ export function CloudSyncSettings() {
 
   const disconnect = async () => {
     setLoading(true);
+    setMessage('');
     try {
       await signOutCloud();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Still could not sign out right now.');
+      setLoading(false);
+    }
+  };
+
+  const disconnectAndClear = async () => {
+    const confirmation = window.prompt(
+      'Still will sync first, then remove this account\'s offline data from this device. Type CLEAR to continue.',
+    );
+    if (confirmation !== 'CLEAR') return;
+
+    setLoading(true);
+    setMessage('Syncing before clearing this device…');
+
+    try {
+      await syncNow(true);
+      await signOutCloud();
+      await clearLocalStillData();
+      window.location.reload();
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? `This device was not cleared because Still could not confirm a cloud sync: ${error.message}`
+          : 'This device was not cleared because Still could not confirm a cloud sync.',
+      );
       setLoading(false);
     }
   };
@@ -97,7 +126,7 @@ export function CloudSyncSettings() {
         <span><Cloud size={19} /></span>
         <div>
           <h2 id="cloud-sync-title">Account & cloud sync</h2>
-          <p>Manage the account that keeps your Still data connected.</p>
+          <p>Supabase is the durable copy of your synced Still records.</p>
         </div>
       </div>
 
@@ -124,14 +153,25 @@ export function CloudSyncSettings() {
                 <RefreshCw size={15} /> {syncing ? 'Syncing…' : 'Sync now'}
               </button>
             </div>
-            <button
-              className="settings-test-notification"
-              disabled={loading || syncing}
-              onClick={() => void disconnect()}
-              type="button"
-            >
-              <LogOut size={15} /> Log out of Still
-            </button>
+
+            <div className="settings-reminder-options">
+              <button
+                className="settings-test-notification"
+                disabled={loading || syncing}
+                onClick={() => void disconnect()}
+                type="button"
+              >
+                <LogOut size={15} /> Log out and keep offline copy
+              </button>
+              <button
+                className="settings-test-notification"
+                disabled={loading || syncing}
+                onClick={() => void disconnectAndClear()}
+                type="button"
+              >
+                <ShieldCheck size={15} /> Log out and clear this device
+              </button>
+            </div>
           </>
         ) : (
           <p className="settings-message" role="status">Your account session ended. Return to the login screen to continue.</p>
@@ -139,7 +179,7 @@ export function CloudSyncSettings() {
 
         {available && message && <p className="settings-message" role="status">{message}</p>}
         <p className="settings-footnote">
-          Still keeps an offline copy on this device. Only this signed-in account can read its cloud records.
+          Logging out can keep the offline copy on this device. Clearing the device is allowed only after Still completes a cloud sync, so unsynced local changes are not intentionally discarded.
         </p>
       </div>
     </section>
