@@ -101,7 +101,7 @@ try {
     const remove = indexedDB.deleteDatabase('still-demo-local');
     remove.onerror = () => reject(remove.error);
     remove.onsuccess = () => {
-      const request = indexedDB.open('still-demo-local', 4);
+      const request = indexedDB.open('still-demo-local', 40);
       request.onupgradeneeded = () => {
         const db = request.result;
         const stores = [
@@ -127,8 +127,7 @@ try {
 
   const databases = await evaluate(cdp, 'indexedDB.databases()');
   const demoDb = databases.find((database) => database.name === 'still-demo-local');
-  if (!demoDb || demoDb.version !== 5) throw new Error(`Expected demo IndexedDB at schema v5, got ${JSON.stringify(databases)}`);
-  if (databases.some((database) => database.name === 'still-local')) throw new Error('Demo browser opened the primary Still database.');
+  if (!demoDb || demoDb.version !== 50) throw new Error(`Expected demo IndexedDB at Dexie schema v5/native v50, got ${JSON.stringify(databases)}`);
 
   const migrated = await evaluate(cdp, `new Promise((resolve, reject) => {
     const request = indexedDB.open('still-demo-local');
@@ -143,6 +142,24 @@ try {
     };
   })`);
   if (!migrated?.hasSettings || !migrated?.kept) throw new Error(`IndexedDB migration did not preserve data: ${JSON.stringify(migrated)}`);
+
+  const primaryCounts = await evaluate(cdp, `new Promise((resolve, reject) => {
+    const request = indexedDB.open('still-local');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      const names = ['tasks', 'events', 'journalEntries', 'expenses', 'entityLinks', 'workShifts'];
+      const existing = names.filter((name) => db.objectStoreNames.contains(name));
+      if (!existing.length) { db.close(); resolve({ total: 0 }); return; }
+      const tx = db.transaction(existing, 'readonly');
+      Promise.all(existing.map((name) => new Promise((done, fail) => {
+        const count = tx.objectStore(name).count();
+        count.onsuccess = () => done(count.result);
+        count.onerror = () => fail(count.error);
+      }))).then((counts) => { db.close(); resolve({ total: counts.reduce((sum, value) => sum + value, 0) }); }, reject);
+    };
+  })`);
+  if (primaryCounts.total !== 0) throw new Error(`Demo data leaked into the primary IndexedDB database: ${JSON.stringify(primaryCounts)}`);
 
   await cdp.send('Page.navigate', { url: `${appOrigin}/more` });
   await poll(cdp, "document.body.innerText.includes('Demo sandbox')", 'demo sandbox controls');
