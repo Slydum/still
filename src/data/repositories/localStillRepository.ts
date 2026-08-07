@@ -105,6 +105,12 @@ function stripSettingsMetadata(record: SyncedAccountSettings): AccountSettings {
   return settings;
 }
 
+function accountSettingsEqual(left: AccountSettings, right: AccountSettings) {
+  const { updatedAt: _leftUpdatedAt, ...leftComparable } = left;
+  const { updatedAt: _rightUpdatedAt, ...rightComparable } = right;
+  return JSON.stringify(leftComparable) === JSON.stringify(rightComparable);
+}
+
 export class LocalStillRepository implements StillRepository {
   readonly provider = 'local' as const;
   readonly schemaVersion = PERMANENT_DATA_SCHEMA_VERSION;
@@ -184,6 +190,7 @@ export class LocalStillRepository implements StillRepository {
 
   async persistAccountSettings(settings: AccountSettings) {
     const existing = await stillDb.accountSettings.get('account');
+    if (existing && accountSettingsEqual(settings, stripSettingsMetadata(existing))) return;
     await stillDb.accountSettings.put(addSyncMetadata(settings, existing));
   }
 
