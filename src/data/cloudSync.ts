@@ -45,8 +45,7 @@ type RemoteRecord = RpcRecord & {
   modified_at: string;
 };
 
-type LocalSyncedRecord = Record<string, unknown> & {
-  id: string;
+type LocalSyncFields = {
   userId: string;
   schemaVersion: number;
   updatedAt: number;
@@ -57,7 +56,8 @@ type LocalSyncedRecord = Record<string, unknown> & {
   dirty: boolean;
 };
 
-type LocalSyncedCheckIn = Omit<LocalSyncedRecord, 'id'> & { date: string };
+type LocalSyncedRecord = Record<string, unknown> & LocalSyncFields & { id: string };
+type LocalSyncedCheckIn = Record<string, unknown> & LocalSyncFields & { date: string };
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -236,10 +236,18 @@ async function savePullCursor(cursor: number) {
 
 async function compactAcknowledgedLocalTombstones(cursor: number) {
   const cutoff = Date.now() - LOCAL_TOMBSTONE_RETENTION_MS;
-  const tables = [stillDb.tasks, stillDb.events, stillDb.journalEntries, stillDb.expenses, stillDb.entityLinks, stillDb.workShifts, stillDb.checkIns];
+  const tables: Array<Table<any, string>> = [
+    stillDb.tasks,
+    stillDb.events,
+    stillDb.journalEntries,
+    stillDb.expenses,
+    stillDb.entityLinks,
+    stillDb.workShifts,
+    stillDb.checkIns,
+  ];
   await stillDb.transaction('rw', tables, async () => {
     for (const table of tables) {
-      await table.filter((record: LocalSyncedRecord) => Boolean(
+      await table.filter((record: LocalSyncFields) => Boolean(
         record.deletedAt
         && record.deletedAt < cutoff
         && record.dirty === false
