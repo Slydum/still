@@ -7,10 +7,10 @@ insert into auth.users (id) values
   ('11111111-1111-1111-1111-111111111111'),
   ('22222222-2222-2222-2222-222222222222');
 
-insert into public.still_records (user_id, record_type, record_id, payload, updated_at)
+insert into public.still_records (user_id, record_type, record_id, payload, updated_at, mutation_id)
 values
-  ('11111111-1111-1111-1111-111111111111', 'task', 'owned', '{"owner":"one"}', 1),
-  ('22222222-2222-2222-2222-222222222222', 'task', 'other', '{"owner":"two"}', 1);
+  ('11111111-1111-1111-1111-111111111111', 'task', 'owned', '{"owner":"one"}', 1, 'seed-owned'),
+  ('22222222-2222-2222-2222-222222222222', 'task', 'other', '{"owner":"two"}', 1, 'seed-other');
 
 set local role authenticated;
 set local "request.jwt.claims" = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
@@ -28,14 +28,14 @@ select is(
 );
 
 select lives_ok(
-  $$insert into public.still_records (user_id, record_type, record_id, payload, updated_at)
-    values ('11111111-1111-1111-1111-111111111111', 'task', 'new-owned', '{}', 2)$$,
+  $$insert into public.still_records (user_id, record_type, record_id, payload, updated_at, mutation_id)
+    values ('11111111-1111-1111-1111-111111111111', 'task', 'new-owned', '{}', 2, 'own-insert')$$,
   'users can insert their own records'
 );
 
 select throws_ok(
-  $$insert into public.still_records (user_id, record_type, record_id, payload, updated_at)
-    values ('22222222-2222-2222-2222-222222222222', 'task', 'forbidden', '{}', 2)$$,
+  $$insert into public.still_records (user_id, record_type, record_id, payload, updated_at, mutation_id)
+    values ('22222222-2222-2222-2222-222222222222', 'task', 'forbidden', '{}', 2, 'cross-user-insert')$$,
   '42501',
   'users cannot insert records for another user'
 );
