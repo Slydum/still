@@ -10,6 +10,7 @@
     "types": ["vite/client"]
   },
   "include": [
+    "src/app/basePathCore.ts",
     "src/domain/**/*.ts",
     "src/data/accountLifecycleCore.ts",
     "src/data/accountSettings.ts",
