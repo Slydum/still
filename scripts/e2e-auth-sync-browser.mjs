@@ -291,6 +291,44 @@ async function clearedLocalDataState(browser) {
   })()`);
 }
 
+function isNeutralPersistedState(rawState) {
+  if (rawState === null) return true;
+  try {
+    const state = JSON.parse(rawState)?.state ?? {};
+    const emptyCollections = ['tasks', 'events', 'journalEntries', 'expenses', 'notifications', 'entityLinks', 'workShifts']
+      .every((key) => Array.isArray(state[key]) && state[key].length === 0);
+    const workProfile = state.workProfile ?? {};
+    const defaultWorkProfile = workProfile.payType === 'hourly'
+      && workProfile.currency === 'PHP'
+      && workProfile.hourlyRate === 0
+      && workProfile.annualSalary === 0
+      && workProfile.weeklyHours === 40
+      && workProfile.unpaidBreakMinutes === 60
+      && Array.isArray(workProfile.scheduleOverrides)
+      && workProfile.scheduleOverrides.length === 0;
+    return emptyCollections
+      && state.name === ''
+      && state.mood === undefined
+      && state.energy === undefined
+      && state.checkInDate === undefined
+      && state.weather === undefined
+      && state.occasion === undefined
+      && state.workPrivacyBlur === true
+      && state.appearanceTone === 'lavender'
+      && state.reduceMotion === false
+      && state.notificationsEnabled === false
+      && state.taskReminders === true
+      && state.eventReminders === true
+      && state.dailyCheckInReminder === false
+      && state.reminderTime === '09:00'
+      && state.eventReminderMinutes === 30
+      && state.autoWeather === true
+      && defaultWorkProfile;
+  } catch {
+    return false;
+  }
+}
+
 const { apiUrl, publicKey, adminKey } = localSupabaseEnvironment();
 const buildEnvironment = {
   ...process.env,
@@ -356,8 +394,10 @@ try {
   await clickText(deviceA, 'button', 'Log out — clear local data');
   await poll(deviceA, "Boolean(document.querySelector('input[autocomplete=current-password]'))", 'login after clear-local logout');
   const clearedState = await clearedLocalDataState(deviceA);
-  const lingeringKey = Object.values(clearedState.storedKeys).some((value) => value !== null);
-  if (lingeringKey || clearedState.totalRows !== 0) {
+  const lingeringDeviceKey = Object.entries(clearedState.storedKeys)
+    .some(([key, value]) => key !== 'still-app-state-v1' && value !== null);
+  const neutralAppState = isNeutralPersistedState(clearedState.storedKeys['still-app-state-v1']);
+  if (lingeringDeviceKey || !neutralAppState || clearedState.totalRows !== 0) {
     throw new Error(`Clear-local logout left Still-managed data behind: ${JSON.stringify(clearedState)}`);
   }
 
