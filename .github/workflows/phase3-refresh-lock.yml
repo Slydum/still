@@ -1,0 +1,33 @@
+name: Phase 3 refresh lockfile
+
+on:
+  push:
+    branches: [v0.2-phase-3-connect-records]
+    paths: [.github/workflows/phase3-refresh-lock.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: v0.2-phase-3-connect-records
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Refresh lockfile
+        run: |
+          npm install --package-lock-only --ignore-scripts
+          node -e "const lock=require('./package-lock.json'); if(lock.packages['node_modules/nanoid']?.version !== '3.3.17') process.exit(1)"
+          rm .github/workflows/phase3-refresh-lock.yml
+      - name: Commit refreshed lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json .github/workflows/phase3-refresh-lock.yml
+          git commit -m "Security: refresh lockfile for nanoid patch"
+          git push origin HEAD:v0.2-phase-3-connect-records
