@@ -2,17 +2,14 @@ import {
   Bell,
   Check,
   Clock3,
-  Download,
   Info,
   MapPin,
   Palette,
   RotateCcw,
   ShieldCheck,
-  Trash2,
   UserRound,
 } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
-import { stillDb } from '../../data/stillDb';
 import { useAppStore, type AppearanceTone } from '../../stores/useAppStore';
 import { CloudSyncSettings } from './CloudSyncSettings';
 
@@ -127,53 +124,6 @@ export function MorePage() {
     }
   };
 
-  const exportData = async () => {
-    const state = useAppStore.getState();
-    const [checkIns, dailyQuotes] = await Promise.all([
-      stillDb.checkIns.toArray(),
-      stillDb.dailyQuotes.toArray(),
-    ]);
-    const payload = {
-      app: 'Still',
-      version: '0.1.0',
-      exportedAt: new Date().toISOString(),
-      profile: { name: state.name },
-      preferences: {
-        appearanceTone: state.appearanceTone,
-        reduceMotion: state.reduceMotion,
-        notificationsEnabled: state.notificationsEnabled,
-        taskReminders: state.taskReminders,
-        eventReminders: state.eventReminders,
-        dailyCheckInReminder: state.dailyCheckInReminder,
-        reminderTime: state.reminderTime,
-        eventReminderMinutes: state.eventReminderMinutes,
-        autoWeather: state.autoWeather,
-      },
-      tasks: state.tasks,
-      events: state.events,
-      journalEntries: state.journalEntries,
-      notifications: state.notifications,
-      checkIns,
-      dailyQuotes,
-    };
-    const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `still-export-${new Date().toISOString().slice(0, 10)}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const resetData = async () => {
-    const confirmation = window.prompt('This removes every task, event, journal entry, and check-in stored on this device. Type RESET to continue.');
-    if (confirmation !== 'RESET') return;
-    await stillDb.delete();
-    window.localStorage.removeItem('still-app-state-v1');
-    window.localStorage.removeItem(LOCATION_WEATHER_KEY);
-    window.localStorage.removeItem('still-sent-reminders-v1');
-    window.location.reload();
-  };
-
   return (
     <main className="shell more-page">
       <header className="more-page-header"><p className="section-kicker">Make Still yours</p><h1>More</h1><p className="subtle">Preferences, privacy, and the details that shape your space.</p></header>
@@ -229,16 +179,17 @@ export function MorePage() {
       <CloudSyncSettings />
 
       <section className="settings-section" aria-labelledby="data-settings-title">
-        <div className="settings-section-heading"><span><ShieldCheck size={19} /></span><div><h2 id="data-settings-title">Your data</h2><p>Still keeps an offline copy on this device. Cloud sync is optional.</p></div></div>
-        <div className="card settings-card settings-data-actions">
-          <button onClick={() => void exportData()} type="button"><Download size={18} /><span><strong>Export my data</strong><small>Download a readable JSON backup.</small></span></button>
-          <button className="is-danger" onClick={() => void resetData()} type="button"><Trash2 size={18} /><span><strong>Reset Still</strong><small>Delete all locally stored app data.</small></span></button>
+        <div className="settings-section-heading"><span><ShieldCheck size={19} /></span><div><h2 id="data-settings-title">Your data</h2><p>Synced records live in your Still account, with an offline copy on this device.</p></div></div>
+        <div className="card settings-card">
+          <p className="settings-footnote">
+            Tasks, events, journal entries, expenses, links, work shifts, and check-ins are included in cloud sync. Some preferences and browser permissions are still device-specific. To remove the offline copy safely, use “Log out and clear this device” above; Still will require a successful sync first.
+          </p>
         </div>
       </section>
 
       <section className="settings-section" aria-labelledby="about-settings-title">
         <div className="settings-section-heading"><span><Info size={19} /></span><div><h2 id="about-settings-title">About</h2><p>A calm daily space built around your own rhythm.</p></div></div>
-        <div className="card settings-about-card"><div><strong>Still</strong><span>Version 0.1.0</span></div><p>Your tasks, calendar, journal, and check-ins remain available offline. Enable cloud sync to carry them between signed-in devices.</p></div>
+        <div className="card settings-about-card"><div><strong>Still</strong><span>Version 0.1.0</span></div><p>Your synced records remain available offline on this device and can be restored from your Still account after a successful cloud sync.</p></div>
       </section>
     </main>
   );
