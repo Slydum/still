@@ -709,6 +709,18 @@ export function DashboardPage() {
         </div>
       </section>
 
+      <section className="section weekly-reflection-entry">
+        <button className="card weekly-reflection-entry-card" onClick={() => navigate('/reflection')} type="button">
+          <span className="weekly-reflection-entry-icon"><Sparkles size={20} /></span>
+          <span className="weekly-reflection-entry-copy">
+            <span className="section-kicker">Weekly reflection</span>
+            <strong>See the week in your own records</strong>
+            <small>Tasks, events, reflections, spending, work, check-ins, and Life Areas — summarized without guessing what they mean.</small>
+          </span>
+          <span className="weekly-reflection-entry-action">Look back</span>
+        </button>
+      </section>
+
       <section className="section closing-note closing-note-v2">
         <div className="closing-icon"><Sparkles size={20} /></div>
         <div><p className="section-kicker">Today’s reminder</p><p className="closing-quote">{closingQuote.text}</p></div>
