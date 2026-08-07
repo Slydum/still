@@ -47,6 +47,8 @@ export type WorkShift = {
   recordedBreakMs?: number;
   note?: string;
   links?: LifeEntityRef[];
+  createdAt?: number;
+  updatedAt?: number;
 };
 
 export type WorkShiftInput = {
