@@ -167,7 +167,7 @@ export function WeeklyReflectionPage() {
 
       <section className="card weekly-reflection-hero" aria-labelledby="weekly-reflection-title">
         <div className="weekly-reflection-hero-copy">
-          <span><Sparkles size={18} /> {isCurrentWeek ? 'This week so far' : 'Past week'}</span>
+          <span><Sparkles size={18} /> {isCurrentWeek ? 'This week' : 'Past week'}</span>
           <h2 id="weekly-reflection-title">{weekLabel(reflection.startDate, reflection.endDate)}</h2>
           <p>
             {reflection.totalActivity === 0
