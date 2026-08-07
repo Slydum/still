@@ -5,6 +5,7 @@ import {
   accountSettingsFromState,
   accountSettingsStatePatch,
   displayNameFromUserMetadata,
+  shouldSeedSignupDisplayName,
 } from '../../src/data/accountSettings.js';
 
 describe('account settings sync model', () => {
@@ -42,5 +43,13 @@ describe('account settings sync model', () => {
     assert.equal(displayNameFromUserMetadata({ display_name: '   ' }), undefined);
     assert.equal(displayNameFromUserMetadata({ display_name: 42 }), undefined);
     assert.equal(displayNameFromUserMetadata(undefined), undefined);
+  });
+
+  it('seeds only an unacknowledged blank or legacy default profile', () => {
+    assert.equal(shouldSeedSignupDisplayName('', undefined), true);
+    assert.equal(shouldSeedSignupDisplayName('Tien', undefined), true);
+    assert.equal(shouldSeedSignupDisplayName('Alex', undefined), false);
+    assert.equal(shouldSeedSignupDisplayName('Tien', 5), false);
+    assert.equal(shouldSeedSignupDisplayName('', 5), false);
   });
 });
