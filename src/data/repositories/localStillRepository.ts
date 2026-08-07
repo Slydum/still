@@ -7,6 +7,7 @@ import type {
   StillExpense,
   StillTask,
 } from '../../stores/useAppStore';
+import type { AccountSettings } from '../accountSettings';
 import { stillDb, withCheckInSyncMetadata } from '../localDb';
 import type { CheckInRecord } from '../records';
 import { activeRecords, addSyncMetadata, createMutationId, reconcileCollection } from './reconcile';
@@ -16,6 +17,7 @@ import {
   type PermanentDataCache,
   type PermanentDataSnapshot,
   type StillRepository,
+  type SyncedAccountSettings,
   type SyncedCheckInRecord,
   type SyncedRecord,
 } from './types';
@@ -89,6 +91,20 @@ function stripCheckInMetadata(record: SyncedCheckInRecord): CheckInRecord {
   return checkIn;
 }
 
+function stripSettingsMetadata(record: SyncedAccountSettings): AccountSettings {
+  const {
+    userId: _userId,
+    schemaVersion: _schemaVersion,
+    deletedAt: _deletedAt,
+    syncCounter: _syncCounter,
+    mutationId: _mutationId,
+    serverRevision: _serverRevision,
+    dirty: _dirty,
+    ...settings
+  } = record;
+  return settings;
+}
+
 export class LocalStillRepository implements StillRepository {
   readonly provider = 'local' as const;
   readonly schemaVersion = PERMANENT_DATA_SCHEMA_VERSION;
@@ -103,24 +119,30 @@ export class LocalStillRepository implements StillRepository {
         stillDb.expenses,
         stillDb.entityLinks,
         stillDb.workShifts,
+        stillDb.accountSettings,
         stillDb.repositoryMeta,
       ],
       async () => {
         const alreadyBootstrapped = await stillDb.repositoryMeta.get(BOOTSTRAP_META_KEY);
-        if (alreadyBootstrapped) return;
 
-        await seedTable(stillDb.tasks, cache.tasks);
-        await seedTable(stillDb.events, cache.events);
-        await seedTable(stillDb.journalEntries, cache.journalEntries);
-        await seedTable(stillDb.expenses, cache.expenses);
-        await seedTable(stillDb.entityLinks, cache.entityLinks);
-        await seedTable(stillDb.workShifts, cache.workShifts);
+        if (!alreadyBootstrapped) {
+          await seedTable(stillDb.tasks, cache.tasks);
+          await seedTable(stillDb.events, cache.events);
+          await seedTable(stillDb.journalEntries, cache.journalEntries);
+          await seedTable(stillDb.expenses, cache.expenses);
+          await seedTable(stillDb.entityLinks, cache.entityLinks);
+          await seedTable(stillDb.workShifts, cache.workShifts);
 
-        await stillDb.repositoryMeta.put({
-          key: BOOTSTRAP_META_KEY,
-          value: this.provider,
-          updatedAt: Date.now(),
-        });
+          await stillDb.repositoryMeta.put({
+            key: BOOTSTRAP_META_KEY,
+            value: this.provider,
+            updatedAt: Date.now(),
+          });
+        }
+
+        if (await stillDb.accountSettings.count() === 0) {
+          await stillDb.accountSettings.put(addSyncMetadata(cache.accountSettings));
+        }
       },
     );
 
@@ -128,7 +150,7 @@ export class LocalStillRepository implements StillRepository {
   }
 
   async load(): Promise<PermanentDataSnapshot> {
-    const [tasks, events, journalEntries, expenses, entityLinks, workShifts, checkIns] = await Promise.all([
+    const [tasks, events, journalEntries, expenses, entityLinks, workShifts, checkIns, storedSettings] = await Promise.all([
       stillDb.tasks.toArray(),
       stillDb.events.toArray(),
       stillDb.journalEntries.toArray(),
@@ -136,7 +158,10 @@ export class LocalStillRepository implements StillRepository {
       stillDb.entityLinks.toArray(),
       stillDb.workShifts.toArray(),
       this.listCheckIns(),
+      stillDb.accountSettings.get('account'),
     ]);
+
+    if (!storedSettings) throw new Error('Still account settings were not initialized.');
 
     return {
       tasks: activeRecords(tasks),
@@ -145,6 +170,7 @@ export class LocalStillRepository implements StillRepository {
       expenses: activeRecords(expenses),
       entityLinks: activeRecords(entityLinks),
       workShifts: activeRecords(workShifts),
+      accountSettings: stripSettingsMetadata(storedSettings),
       checkIns,
     };
   }
@@ -155,6 +181,11 @@ export class LocalStillRepository implements StillRepository {
   persistExpenses(changes: CollectionChanges<StillExpense>) { return persistTableChanges(stillDb.expenses, changes); }
   persistEntityLinks(changes: CollectionChanges<LifeEntityLink>) { return persistTableChanges(stillDb.entityLinks, changes); }
   persistWorkShifts(changes: CollectionChanges<WorkShift>) { return persistTableChanges(stillDb.workShifts, changes); }
+
+  async persistAccountSettings(settings: AccountSettings) {
+    const existing = await stillDb.accountSettings.get('account');
+    await stillDb.accountSettings.put(addSyncMetadata(settings, existing));
+  }
 
   async listCheckIns() {
     const records = await stillDb.checkIns.orderBy('date').reverse().toArray();
