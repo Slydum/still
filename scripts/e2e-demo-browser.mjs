@@ -59,11 +59,7 @@ function createCdp(socketUrl) {
 }
 
 async function evaluate(cdp, expression) {
-  const result = await cdp.send('Runtime.evaluate', {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-  });
+  const result = await cdp.send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
   if (result.exceptionDetails) throw new Error(result.exceptionDetails.text || 'Browser evaluation failed.');
   return result.result.value;
 }
@@ -92,11 +88,13 @@ try {
     'about:blank',
   ], { stdio: 'ignore' });
 
-  const version = await (await waitFor(`http://127.0.0.1:${chromePort}/json/version`)).json();
-  cdp = createCdp(version.webSocketDebuggerUrl);
+  await waitFor(`http://127.0.0.1:${chromePort}/json/version`);
+  const pageResponse = await fetch(`http://127.0.0.1:${chromePort}/json/new?${encodeURIComponent(`${appOrigin}/auth`)}`, { method: 'PUT' });
+  if (!pageResponse.ok) throw new Error(`Could not create browser page target: ${pageResponse.status}`);
+  const page = await pageResponse.json();
+  cdp = createCdp(page.webSocketDebuggerUrl);
   await cdp.send('Page.enable');
   await cdp.send('Runtime.enable');
-  await cdp.send('Page.navigate', { url: `${appOrigin}/auth` });
   await poll(cdp, "Boolean(document.querySelector('.auth-demo-entry button'))", 'demo entry button');
 
   const legacyCreated = await evaluate(cdp, `new Promise((resolve, reject) => {
