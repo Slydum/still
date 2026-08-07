@@ -7,6 +7,7 @@ import {
   type CollectionChanges,
   type IdentifiedVersionedRecord,
 } from '../data/repositories/recordChanges';
+import { enqueueRepositoryWrite } from '../data/repositoryWriteQueue';
 import { useAppStore } from '../stores/useAppStore';
 import { usePersistenceStatus } from '../stores/usePersistenceStatus';
 
@@ -68,15 +69,12 @@ export function usePermanentDataRepository() {
   useEffect(() => {
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
-    let writeQueue = Promise.resolve();
 
     const enqueue = (write: () => Promise<void>) => {
-      writeQueue = writeQueue
-        .then(async () => {
-          await write();
-          reportRepositorySuccess();
-        })
-        .catch(reportRepositoryError);
+      enqueueRepositoryWrite(write, {
+        onSuccess: reportRepositorySuccess,
+        onError: reportRepositoryError,
+      });
     };
 
     const persistCollection = <T extends IdentifiedVersionedRecord>(

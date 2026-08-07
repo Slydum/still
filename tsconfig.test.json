@@ -16,6 +16,7 @@
     "src/data/accountLifecycleCore.ts",
     "src/data/accountSettings.ts",
     "src/data/cloudSyncCore.ts",
+    "src/data/repositoryWriteQueue.ts",
     "src/data/repositories/reconcile.ts",
     "src/data/repositories/recordChanges.ts",
     "src/data/repositories/types.ts",
