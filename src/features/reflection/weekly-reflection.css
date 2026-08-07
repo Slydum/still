@@ -350,3 +350,59 @@
     align-items: flex-end;
   }
 }
+
+
+.weekly-reflection-entry-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.05rem 1.15rem;
+  border: 0;
+  color: inherit;
+  text-align: left;
+}
+
+.weekly-reflection-entry-icon {
+  width: 2.55rem;
+  height: 2.55rem;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 0.9rem;
+  background: rgba(124, 111, 167, 0.1);
+}
+
+.weekly-reflection-entry-copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.22rem;
+  flex: 1;
+}
+
+.weekly-reflection-entry-copy strong {
+  font-size: 1.02rem;
+}
+
+.weekly-reflection-entry-copy small {
+  line-height: 1.4;
+  opacity: 0.62;
+}
+
+.weekly-reflection-entry-action {
+  font-size: 0.8rem;
+  font-weight: 700;
+  opacity: 0.62;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .weekly-reflection-entry-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .weekly-reflection-entry-action {
+    margin-left: 3.45rem;
+  }
+}

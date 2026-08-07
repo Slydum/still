@@ -24,6 +24,7 @@ import { LifeAreaPage } from '../features/life-area/LifeAreaPage';
 import { CheckInHistoryPage } from '../features/check-ins/CheckInHistoryPage';
 import { MoneyPage } from '../features/money/MoneyPage';
 import { MorePage } from '../features/more/MorePage';
+import { WeeklyReflectionPage } from '../features/reflection/WeeklyReflectionPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
 import { WorkPage } from '../features/work/WorkPage';
 import { useAppStore } from '../stores/useAppStore';
@@ -98,6 +99,7 @@ function AppRoutes() {
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/check-ins" element={<CheckInHistoryPage />} />
         <Route path="/more" element={<MorePage />} />
+        <Route path="/reflection" element={<WeeklyReflectionPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/work" element={<WorkPage />} />
         <Route path="/money" element={<MoneyPage />} />

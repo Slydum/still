@@ -135,6 +135,14 @@ try {
     'controlled direct live /more route',
   );
 
+  const reflectionUrl = new URL('reflection', liveUrl).toString();
+  await cdp.send('Page.navigate', { url: reflectionUrl });
+  await poll(
+    cdp,
+    "document.body.innerText.includes('Weekly reflection') && document.body.innerText.includes('Week rhythm') && Boolean(navigator.serviceWorker.controller)",
+    'controlled direct live /reflection route',
+  );
+
   await cdp.send('Page.navigate', { url: liveUrl.toString() });
   await poll(cdp, "Boolean(document.querySelector('.app')) && Boolean(navigator.serviceWorker.controller)", 'controlled live app before offline reload');
 
