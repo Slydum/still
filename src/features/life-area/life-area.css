@@ -1,0 +1,191 @@
+.life-area-page {
+  display: grid;
+  gap: 22px;
+  padding-bottom: 120px;
+}
+
+.life-area-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.life-area-heading {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.life-area-heading h1 {
+  margin: 2px 0 4px;
+}
+
+.life-area-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  background: var(--surface-soft, rgba(255, 255, 255, 0.62));
+}
+
+.life-area-work .life-area-icon { color: #7864a6; }
+.life-area-love .life-area-icon { color: #b86f82; }
+.life-area-health .life-area-icon { color: #5c8f78; }
+.life-area-money .life-area-icon { color: #a77c2e; }
+
+.life-area-summary {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.life-area-summary > div:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.life-area-summary strong {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.life-area-summary p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.life-area-summary .btn {
+  justify-self: start;
+}
+
+.life-area-capture {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.life-area-capture button {
+  min-height: 48px;
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  background: var(--surface, #fff);
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.life-area-empty {
+  text-align: center;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 34px 22px;
+}
+
+.life-area-empty h2,
+.life-area-empty p {
+  margin: 0;
+}
+
+.life-area-empty p {
+  max-width: 480px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.life-area-record-sections,
+.life-area-record-section,
+.life-area-record-list {
+  display: grid;
+  gap: 12px;
+}
+
+.life-area-record-sections {
+  gap: 24px;
+}
+
+.life-area-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.life-area-section-heading h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.life-area-record {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  text-align: left;
+  color: inherit;
+  border: 0;
+}
+
+button.life-area-record {
+  cursor: pointer;
+}
+
+.life-area-record > span:last-child {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.life-area-record strong,
+.life-area-record small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.life-area-record strong {
+  white-space: nowrap;
+}
+
+.life-area-record small {
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.life-area-record-state {
+  width: 22px;
+  height: 22px;
+  border: 2px solid currentColor;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+}
+
+.life-area-record-state.is-complete {
+  opacity: 0.6;
+}
+
+.life-area-record.is-static {
+  cursor: default;
+}
+
+.life-area-picker > small:last-child {
+  color: var(--text-muted);
+}
+
+@media (max-width: 520px) {
+  .life-area-capture {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
