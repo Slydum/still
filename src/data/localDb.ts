@@ -11,11 +11,13 @@ import {
   CHECK_IN_SCALE_VERSION,
   createCheckInSnapshot,
 } from '../features/check-ins/checkInScale';
+import type { AccountSettings } from './accountSettings';
 import type { CheckInRecord, DailyQuoteRecord } from './records';
 import {
   LOCAL_DEVICE_USER_ID,
   PERMANENT_DATA_SCHEMA_VERSION,
   type SyncMetadata,
+  type SyncedAccountSettings,
   type SyncedCheckInRecord,
   type SyncedRecord,
 } from './repositories/types';
@@ -66,6 +68,7 @@ export class StillLocalDatabase extends Dexie {
   expenses!: Table<SyncedRecord<StillExpense>, string>;
   entityLinks!: Table<SyncedRecord<LifeEntityLink>, string>;
   workShifts!: Table<SyncedRecord<WorkShift & { id: string }>, string>;
+  accountSettings!: Table<SyncedAccountSettings, string>;
   repositoryMeta!: Table<RepositoryMetaRecord, string>;
 
   constructor() {
@@ -128,6 +131,18 @@ export class StillLocalDatabase extends Dexie {
       await migrateTable('expenses', 'id');
       await migrateTable('entityLinks', 'id');
       await migrateTable('workShifts', 'id');
+    });
+    this.version(5).stores({
+      dailyQuotes: 'date, quoteId, createdAt',
+      checkIns: 'date, updatedAt, scaleVersion, userId, deletedAt, syncCounter, serverRevision',
+      tasks: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      events: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      journalEntries: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      expenses: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      entityLinks: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      workShifts: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      accountSettings: 'id, updatedAt, userId, syncCounter, serverRevision',
+      repositoryMeta: 'key, updatedAt',
     });
   }
 }
