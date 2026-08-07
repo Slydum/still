@@ -47,3 +47,9 @@ export function displayNameFromUserMetadata(metadata: Record<string, unknown> | 
   const value = metadata?.display_name;
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
+
+export function shouldSeedSignupDisplayName(existingName: string | undefined, serverRevision: number | undefined) {
+  if (serverRevision !== undefined) return false;
+  const normalized = existingName?.trim();
+  return !normalized || normalized === 'Tien';
+}
