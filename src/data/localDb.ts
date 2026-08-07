@@ -37,6 +37,10 @@ function withCheckInSnapshot(record: CheckInRecord): CheckInRecord {
   };
 }
 
+function legacyMutationId(key: string, updatedAt: number) {
+  return `legacy:${key}:${updatedAt}`;
+}
+
 function withCheckInSyncMetadata(record: CheckInRecord): SyncedCheckInRecord {
   const snapshotted = withCheckInSnapshot(record);
   const existing = record as CheckInRecord & Partial<SyncMetadata>;
@@ -46,6 +50,10 @@ function withCheckInSyncMetadata(record: CheckInRecord): SyncedCheckInRecord {
     schemaVersion: PERMANENT_DATA_SCHEMA_VERSION,
     updatedAt: record.updatedAt,
     deletedAt: existing.deletedAt,
+    syncCounter: existing.syncCounter ?? 1,
+    mutationId: existing.mutationId ?? legacyMutationId(record.date, record.updatedAt),
+    serverRevision: existing.serverRevision,
+    dirty: existing.dirty ?? true,
   };
 }
 
@@ -91,6 +99,35 @@ export class StillLocalDatabase extends Dexie {
         const migrated = withCheckInSyncMetadata(record);
         Object.assign(record, migrated);
       });
+    });
+    this.version(4).stores({
+      dailyQuotes: 'date, quoteId, createdAt',
+      checkIns: 'date, updatedAt, scaleVersion, userId, deletedAt, syncCounter, serverRevision',
+      tasks: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      events: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      journalEntries: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      expenses: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      entityLinks: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      workShifts: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      repositoryMeta: 'key, updatedAt',
+    }).upgrade(async (transaction) => {
+      const migrateTable = async (name: string, key: 'id' | 'date') => {
+        await transaction.table<Record<string, unknown>>(name).toCollection().modify((record) => {
+          const updatedAt = Number(record.updatedAt) || Date.now();
+          const recordKey = String(record[key] ?? name);
+          record.syncCounter = Number(record.syncCounter) || 1;
+          record.mutationId = String(record.mutationId || legacyMutationId(recordKey, updatedAt));
+          record.dirty = record.dirty === false ? false : true;
+        });
+      };
+
+      await migrateTable('checkIns', 'date');
+      await migrateTable('tasks', 'id');
+      await migrateTable('events', 'id');
+      await migrateTable('journalEntries', 'id');
+      await migrateTable('expenses', 'id');
+      await migrateTable('entityLinks', 'id');
+      await migrateTable('workShifts', 'id');
     });
   }
 }

@@ -4,6 +4,7 @@ import {
   chunkRows,
   collectPaginatedRows,
   createSingleFlight,
+  maxServerRevision,
   mergeByKey,
 } from './cloudSyncCore';
 import { stillDb } from './localDb';
@@ -12,8 +13,10 @@ import type { PermanentDataSnapshot } from './repositories/types';
 import { getCloudSession, getSupabaseClient } from './supabaseClient';
 
 const CLOUD_USER_META_KEY = 'supabase-user-id-v1';
+const SYNC_CURSOR_META_KEY = 'supabase-sync-cursor-v2';
 const SYNC_BATCH_SIZE = 250;
 const PULL_PAGE_SIZE = 500;
+const LOCAL_TOMBSTONE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 type StillRecordType =
   | 'task'
@@ -31,29 +34,30 @@ type RpcRecord = {
   payload: Record<string, unknown>;
   updated_at: number;
   deleted_at: number | null;
+  sync_counter: number;
+  mutation_id: string;
 };
 
 type RemoteRecord = RpcRecord & {
   user_id: string;
+  server_revision: number;
   created_at: string;
   modified_at: string;
 };
 
-type LocalSyncedRecord = Record<string, unknown> & {
-  id: string;
+type LocalSyncFields = {
   userId: string;
   schemaVersion: number;
   updatedAt: number;
   deletedAt?: number;
+  syncCounter: number;
+  mutationId: string;
+  serverRevision?: number;
+  dirty: boolean;
 };
 
-type LocalSyncedCheckIn = Record<string, unknown> & {
-  date: string;
-  userId: string;
-  schemaVersion: number;
-  updatedAt: number;
-  deletedAt?: number;
-};
+type LocalSyncedRecord = Record<string, unknown> & LocalSyncFields & { id: string };
+type LocalSyncedCheckIn = Record<string, unknown> & LocalSyncFields & { date: string };
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -65,14 +69,21 @@ function toRpcRecords(
   idKey: 'id' | 'date',
 ): RpcRecord[] {
   return records.flatMap((record) => {
+    if (record.dirty !== true) return [];
     const recordId = String(record[idKey] ?? '');
     const updatedAt = Number(record.updatedAt);
-    if (!recordId || !Number.isFinite(updatedAt)) return [];
+    const syncCounter = Number(record.syncCounter);
+    const mutationId = String(record.mutationId ?? '');
+    if (!recordId || !Number.isFinite(updatedAt) || !Number.isFinite(syncCounter) || !mutationId) return [];
 
     const {
       userId: _userId,
       schemaVersion: _schemaVersion,
       deletedAt: _deletedAt,
+      syncCounter: _syncCounter,
+      mutationId: _mutationId,
+      serverRevision: _serverRevision,
+      dirty: _dirty,
       ...payload
     } = record;
 
@@ -83,20 +94,14 @@ function toRpcRecords(
       payload,
       updated_at: updatedAt,
       deleted_at: typeof record.deletedAt === 'number' ? record.deletedAt : null,
+      sync_counter: syncCounter,
+      mutation_id: mutationId,
     }];
   });
 }
 
-async function readLocalRows(): Promise<RpcRecord[]> {
-  const [
-    tasks,
-    events,
-    journalEntries,
-    expenses,
-    entityLinks,
-    workShifts,
-    checkIns,
-  ] = await Promise.all([
+async function readDirtyRows(): Promise<RpcRecord[]> {
+  const [tasks, events, journalEntries, expenses, entityLinks, workShifts, checkIns] = await Promise.all([
     stillDb.tasks.toArray(),
     stillDb.events.toArray(),
     stillDb.journalEntries.toArray(),
@@ -117,17 +122,26 @@ async function readLocalRows(): Promise<RpcRecord[]> {
   ];
 }
 
-async function pushRows(rows: RpcRecord[]) {
+async function pushRows(rows: RpcRecord[]): Promise<RemoteRecord[]> {
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error('Cloud sync could not load on this device.');
 
+  const authoritative: RemoteRecord[] = [];
   for (const batch of chunkRows(rows, SYNC_BATCH_SIZE)) {
-    const { error } = await supabase.rpc('sync_still_records', { p_records: batch });
+    const { data, error } = await supabase.rpc('sync_still_records', { p_records: batch });
     if (error) throw new Error(error.message);
+    authoritative.push(...((data ?? []) as RemoteRecord[]));
   }
+  return authoritative;
 }
 
-async function pullRows(): Promise<RemoteRecord[]> {
+async function readPullCursor() {
+  const cursor = await stillDb.repositoryMeta.get(SYNC_CURSOR_META_KEY);
+  const value = Number(cursor?.value ?? 0);
+  return Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
+async function pullRows(cursor: number): Promise<RemoteRecord[]> {
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error('Cloud sync could not load on this device.');
 
@@ -135,9 +149,8 @@ async function pullRows(): Promise<RemoteRecord[]> {
     const { data, error } = await supabase
       .from('still_records')
       .select('*')
-      .order('updated_at', { ascending: true })
-      .order('record_type', { ascending: true })
-      .order('record_id', { ascending: true })
+      .gt('server_revision', cursor)
+      .order('server_revision', { ascending: true })
       .range(from, to);
 
     if (error) throw new Error(error.message);
@@ -154,6 +167,10 @@ function remoteEntityRecord(row: RemoteRecord, userId: string): LocalSyncedRecor
     schemaVersion: row.schema_version,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at ?? undefined,
+    syncCounter: row.sync_counter,
+    mutationId: row.mutation_id,
+    serverRevision: row.server_revision,
+    dirty: false,
   };
 }
 
@@ -166,6 +183,10 @@ function remoteCheckInRecord(row: RemoteRecord, userId: string): LocalSyncedChec
     schemaVersion: row.schema_version,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at ?? undefined,
+    syncCounter: row.sync_counter,
+    mutationId: row.mutation_id,
+    serverRevision: row.server_revision,
+    dirty: false,
   };
 }
 
@@ -175,43 +196,28 @@ async function mergeEntityTable(
   recordType: StillRecordType,
   userId: string,
 ) {
+  const relevant = rows.filter((row) => row.record_type === recordType);
+  if (!relevant.length) return;
   const local = await table.toArray() as LocalSyncedRecord[];
-  const remote = rows
-    .filter((row) => row.record_type === recordType)
-    .map((row) => remoteEntityRecord(row, userId));
-  const merged = mergeByKey(local, remote, (record) => record.id)
-    .map((record) => ({ ...record, userId }));
-
+  const remote = relevant.map((row) => remoteEntityRecord(row, userId));
+  const merged = mergeByKey(local, remote, (record) => record.id).map((record) => ({ ...record, userId }));
   if (merged.length) await table.bulkPut(merged);
 }
 
-async function mergeCheckIns(
-  table: Table<any, string>,
-  rows: RemoteRecord[],
-  userId: string,
-) {
+async function mergeCheckIns(table: Table<any, string>, rows: RemoteRecord[], userId: string) {
+  const relevant = rows.filter((row) => row.record_type === 'check_in');
+  if (!relevant.length) return;
   const local = await table.toArray() as LocalSyncedCheckIn[];
-  const remote = rows
-    .filter((row) => row.record_type === 'check_in')
-    .map((row) => remoteCheckInRecord(row, userId));
-  const merged = mergeByKey(local, remote, (record) => record.date)
-    .map((record) => ({ ...record, userId }));
-
+  const remote = relevant.map((row) => remoteCheckInRecord(row, userId));
+  const merged = mergeByKey(local, remote, (record) => record.date).map((record) => ({ ...record, userId }));
   if (merged.length) await table.bulkPut(merged);
 }
 
 async function applyRemoteRows(rows: RemoteRecord[], userId: string) {
+  if (!rows.length) return;
   await stillDb.transaction(
     'rw',
-    [
-      stillDb.tasks,
-      stillDb.events,
-      stillDb.journalEntries,
-      stillDb.expenses,
-      stillDb.entityLinks,
-      stillDb.workShifts,
-      stillDb.checkIns,
-    ],
+    [stillDb.tasks, stillDb.events, stillDb.journalEntries, stillDb.expenses, stillDb.entityLinks, stillDb.workShifts, stillDb.checkIns],
     async () => {
       await mergeEntityTable(stillDb.tasks, rows, 'task', userId);
       await mergeEntityTable(stillDb.events, rows, 'event', userId);
@@ -224,17 +230,37 @@ async function applyRemoteRows(rows: RemoteRecord[], userId: string) {
   );
 }
 
+async function savePullCursor(cursor: number) {
+  await stillDb.repositoryMeta.put({ key: SYNC_CURSOR_META_KEY, value: String(cursor), updatedAt: Date.now() });
+}
+
+async function compactAcknowledgedLocalTombstones(cursor: number) {
+  const cutoff = Date.now() - LOCAL_TOMBSTONE_RETENTION_MS;
+  const tables: Array<Table<any, string>> = [
+    stillDb.tasks,
+    stillDb.events,
+    stillDb.journalEntries,
+    stillDb.expenses,
+    stillDb.entityLinks,
+    stillDb.workShifts,
+    stillDb.checkIns,
+  ];
+  await stillDb.transaction('rw', tables, async () => {
+    for (const table of tables) {
+      await table.filter((record: LocalSyncFields) => Boolean(
+        record.deletedAt
+        && record.deletedAt < cutoff
+        && record.dirty === false
+        && (record.serverRevision ?? Number.MAX_SAFE_INTEGER) <= cursor,
+      )).delete();
+    }
+  });
+}
+
 async function assertCloudUserBinding(userId: string) {
   const existing = await stillDb.repositoryMeta.get(CLOUD_USER_META_KEY);
   assertCloudUserCompatibility(existing?.value, userId);
-
-  if (!existing) {
-    await stillDb.repositoryMeta.put({
-      key: CLOUD_USER_META_KEY,
-      value: userId,
-      updatedAt: Date.now(),
-    });
-  }
+  if (!existing) await stillDb.repositoryMeta.put({ key: CLOUD_USER_META_KEY, value: userId, updatedAt: Date.now() });
 }
 
 async function runCloudSync(): Promise<PermanentDataSnapshot> {
@@ -242,15 +268,20 @@ async function runCloudSync(): Promise<PermanentDataSnapshot> {
   if (!session) throw new Error('Sign in before synchronizing Still.');
 
   await assertCloudUserBinding(session.user.id);
+  const cursor = await readPullCursor();
 
-  const localRows = await readLocalRows();
-  if (localRows.length) await pushRows(localRows);
+  const dirtyRows = await readDirtyRows();
+  if (dirtyRows.length) {
+    const acknowledgements = await pushRows(dirtyRows);
+    await applyRemoteRows(acknowledgements, session.user.id);
+  }
 
-  const remoteRows = await pullRows();
+  const remoteRows = await pullRows(cursor);
   await applyRemoteRows(remoteRows, session.user.id);
 
-  const convergedRows = await readLocalRows();
-  if (convergedRows.length) await pushRows(convergedRows);
+  const nextCursor = maxServerRevision(remoteRows, cursor);
+  if (nextCursor !== cursor) await savePullCursor(nextCursor);
+  await compactAcknowledgedLocalTombstones(nextCursor);
 
   return localStillRepository.load();
 }

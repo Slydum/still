@@ -9,7 +9,7 @@ import type {
 } from '../../stores/useAppStore';
 import { stillDb, withCheckInSyncMetadata } from '../localDb';
 import type { CheckInRecord } from '../records';
-import { activeRecords, addSyncMetadata, reconcileCollection } from './reconcile';
+import { activeRecords, addSyncMetadata, createMutationId, reconcileCollection } from './reconcile';
 import type { CollectionChanges } from './recordChanges';
 import {
   PERMANENT_DATA_SCHEMA_VERSION,
@@ -54,22 +54,7 @@ async function persistTableChanges<T extends RepositoryEntity>(
     }),
   );
 
-  const upserts = changes.upserts.map((record) => {
-    const existing = existingById.get(record.id);
-    const candidate = addSyncMetadata(record, existing);
-
-    if (
-      existing
-      && (
-        existing.updatedAt > candidate.updatedAt
-        || (existing.updatedAt === candidate.updatedAt && existing.deletedAt)
-      )
-    ) {
-      return existing;
-    }
-
-    return candidate;
-  });
+  const upserts = changes.upserts.map((record) => addSyncMetadata(record, existingById.get(record.id)));
 
   const now = Date.now();
   const tombstones = changes.deletedIds.flatMap((id) => {
@@ -77,11 +62,13 @@ async function persistTableChanges<T extends RepositoryEntity>(
     if (!existing) return [];
     if (existing.deletedAt) return [existing];
 
-    const deletedAt = Math.max(now, existing.updatedAt);
     return [{
       ...existing,
-      updatedAt: deletedAt,
-      deletedAt,
+      updatedAt: now,
+      deletedAt: now,
+      syncCounter: existing.syncCounter + 1,
+      mutationId: createMutationId(),
+      dirty: true,
     }];
   });
 
@@ -93,6 +80,10 @@ function stripCheckInMetadata(record: SyncedCheckInRecord): CheckInRecord {
     userId: _userId,
     schemaVersion: _schemaVersion,
     deletedAt: _deletedAt,
+    syncCounter: _syncCounter,
+    mutationId: _mutationId,
+    serverRevision: _serverRevision,
+    dirty: _dirty,
     ...checkIn
   } = record;
   return checkIn;
@@ -137,15 +128,7 @@ export class LocalStillRepository implements StillRepository {
   }
 
   async load(): Promise<PermanentDataSnapshot> {
-    const [
-      tasks,
-      events,
-      journalEntries,
-      expenses,
-      entityLinks,
-      workShifts,
-      checkIns,
-    ] = await Promise.all([
+    const [tasks, events, journalEntries, expenses, entityLinks, workShifts, checkIns] = await Promise.all([
       stillDb.tasks.toArray(),
       stillDb.events.toArray(),
       stillDb.journalEntries.toArray(),
@@ -166,29 +149,12 @@ export class LocalStillRepository implements StillRepository {
     };
   }
 
-  persistTasks(changes: CollectionChanges<StillTask>) {
-    return persistTableChanges(stillDb.tasks, changes);
-  }
-
-  persistEvents(changes: CollectionChanges<StillEvent>) {
-    return persistTableChanges(stillDb.events, changes);
-  }
-
-  persistJournalEntries(changes: CollectionChanges<JournalEntry>) {
-    return persistTableChanges(stillDb.journalEntries, changes);
-  }
-
-  persistExpenses(changes: CollectionChanges<StillExpense>) {
-    return persistTableChanges(stillDb.expenses, changes);
-  }
-
-  persistEntityLinks(changes: CollectionChanges<LifeEntityLink>) {
-    return persistTableChanges(stillDb.entityLinks, changes);
-  }
-
-  persistWorkShifts(changes: CollectionChanges<WorkShift>) {
-    return persistTableChanges(stillDb.workShifts, changes);
-  }
+  persistTasks(changes: CollectionChanges<StillTask>) { return persistTableChanges(stillDb.tasks, changes); }
+  persistEvents(changes: CollectionChanges<StillEvent>) { return persistTableChanges(stillDb.events, changes); }
+  persistJournalEntries(changes: CollectionChanges<JournalEntry>) { return persistTableChanges(stillDb.journalEntries, changes); }
+  persistExpenses(changes: CollectionChanges<StillExpense>) { return persistTableChanges(stillDb.expenses, changes); }
+  persistEntityLinks(changes: CollectionChanges<LifeEntityLink>) { return persistTableChanges(stillDb.entityLinks, changes); }
+  persistWorkShifts(changes: CollectionChanges<WorkShift>) { return persistTableChanges(stillDb.workShifts, changes); }
 
   async listCheckIns() {
     const records = await stillDb.checkIns.orderBy('date').reverse().toArray();
@@ -202,6 +168,10 @@ export class LocalStillRepository implements StillRepository {
       ...syncedRecord,
       userId: existing?.userId ?? syncedRecord.userId,
       deletedAt: undefined,
+      syncCounter: (existing?.syncCounter ?? 0) + 1,
+      mutationId: createMutationId(),
+      serverRevision: existing?.serverRevision,
+      dirty: true,
     });
   }
 
@@ -212,8 +182,11 @@ export class LocalStillRepository implements StillRepository {
     const deletedAt = Date.now();
     await stillDb.checkIns.put({
       ...existing,
-      updatedAt: Math.max(existing.updatedAt, deletedAt),
+      updatedAt: deletedAt,
       deletedAt,
+      syncCounter: existing.syncCounter + 1,
+      mutationId: createMutationId(),
+      dirty: true,
     });
   }
 }
