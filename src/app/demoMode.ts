@@ -6,6 +6,10 @@ const PRIMARY_BACKUP_KEY = 'still-demo-primary-backup-v1';
 export const DEMO_DATABASE_NAME = 'still-demo-local';
 export const PRIMARY_DATABASE_NAME = 'still-local';
 
+export function databaseNameForMode(demoMode: boolean) {
+  return demoMode ? DEMO_DATABASE_NAME : PRIMARY_DATABASE_NAME;
+}
+
 export function isDemoMode() {
   if (typeof window === 'undefined') return false;
   try {
@@ -48,7 +52,7 @@ export function clearDemoAppState() {
 }
 
 export function appDatabaseName() {
-  return isDemoMode() ? DEMO_DATABASE_NAME : PRIMARY_DATABASE_NAME;
+  return databaseNameForMode(isDemoMode());
 }
 
 export const demoModeStorageKeys = {
