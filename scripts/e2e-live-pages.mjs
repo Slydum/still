@@ -124,15 +124,19 @@ try {
     throw new Error(`Service worker scope mismatch. Expected ${liveUrl}, got ${readyScope}`);
   }
 
-  await cdp.send('Page.reload', { ignoreCache: true });
-  await poll(cdp, "Boolean(document.querySelector('.app')) && Boolean(navigator.serviceWorker.controller)", 'controlled live app reload');
-
+  // An active registration can become ready slightly before Chrome attaches it as
+  // the controller for the current document. A real scoped navigation gives the
+  // active worker the next document instead of racing that controller handoff.
   const moreUrl = new URL('more', liveUrl).toString();
   await cdp.send('Page.navigate', { url: moreUrl });
-  await poll(cdp, "document.body.innerText.includes('Demo sandbox') && document.body.innerText.includes('Reset demo data')", 'direct live /more route');
+  await poll(
+    cdp,
+    "document.body.innerText.includes('Demo sandbox') && document.body.innerText.includes('Reset demo data') && Boolean(navigator.serviceWorker.controller)",
+    'controlled direct live /more route',
+  );
 
   await cdp.send('Page.navigate', { url: liveUrl.toString() });
-  await poll(cdp, "Boolean(document.querySelector('.app')) && Boolean(navigator.serviceWorker.controller)", 'live app before offline reload');
+  await poll(cdp, "Boolean(document.querySelector('.app')) && Boolean(navigator.serviceWorker.controller)", 'controlled live app before offline reload');
 
   await cdp.send('Network.emulateNetworkConditions', {
     offline: true,
@@ -140,8 +144,8 @@ try {
     downloadThroughput: -1,
     uploadThroughput: -1,
   });
-  await cdp.send('Page.reload', { ignoreCache: true }).catch(() => undefined);
-  await poll(cdp, "Boolean(document.querySelector('.app'))", 'offline service-worker app shell');
+  await cdp.send('Page.reload').catch(() => undefined);
+  await poll(cdp, "Boolean(document.querySelector('.app')) && Boolean(navigator.serviceWorker.controller)", 'offline service-worker app shell');
 
   console.log(`Live release smoke checks passed for ${liveUrl}`);
 } finally {
