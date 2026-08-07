@@ -22,14 +22,13 @@ describe('domain correctness helpers', () => {
   });
 
   it('prevents a same-day timed event from ending before it starts', () => {
-    assert.deepEqual(normalizeTimedRange('2026-08-07', '2026-08-07', '16:00', '15:00'), {
-      startTime: '16:00',
-      endTime: '16:00',
-    });
-    assert.deepEqual(normalizeTimedRange('2026-08-07', '2026-08-08', '16:00', '01:00'), {
-      startTime: '16:00',
-      endTime: '01:00',
-    });
+    const sameDay = normalizeTimedRange('2026-08-07', '2026-08-07', '16:00', '15:00');
+    assert.equal(sameDay.startTime, '16:00');
+    assert.equal(sameDay.endTime, '16:00');
+
+    const overnight = normalizeTimedRange('2026-08-07', '2026-08-08', '16:00', '01:00');
+    assert.equal(overnight.startTime, '16:00');
+    assert.equal(overnight.endTime, '01:00');
   });
 
   it('rejects non-finite money values and clamps negative amounts', () => {
