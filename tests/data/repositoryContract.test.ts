@@ -24,8 +24,20 @@ function fixture(id: string, updatedAt: number): RecordFixture {
   return { id, title: `Record ${id}`, createdAt: 1, updatedAt };
 }
 
+function synced(record: RecordFixture, metadata: Partial<SyncMetadata> = {}): SyncedFixture {
+  return {
+    ...record,
+    userId: 'user-1',
+    schemaVersion: 1,
+    syncCounter: 1,
+    mutationId: 'base',
+    dirty: false,
+    ...metadata,
+  };
+}
+
 describe('permanent data repository contract', () => {
-  it('adds Supabase-ready metadata to active records', () => {
+  it('adds sync metadata and marks new records dirty', () => {
     const [record] = reconcileCollection([], [fixture('one', 10)], 20);
 
     assert.equal(record.id, 'one');
@@ -33,36 +45,46 @@ describe('permanent data repository contract', () => {
     assert.equal(record.schemaVersion, PERMANENT_DATA_SCHEMA_VERSION);
     assert.equal(record.updatedAt, 10);
     assert.equal(record.deletedAt, undefined);
+    assert.equal(record.syncCounter, 1);
+    assert.equal(record.dirty, true);
+    assert.ok(Boolean(record.mutationId));
   });
 
-  it('keeps removed records as tombstones instead of losing deletion history', () => {
+  it('increments logical revisions for edits and tombstones', () => {
     const existing = reconcileCollection([], [fixture('one', 10), fixture('two', 11)], 20);
     const next = reconcileCollection(existing, [fixture('two', 30)], 40);
     const removed = next.find((record) => record.id === 'one');
     const kept = next.find((record) => record.id === 'two');
 
     assert.equal(removed?.deletedAt, 40);
-    assert.equal(removed?.updatedAt, 40);
+    assert.equal(removed?.syncCounter, 2);
+    assert.equal(removed?.dirty, true);
     assert.equal(kept?.deletedAt, undefined);
     assert.equal(kept?.updatedAt, 30);
+    assert.equal(kept?.syncCounter, 2);
     assert.equal(activeRecords(next).length, 1);
   });
 
-  it('resolves local and future remote changes by latest update and deletion', () => {
-    const base: SyncedFixture = {
-      ...fixture('one', 10),
-      userId: 'user-1',
-      schemaVersion: 1,
-    };
-    const newerRemote: SyncedFixture = { ...base, title: 'Remote', updatedAt: 30 };
-    const olderLocal: SyncedFixture = { ...base, title: 'Local', updatedAt: 20 };
-    const merged = mergeSyncedRecords([olderLocal], [newerRemote]);
+  it('resolves changes by logical revision independent of updatedAt clock skew', () => {
+    const futureClockLocal = synced(fixture('one', 9_999_999), {
+      syncCounter: 2,
+      mutationId: 'a',
+    });
+    const normalClockRemote = synced({ ...fixture('one', 30), title: 'Remote' }, {
+      syncCounter: 3,
+      mutationId: 'b',
+    });
+    const merged = mergeSyncedRecords([futureClockLocal], [normalClockRemote]);
 
     assert.equal(merged.length, 1);
     assert.equal(merged[0].title, 'Remote');
+  });
 
-    const deletion: SyncedFixture = { ...newerRemote, deletedAt: 30 };
-    const deletionWinsTie = mergeSyncedRecords([newerRemote], [deletion]);
-    assert.equal(deletionWinsTie[0].deletedAt, 30);
+  it('resolves concurrent equal-counter writes deterministically', () => {
+    const left = synced({ ...fixture('one', 20), title: 'Left' }, { syncCounter: 5, mutationId: 'alpha' });
+    const right = synced({ ...fixture('one', 20), title: 'Right' }, { syncCounter: 5, mutationId: 'omega' });
+
+    assert.equal(mergeSyncedRecords([left], [right])[0].title, 'Right');
+    assert.equal(mergeSyncedRecords([right], [left])[0].title, 'Right');
   });
 });
