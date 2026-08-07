@@ -46,7 +46,7 @@ jobs:
   database-security:
     name: database-security
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -54,12 +54,17 @@ jobs:
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 22
-      - name: Start isolated Supabase database
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Start isolated Supabase database and auth stack
         run: >-
           npx -y supabase@2.109.1 start
-          -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+          -x realtime,storage-api,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - name: Run database and RLS tests
         run: npx -y supabase@2.109.1 test db
+      - name: Run disposable auth, recovery, and cross-browser sync acceptance
+        run: node scripts/e2e-auth-sync-browser.mjs
       - name: Stop isolated Supabase stack
         if: always()
         run: npx -y supabase@2.109.1 stop --no-backup
