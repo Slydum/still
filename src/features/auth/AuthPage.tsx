@@ -46,7 +46,7 @@ const modeCopy: Record<AuthMode, { title: string; subtitle: string; action: stri
   },
   forgot: {
     title: 'Find your way back',
-    subtitle: 'We will send a secure password reset link.',
+    subtitle: 'We will send a password reset link through Supabase Auth.',
     action: 'Send reset email',
   },
   recovery: {
@@ -138,7 +138,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
       } else if (mode === 'forgot') {
         await requestCloudPasswordReset(email.trim());
         setMode('login');
-        setMessage('Check your email for the password reset link. After saving a password, return here to log in.');
+        setMessage('Check your email for the password reset link. Open it in a browser to choose a new password; Still will continue from the recovered session after it is saved.');
       } else {
         await updateCloudPassword(password);
         setMessage('Password updated. Opening your Still space…');
@@ -229,7 +229,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
 
             {mode === 'login' && (
               <div className="auth-login-tools">
-                <span>Securely remembered on this device</span>
+                <span>Your sign-in session can stay on this device.</span>
                 <button className="auth-text-action" onClick={() => changeMode('forgot')} type="button">Forgot password?</button>
               </div>
             )}
@@ -245,7 +245,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
             <div className="auth-demo-entry">
               <span>Just testing?</span>
               <button className="settings-test-notification" onClick={onEnterDemo} type="button">Open demo sandbox</button>
-              <small>No account, no cloud sync. Demo data stays isolated on this device.</small>
+              <small>No account or cloud sync. Demo records use a separate local database on this browser.</small>
             </div>
           )}
         </section>
@@ -253,7 +253,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
         {mode === 'login' && <p className="auth-switch">Don’t have an account? <button onClick={() => changeMode('signup')} type="button">Create account</button></p>}
         {mode === 'signup' && <p className="auth-switch">Already have an account? <button onClick={() => changeMode('login')} type="button">Log in</button></p>}
         {mode === 'login' && <p className="auth-help">Used the old email-link login? Choose <strong>Forgot password</strong> once to create a password for the same account.</p>}
-        <p className="auth-privacy"><ShieldCheck size={16} /> Your Still data stays private to your account.</p>
+        <p className="auth-privacy"><ShieldCheck size={16} /> Cloud-synced Still records are scoped to your signed-in account.</p>
       </div>
     </main>
   );

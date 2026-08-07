@@ -162,8 +162,8 @@ function AuthenticatedApp({ session }: { session: CloudSession }) {
       <main className="auth-page">
         <section className="auth-card auth-conflict-card">
           <div className="auth-brand">Still.</div>
-          <header className="auth-card-header"><p className="section-kicker">Account protection</p><h2>This device belongs to another Still account.</h2><p>{accountConflict}</p></header>
-          <p className="auth-status is-error">Sign back into the original account, or clear this device from that account before using a different account.</p>
+          <header className="auth-card-header"><p className="section-kicker">Account protection</p><h2>This browser already has local Still data for another account.</h2><p>{accountConflict}</p></header>
+          <p className="auth-status is-error">Still will not merge local records across accounts. Sign back into the original account and use “Log out — clear local data” before switching this browser to a different account.</p>
           <button className="auth-submit" disabled={signingOut} onClick={() => { setSigningOut(true); void signOutCloud().finally(() => setSigningOut(false)); }} type="button">{signingOut ? 'Signing out…' : 'Return to login'}</button>
         </section>
       </main>

@@ -90,7 +90,7 @@ export function MorePage() {
     const permission = await Notification.requestPermission();
     const enabled = permission === 'granted';
     setNotificationsEnabled(enabled);
-    setNotificationMessage(enabled ? 'Notifications are ready.' : 'Permission was not granted. You can change it in your browser settings.');
+    setNotificationMessage(enabled ? 'Local reminders are enabled in Still on this browser.' : 'Permission was not granted. You can change it in your browser settings.');
 
     if (enabled) {
       try {
@@ -147,18 +147,18 @@ export function MorePage() {
       </section>
 
       <section className="settings-section" aria-labelledby="weather-settings-title">
-        <div className="settings-section-heading"><span><MapPin size={19} /></span><div><h2 id="weather-settings-title">Weather & location</h2><p>Location is used only to request your local weather.</p></div></div>
+        <div className="settings-section-heading"><span><MapPin size={19} /></span><div><h2 id="weather-settings-title">Weather & location</h2><p>Automatic weather uses browser location only for a direct Open-Meteo weather request.</p></div></div>
         <div className="card settings-card">
-          <SettingToggle checked={autoWeather} label="Automatic local weather" description="Refresh weather when Still opens on this device." onChange={updateWeatherPreference} />
+          <SettingToggle checked={autoWeather} label="Automatic local weather" description="Request current local weather when the dashboard opens on this device." onChange={updateWeatherPreference} />
           <div className="settings-status-row"><span><small>Current condition</small><strong>{weather ? weather.replace('-', ' ') : 'Not connected'}</strong></span>{weather && <button onClick={() => { window.localStorage.removeItem(LOCATION_WEATHER_KEY); setWeather(undefined); }} type="button"><RotateCcw size={15} /> Reset</button>}</div>
-          <p className="settings-footnote">Turning this off stops automatic requests. Browser-level location permission is managed in your device settings.</p>
+          <p className="settings-footnote">When automatic weather runs, your browser sends latitude and longitude directly to Open-Meteo to request current conditions. Still does not add those coordinates to your Supabase account. Turning this off stops automatic weather requests; browser location permission is managed by your browser or device.</p>
         </div>
       </section>
 
       <section className="settings-section" id="notifications" aria-labelledby="notification-settings-title">
-        <div className="settings-section-heading"><span><Bell size={19} /></span><div><h2 id="notification-settings-title">Notifications</h2><p>Control whether Still may send gentle browser reminders.</p></div></div>
+        <div className="settings-section-heading"><span><Bell size={19} /></span><div><h2 id="notification-settings-title">Notifications</h2><p>Control local browser reminders on this device.</p></div></div>
         <div className="card settings-card">
-          <div className="settings-action-row"><span><strong>Browser notifications</strong><small>Permission: {notificationPermission}</small></span>{notificationsEnabled ? <button className="settings-secondary-action" onClick={() => setNotificationsEnabled(false)} type="button">Turn off</button> : <button className="settings-primary-action" onClick={() => void enableNotifications()} type="button">Enable</button>}</div>
+          <div className="settings-action-row"><span><strong>Browser notifications</strong><small>Permission: {notificationPermission}</small></span>{notificationsEnabled ? <button className="settings-secondary-action" onClick={() => setNotificationsEnabled(false)} type="button">Pause in Still</button> : <button className="settings-primary-action" onClick={() => void enableNotifications()} type="button">{notificationPermission === 'granted' ? 'Resume in Still' : 'Enable'}</button>}</div>
           {notificationsEnabled && <>
             <div className="settings-reminder-options">
               <SettingToggle checked={taskReminders} label="Task reminders" description="Remind me about unfinished tasks due today." onChange={setTaskReminders} />
@@ -172,24 +172,24 @@ export function MorePage() {
             <button className="settings-test-notification" onClick={() => void sendTestNotification()} type="button">Send a test reminder</button>
           </>}
           {notificationMessage && <p className="settings-message" role="status">{notificationMessage}</p>}
-          <p className="settings-footnote">Reminders work while Still is open or running in the background. A fully closed browser cannot receive local reminders without an online push service.</p>
+          <p className="settings-footnote">Still has no server-side push service. Reminder checks are driven by the running page/PWA process, so browsers may throttle or suspend them in the background and a fully closed browser cannot receive these local-only reminders. Pausing reminders in Still does not revoke browser notification permission.</p>
         </div>
       </section>
 
       <CloudSyncSettings />
 
       <section className="settings-section" aria-labelledby="data-settings-title">
-        <div className="settings-section-heading"><span><ShieldCheck size={19} /></span><div><h2 id="data-settings-title">Your data</h2><p>Synced records live in your Still account, with an offline copy on this device.</p></div></div>
+        <div className="settings-section-heading"><span><ShieldCheck size={19} /></span><div><h2 id="data-settings-title">Data & privacy</h2><p>Local-first storage, account-scoped cloud sync, and clear recovery limits.</p></div></div>
         <div className="card settings-card">
-          <p className="settings-footnote">
-            Tasks, events, journal entries, expenses, links, work shifts, and check-ins are included in cloud sync. Some preferences and browser permissions are still device-specific. To remove the offline copy safely, use “Log out and clear this device” above; Still will require a successful sync first.
-          </p>
+          <p className="settings-footnote">Still saves supported records in IndexedDB first. Cloud sync is attempted when the signed-in app starts, when you tap “Sync now,” and during logout flows; edits made between successful syncs can exist only on this browser.</p>
+          <p className="settings-footnote">Cloud sync includes tasks, events, journal entries, expenses, links, work shifts, check-ins, and account preferences. Browser notification permission and local notification history, location/weather state, reminder delivery bookkeeping, and daily quote history stay device-specific.</p>
+          <p className="settings-footnote">Supabase rows are scoped to your authenticated account with row-level security. Still cloud sync is not an end-to-end encrypted vault with user-only keys.</p>
         </div>
       </section>
 
       <section className="settings-section" aria-labelledby="about-settings-title">
         <div className="settings-section-heading"><span><Info size={19} /></span><div><h2 id="about-settings-title">About</h2><p>A calm daily space built around your own rhythm.</p></div></div>
-        <div className="card settings-about-card"><div><strong>Still</strong><span>Version 0.1.0</span></div><p>Your synced records remain available offline on this device and can be restored from your Still account after a successful cloud sync.</p></div>
+        <div className="card settings-about-card"><div><strong>Still</strong><span>Version 0.1.0</span></div><p>Offline use depends on this browser’s local copy. Clearing site data or using “Log out — clear local data” removes that copy. Another device can recover only records that previously completed a successful Supabase sync.</p></div>
       </section>
     </main>
   );
