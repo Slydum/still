@@ -9,6 +9,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
+import { toAppPath } from '../../app/appLocation';
 import {
   getSupabaseConfigurationError,
   isSupabaseAvailable,
@@ -164,7 +165,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
               draggable={false}
               fetchPriority="high"
               height="360"
-              src="/assets/auth/still-cloud-mascot.svg"
+              src={toAppPath('/assets/auth/still-cloud-mascot.svg')}
               width="640"
             />
           </div>
