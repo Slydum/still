@@ -21,7 +21,7 @@ await replaceExact(
 await replaceExact(
   'scripts/e2e-demo-browser.mjs',
   `  console.log('Browser demo isolation and IndexedDB migration checks passed.');`,
-  `  await cdp.send('Page.navigate', { url: \`${appOrigin}/reflection\` });
+  `  await cdp.send('Page.navigate', { url: appOrigin + '/reflection' });
   await poll(
     cdp,
     "document.querySelector('.weekly-reflection-page h1')?.textContent === 'Weekly reflection' && document.querySelector('#weekly-rhythm-title')?.textContent === 'Recorded activity by day'",
