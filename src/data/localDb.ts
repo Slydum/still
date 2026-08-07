@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie';
+import { appDatabaseName } from '../app/demoMode';
 import type { LifeEntityLink } from '../domain/lifeAreas';
 import type { WorkShift } from '../domain/work';
 import type {
@@ -71,8 +72,8 @@ export class StillLocalDatabase extends Dexie {
   accountSettings!: Table<SyncedAccountSettings, string>;
   repositoryMeta!: Table<RepositoryMetaRecord, string>;
 
-  constructor() {
-    super('still-local');
+  constructor(databaseName = appDatabaseName()) {
+    super(databaseName);
     this.version(1).stores({
       dailyQuotes: 'date, quoteId, createdAt',
       checkIns: 'date, updatedAt',
