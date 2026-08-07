@@ -69,48 +69,56 @@ begin
       input.updated_at desc,
       input.mutation_id desc,
       input.deleted_at desc nulls last
+  ), upserted as (
+    insert into public.still_records as current_record (
+      user_id,
+      record_type,
+      record_id,
+      schema_version,
+      payload,
+      updated_at,
+      deleted_at,
+      mutation_id,
+      server_revision
+    )
+    select
+      (select auth.uid()),
+      parsed.record_type,
+      parsed.record_id,
+      parsed.schema_version,
+      parsed.payload,
+      parsed.updated_at,
+      parsed.deleted_at,
+      parsed.mutation_id,
+      nextval('public.still_sync_server_revision_seq')
+    from parsed
+    on conflict (user_id, record_type, record_id)
+    do update set
+      schema_version = excluded.schema_version,
+      payload = excluded.payload,
+      updated_at = excluded.updated_at,
+      deleted_at = excluded.deleted_at,
+      mutation_id = excluded.mutation_id,
+      server_revision = nextval('public.still_sync_server_revision_seq'),
+      modified_at = now()
+    where (excluded.updated_at, excluded.mutation_id) > (current_record.updated_at, current_record.mutation_id)
+       or (
+         excluded.updated_at = current_record.updated_at
+         and excluded.mutation_id = current_record.mutation_id
+         and excluded.deleted_at is not null
+         and current_record.deleted_at is null
+       )
+    returning current_record.*
   )
-  insert into public.still_records as current_record (
-    user_id,
-    record_type,
-    record_id,
-    schema_version,
-    payload,
-    updated_at,
-    deleted_at,
-    mutation_id,
-    server_revision
-  )
-  select
-    (select auth.uid()),
-    parsed.record_type,
-    parsed.record_id,
-    parsed.schema_version,
-    parsed.payload,
-    parsed.updated_at,
-    parsed.deleted_at,
-    parsed.mutation_id,
-    nextval('public.still_sync_server_revision_seq')
+  select current_record.*
   from parsed
-  on conflict (user_id, record_type, record_id)
-  do update set
-    schema_version = excluded.schema_version,
-    payload = excluded.payload,
-    updated_at = excluded.updated_at,
-    deleted_at = excluded.deleted_at,
-    mutation_id = excluded.mutation_id,
-    server_revision = nextval('public.still_sync_server_revision_seq'),
-    modified_at = now()
-  where (excluded.updated_at, excluded.mutation_id) > (current_record.updated_at, current_record.mutation_id)
-     or (
-       excluded.updated_at = current_record.updated_at
-       and excluded.mutation_id = current_record.mutation_id
-       and excluded.deleted_at is not null
-       and current_record.deleted_at is null
-     )
-  returning current_record.*;
+  join public.still_records as current_record
+    on current_record.user_id = (select auth.uid())
+   and current_record.record_type = parsed.record_type
+   and current_record.record_id = parsed.record_id
+  order by current_record.record_type, current_record.record_id;
 end;
 $$;
 
 comment on function public.sync_still_records(jsonb) is
-  'Incremental Still sync upsert. Client records resolve by (updated_at, mutation_id); accepted changes receive monotonic server_revision values for gap-safe pull cursors.';
+  'Incremental Still sync upsert. Client records resolve by (updated_at, mutation_id); accepted changes receive monotonic server_revision values for gap-safe pull cursors. Every pushed key returns its authoritative server row.';
