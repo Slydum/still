@@ -19,27 +19,34 @@ describe('account data lifecycle', () => {
       },
     });
 
-    assert.deepEqual(calls, ['sync', 'signOut']);
+    assert.equal(calls.join(','), 'sync,signOut');
     assert.equal(result.synced, false);
   });
 
   it('never clears local data when the required pre-clear sync fails', async () => {
     const calls: string[] = [];
+    let error: unknown;
 
-    await assert.rejects(() => signOutAndClearDevice({
-      sync: async () => {
-        calls.push('sync');
-        throw new Error('offline');
-      },
-      signOut: async () => {
-        calls.push('signOut');
-      },
-      clearLocal: async () => {
-        calls.push('clearLocal');
-      },
-    }), /offline/);
+    try {
+      await signOutAndClearDevice({
+        sync: async () => {
+          calls.push('sync');
+          throw new Error('offline');
+        },
+        signOut: async () => {
+          calls.push('signOut');
+        },
+        clearLocal: async () => {
+          calls.push('clearLocal');
+        },
+      });
+    } catch (caught) {
+      error = caught;
+    }
 
-    assert.deepEqual(calls, ['sync']);
+    assert.ok(error instanceof Error);
+    assert.equal((error as Error).message, 'offline');
+    assert.equal(calls.join(','), 'sync');
   });
 
   it('clears only after a successful sync and logout', async () => {
@@ -57,7 +64,8 @@ describe('account data lifecycle', () => {
       },
     });
 
-    assert.deepEqual(calls, ['sync', 'signOut', 'clearLocal']);
-    assert.deepEqual(result, { synced: true, cleared: true });
+    assert.equal(calls.join(','), 'sync,signOut,clearLocal');
+    assert.equal(result.synced, true);
+    assert.equal(result.cleared, true);
   });
 });
