@@ -41,8 +41,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Start isolated Supabase stack
-        run: npx -y supabase@2.109.1 start
+      - name: Start isolated Supabase database
+        run: >-
+          npx -y supabase@2.109.1 start
+          -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
       - name: Run database and RLS tests
         run: npx -y supabase@2.109.1 test db
       - name: Stop isolated Supabase stack
