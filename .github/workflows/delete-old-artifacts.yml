@@ -1,0 +1,45 @@
+name: One-time Actions artifact cleanup
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/delete-old-artifacts.yml'
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  cleanup:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Delete stale Actions artifacts
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const keepIds = new Set([9007587453]);
+            const artifacts = await github.paginate(
+              github.rest.actions.listArtifactsForRepo,
+              { owner, repo, per_page: 100 },
+            );
+
+            const stale = artifacts.filter((artifact) => !keepIds.has(artifact.id));
+            let reclaimedBytes = 0;
+
+            for (const artifact of stale) {
+              await github.rest.actions.deleteArtifact({
+                owner,
+                repo,
+                artifact_id: artifact.id,
+              });
+              reclaimedBytes += artifact.size_in_bytes ?? 0;
+              core.info(`Deleted ${artifact.name} (${artifact.id})`);
+            }
+
+            const reclaimedMiB = (reclaimedBytes / 1024 / 1024).toFixed(1);
+            core.notice(`Deleted ${stale.length} stale artifacts and reclaimed about ${reclaimedMiB} MiB. Kept artifact 9007587453.`);
