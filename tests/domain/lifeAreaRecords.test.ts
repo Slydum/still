@@ -2,6 +2,10 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { recordsForLifeArea } from '../../src/domain/lifeAreaRecords.js';
 
+function recordIds(records: Array<{ id: string }>) {
+  return records.map((record) => record.id).join(',');
+}
+
 describe('Life Area record filtering', () => {
   const records = {
     tasks: [
@@ -29,21 +33,21 @@ describe('Life Area record filtering', () => {
 
   it('uses the same deterministic ownership rules as Life Garden summaries', () => {
     const work = recordsForLifeArea('work', records);
-    assert.deepEqual(work.tasks.map((record) => record.id), ['task-work']);
-    assert.deepEqual(work.expenses.map((record) => record.id), ['expense-work']);
-    assert.deepEqual(work.workShifts.map((record) => record.id), ['shift-1']);
+    assert.equal(recordIds(work.tasks), 'task-work');
+    assert.equal(recordIds(work.expenses), 'expense-work');
+    assert.equal(recordIds(work.workShifts), 'shift-1');
 
     const love = recordsForLifeArea('love', records);
-    assert.deepEqual(love.events.map((record) => record.id), ['event-love']);
-    assert.deepEqual(love.journalEntries.map((record) => record.id), ['journal-love']);
+    assert.equal(recordIds(love.events), 'event-love');
+    assert.equal(recordIds(love.journalEntries), 'journal-love');
     assert.equal(love.workShifts.length, 0);
 
     const health = recordsForLifeArea('health', records);
-    assert.deepEqual(health.tasks.map((record) => record.id), ['task-health']);
-    assert.deepEqual(health.events.map((record) => record.id), ['event-health']);
+    assert.equal(recordIds(health.tasks), 'task-health');
+    assert.equal(recordIds(health.events), 'event-health');
 
     const money = recordsForLifeArea('money', records);
-    assert.deepEqual(money.expenses.map((record) => record.id), ['expense-default-money']);
+    assert.equal(recordIds(money.expenses), 'expense-default-money');
   });
 
   it('does not infer a Life Area for personal or unassigned records', () => {
