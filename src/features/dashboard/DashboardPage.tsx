@@ -18,6 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSecondaryQuote } from '../../content/quoteEngine';
 import { saveCheckIn } from '../../data/stillDb';
+import { buildLifeGardenSummaries } from '../../domain/lifeGarden';
 import {
   checkInEnergyOptions,
   checkInMoodOptions,
@@ -120,16 +121,15 @@ function weatherCodeToKey(code: number): WeatherKey {
 type LifeGardenArea = {
   key: 'work' | 'love' | 'health' | 'money';
   label: string;
-  status: string;
   route?: '/work' | '/money';
   icon: string;
 };
 
 const lifeAreas: LifeGardenArea[] = [
-  { key: 'work', label: 'Work', status: 'Open work', route: '/work', icon: stillAssets.tabs.work },
-  { key: 'love', label: 'Love', status: 'Not connected yet', icon: stillAssets.tabs.love },
-  { key: 'health', label: 'Health', status: 'Not connected yet', icon: stillAssets.tabs.health },
-  { key: 'money', label: 'Money', status: 'Open money', route: '/money', icon: stillAssets.tabs.finance },
+  { key: 'work', label: 'Work', route: '/work', icon: stillAssets.tabs.work },
+  { key: 'love', label: 'Love', icon: stillAssets.tabs.love },
+  { key: 'health', label: 'Health', icon: stillAssets.tabs.health },
+  { key: 'money', label: 'Money', route: '/money', icon: stillAssets.tabs.finance },
 ];
 
 function useCurrentTime() {
@@ -186,6 +186,9 @@ export function DashboardPage() {
   const toggleTask = useAppStore((state) => state.toggleTask);
   const deleteTask = useAppStore((state) => state.deleteTask);
   const events = useAppStore((state) => state.events);
+  const journalEntries = useAppStore((state) => state.journalEntries);
+  const expenses = useAppStore((state) => state.expenses);
+  const workShifts = useAppStore((state) => state.workShifts);
   const openEventEditor = useAppStore((state) => state.openEventEditor);
   const openJournalEditor = useAppStore((state) => state.openJournalEditor);
   const [weatherStatus, setWeatherStatus] =
@@ -408,6 +411,14 @@ export function DashboardPage() {
     todayKey,
     format(addDays(now, 45), 'yyyy-MM-dd'),
   ).slice(0, 4), [events, now, todayKey]);
+
+  const lifeGardenSummaries = useMemo(() => buildLifeGardenSummaries({
+    tasks,
+    events,
+    journalEntries,
+    expenses,
+    workShifts,
+  }), [events, expenses, journalEntries, tasks, workShifts]);
 
   const completeCheckIn = (nextMood: number, nextEnergy: number) => {
     replaceTodayCheckIn(nextMood, nextEnergy);
@@ -673,24 +684,31 @@ export function DashboardPage() {
 
       <section className="section life-garden-section">
         <div className="section-head">
-          <div><p className="section-kicker">Life garden</p><p className="micro-copy garden-subtitle">Keep what matters in view.</p></div>
+          <div><p className="section-kicker">Life garden</p><p className="micro-copy garden-subtitle">Real records, grouped around what matters.</p></div>
         </div>
         <div className="life-garden-grid">
-          {lifeAreas.map((area) => (
-            <button
-              aria-label={area.route ? `Open ${area.label}` : `${area.label}: ${area.status}`}
-              className={`card garden-card ${area.key}`}
-              disabled={!area.route}
-              onClick={() => {
-                if (area.route) navigate(area.route);
-              }}
-              type="button"
-              key={area.key}
-            >
-              <div className="garden-card-head"><img src={area.icon} alt="" /><strong>{area.label}</strong></div>
-              <span className="garden-status">{area.status}</span>
-            </button>
-          ))}
+          {lifeAreas.map((area) => {
+            const summary = lifeGardenSummaries[area.key];
+            const status = summary.recordCount
+              ? `${summary.recordCount} connected · ${summary.detail}`
+              : summary.detail;
+
+            return (
+              <button
+                aria-label={area.route ? `Open ${area.label}. ${status}` : `${area.label}. ${status}`}
+                className={`card garden-card ${area.key}`}
+                disabled={!area.route}
+                onClick={() => {
+                  if (area.route) navigate(area.route);
+                }}
+                type="button"
+                key={area.key}
+              >
+                <div className="garden-card-head"><img src={area.icon} alt="" /><strong>{area.label}</strong></div>
+                <span className="garden-status">{status}</span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
