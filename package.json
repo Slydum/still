@@ -13,7 +13,7 @@
     "typecheck": "tsc -b",
     "lint": "npm run typecheck && node scripts/check-source-hygiene.mjs",
     "format:check": "node scripts/check-format.mjs",
-    "security:audit": "npm audit --audit-level=high",
+    "security:audit": "node scripts/security-audit.mjs",
     "build:budget": "node scripts/check-build-budget.mjs",
     "test": "rm -rf .tmp/tests && tsc -p tsconfig.test.json && find .tmp/tests/src -name '*.js' -exec sh -c 'cp \"$1\" \"${1%.js}\"' sh {} \\; && node --test .tmp/tests/tests/**/*.test.js"
   },
@@ -26,7 +26,7 @@
     "lucide-react": "1.27.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "react-router-dom": "7.11.0",
+    "react-router-dom": "7.18.2",
     "vite": "8.1.5",
     "zustand": "5.0.14"
   },
