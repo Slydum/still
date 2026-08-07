@@ -121,15 +121,15 @@ function weatherCodeToKey(code: number): WeatherKey {
 type LifeGardenArea = {
   key: 'work' | 'love' | 'health' | 'money';
   label: string;
-  route?: '/work' | '/money';
+  route: `/life/${'work' | 'love' | 'health' | 'money'}`;
   icon: string;
 };
 
 const lifeAreas: LifeGardenArea[] = [
-  { key: 'work', label: 'Work', route: '/work', icon: stillAssets.tabs.work },
-  { key: 'love', label: 'Love', icon: stillAssets.tabs.love },
-  { key: 'health', label: 'Health', icon: stillAssets.tabs.health },
-  { key: 'money', label: 'Money', route: '/money', icon: stillAssets.tabs.finance },
+  { key: 'work', label: 'Work', route: '/life/work', icon: stillAssets.tabs.work },
+  { key: 'love', label: 'Love', route: '/life/love', icon: stillAssets.tabs.love },
+  { key: 'health', label: 'Health', route: '/life/health', icon: stillAssets.tabs.health },
+  { key: 'money', label: 'Money', route: '/life/money', icon: stillAssets.tabs.finance },
 ];
 
 function useCurrentTime() {
@@ -695,12 +695,9 @@ export function DashboardPage() {
 
             return (
               <button
-                aria-label={area.route ? `Open ${area.label}. ${status}` : `${area.label}. ${status}`}
+                aria-label={`Open ${area.label}. ${status}`}
                 className={`card garden-card ${area.key}`}
-                disabled={!area.route}
-                onClick={() => {
-                  if (area.route) navigate(area.route);
-                }}
+                onClick={() => navigate(area.route)}
                 type="button"
                 key={area.key}
               >
