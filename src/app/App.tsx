@@ -2,7 +2,9 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { BottomNav } from '../components/navigation/BottomNav';
 import { QuickAddSheet } from '../components/ui/QuickAddSheet';
+import { accountSettingsStatePatch, displayNameFromUserMetadata } from '../data/accountSettings';
 import { synchronizeCloudData } from '../data/cloudSync';
+import { stillDb } from '../data/localDb';
 import {
   getCloudSession,
   isSupabaseAvailable,
@@ -71,7 +73,14 @@ function applyCloudSnapshot(snapshot: Awaited<ReturnType<typeof synchronizeCloud
     expenses: snapshot.expenses,
     entityLinks: snapshot.entityLinks,
     workShifts: snapshot.workShifts,
+    ...accountSettingsStatePatch(snapshot.accountSettings),
   });
+}
+
+async function seedDisplayNameForNewAccount(session: CloudSession) {
+  if (await stillDb.accountSettings.count() > 0) return;
+  const displayName = displayNameFromUserMetadata(session.user.user_metadata);
+  if (displayName) useAppStore.setState({ name: displayName });
 }
 
 function AuthenticatedApp({ session }: { session: CloudSession }) {
@@ -86,6 +95,7 @@ function AuthenticatedApp({ session }: { session: CloudSession }) {
 
     const prepare = async () => {
       try {
+        await seedDisplayNameForNewAccount(session);
         await initializePermanentDataRepository();
         const snapshot = await synchronizeCloudData();
         if (!disposed) applyCloudSnapshot(snapshot);
@@ -119,7 +129,7 @@ function AuthenticatedApp({ session }: { session: CloudSession }) {
             <h2>This device belongs to another Still account.</h2>
             <p>{accountConflict}</p>
           </header>
-          <p className="auth-status is-error">Sign back into the original account, or export and reset this device's local data before using a different account.</p>
+          <p className="auth-status is-error">Sign back into the original account, or clear this device from that account before using a different account.</p>
           <button
             className="auth-submit"
             disabled={signingOut}
