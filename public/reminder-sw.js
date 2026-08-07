@@ -1,12 +1,19 @@
-const SHELL_CACHE = 'still-shell-v2';
+const SHELL_CACHE = 'still-shell-v3';
+const APP_SCOPE_URL = new URL(self.registration.scope);
+const APP_SHELL_URL = new URL('./', APP_SCOPE_URL).toString();
+
+function appUrl(path = '/') {
+  const normalized = path === '/' ? './' : path.replace(/^\//, '');
+  return new URL(normalized, APP_SCOPE_URL).toString();
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(SHELL_CACHE).then((cache) => cache.addAll([
-      '/',
-      '/manifest.webmanifest',
-      '/icons/icon-192.png',
-      '/icons/icon-512.png',
+      APP_SHELL_URL,
+      appUrl('/manifest.webmanifest'),
+      appUrl('/icons/icon-192.png'),
+      appUrl('/icons/icon-512.png'),
     ])),
   );
   self.skipWaiting();
@@ -28,20 +35,25 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(SHELL_CACHE).then((cache) => cache.put('/', copy));
+          if (response.ok) {
+            const copy = response.clone();
+            void caches.open(SHELL_CACHE).then((cache) => cache.put(APP_SHELL_URL, copy));
+          }
           return response;
         })
-        .catch(() => caches.match('/')),
+        .catch(() => caches.match(APP_SHELL_URL)),
     );
     return;
   }
 
-  if (new URL(event.request.url).origin === self.location.origin) {
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin === self.location.origin && requestUrl.pathname.startsWith(APP_SCOPE_URL.pathname)) {
     event.respondWith(
       caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(SHELL_CACHE).then((cache) => cache.put(event.request, copy));
+        if (response.ok) {
+          const copy = response.clone();
+          void caches.open(SHELL_CACHE).then((cache) => cache.put(event.request, copy));
+        }
         return response;
       })),
     );
@@ -51,9 +63,10 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  let targetUrl = event.notification.data?.url || '/notifications';
-  if (event.action === 'check-in-now') targetUrl = '/?checkin=now';
-  if (event.action === 'snooze-check-in') targetUrl = '/?checkin=snooze';
+  let targetPath = event.notification.data?.url || '/notifications';
+  if (event.action === 'check-in-now') targetPath = '/?checkin=now';
+  if (event.action === 'snooze-check-in') targetPath = '/?checkin=snooze';
+  const targetUrl = appUrl(targetPath);
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {

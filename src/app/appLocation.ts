@@ -1,31 +1,16 @@
-const normalizedBaseUrl = import.meta.env.BASE_URL.endsWith('/')
-  ? import.meta.env.BASE_URL
-  : `${import.meta.env.BASE_URL}/`;
+import { basePathFromUrl, buildAppPath, stripAppBasePath } from './basePathCore';
 
-const basePath = normalizedBaseUrl === '/'
-  ? ''
-  : normalizedBaseUrl.replace(/\/$/, '');
-
-function normalizeRoutePath(path: string) {
-  if (!path || path === '/') return '/';
-  return path.startsWith('/') ? path : `/${path}`;
-}
+const baseUrl = import.meta.env.BASE_URL;
+const basePath = basePathFromUrl(baseUrl);
 
 export const APP_BASENAME = basePath || '/';
 
 export function toAppPath(path = '/') {
-  const routePath = normalizeRoutePath(path);
-  if (!basePath) return routePath;
-  return routePath === '/' ? `${basePath}/` : `${basePath}${routePath}`;
+  return buildAppPath(baseUrl, path);
 }
 
 export function getAppRoutePathname(pathname = window.location.pathname) {
-  if (!basePath) return pathname || '/';
-  if (pathname === basePath || pathname === `${basePath}/`) return '/';
-  if (pathname.startsWith(`${basePath}/`)) {
-    return pathname.slice(basePath.length) || '/';
-  }
-  return pathname || '/';
+  return stripAppBasePath(baseUrl, pathname);
 }
 
 export function toAppUrl(path = '/') {
