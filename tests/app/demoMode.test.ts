@@ -10,6 +10,6 @@ describe('demo mode isolation', () => {
   it('uses a different IndexedDB database from the primary app', () => {
     assert.equal(databaseNameForMode(false), PRIMARY_DATABASE_NAME);
     assert.equal(databaseNameForMode(true), DEMO_DATABASE_NAME);
-    assert.ok(DEMO_DATABASE_NAME !== PRIMARY_DATABASE_NAME);
+    assert.ok(String(DEMO_DATABASE_NAME) !== String(PRIMARY_DATABASE_NAME));
   });
 });
