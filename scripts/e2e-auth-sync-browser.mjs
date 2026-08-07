@@ -154,6 +154,15 @@ async function clickText(browser, selector, text) {
   if (!clicked) throw new Error(`Could not click ${text}`);
 }
 
+async function waitAndClickText(browser, selector, text) {
+  await poll(
+    browser,
+    `[...document.querySelectorAll(${JSON.stringify(selector)})].some((candidate) => candidate.textContent?.replace(/\\s+/g, ' ').includes(${JSON.stringify(text)}))`,
+    `${text} control`,
+  );
+  await clickText(browser, selector, text);
+}
+
 async function clickAria(browser, label) {
   const clicked = await evaluate(browser, `(() => {
     const element = [...document.querySelectorAll('button')]
@@ -203,8 +212,7 @@ async function signIn(browser, email, password) {
 
 async function syncNow(browser) {
   await navigate(browser, '/more');
-  await poll(browser, "[...document.querySelectorAll('button')].some((button) => button.textContent?.includes('Sync now'))", 'Sync now button');
-  await clickText(browser, 'button', 'Sync now');
+  await waitAndClickText(browser, 'button', 'Sync now');
   await poll(browser, "[...document.querySelectorAll('.settings-message')].some((item) => item.textContent?.includes('Synced at'))", 'successful cloud sync');
 }
 
@@ -300,16 +308,17 @@ try {
   await poll(deviceA, `Boolean(document.querySelector('.app')) && !document.body.innerText.includes(${JSON.stringify(taskTitle)})`, 'task deletion pulled onto first browser');
 
   await navigate(deviceA, '/more');
-  await clickText(deviceA, 'button', 'Log out — keep local copy');
+  await waitAndClickText(deviceA, 'button', 'Log out — keep local copy');
   await poll(deviceA, "Boolean(document.querySelector('input[autocomplete=current-password]'))", 'login after ordinary logout');
   await signIn(deviceA, secondEmail, secondPassword);
   await poll(deviceA, "document.body.innerText.includes('This browser already has local Still data for another account.')", 'account binding protection');
-  await clickText(deviceA, 'button', 'Return to login');
+  await waitAndClickText(deviceA, 'button', 'Return to login');
   await poll(deviceA, "Boolean(document.querySelector('input[autocomplete=current-password]'))", 'login after account conflict');
 
   await signIn(deviceA, primaryEmail, primaryPassword);
   await poll(deviceA, "Boolean(document.querySelector('.app'))", 'original account after conflict');
   await navigate(deviceA, '/more');
+  await poll(deviceA, "[...document.querySelectorAll('button')].some((button) => button.textContent?.includes('Log out — clear local data'))", 'clear-local logout control');
   await evaluate(deviceA, "window.prompt = () => 'CLEAR'; true");
   await clickText(deviceA, 'button', 'Log out — clear local data');
   await poll(deviceA, "Boolean(document.querySelector('input[autocomplete=current-password]'))", 'login after clear-local logout');
@@ -336,7 +345,7 @@ try {
   await poll(recoveryBrowser, "Boolean(document.querySelector('.app'))", 'application after password recovery');
 
   await navigate(recoveryBrowser, '/more');
-  await clickText(recoveryBrowser, 'button', 'Log out — keep local copy');
+  await waitAndClickText(recoveryBrowser, 'button', 'Log out — keep local copy');
   await poll(recoveryBrowser, "Boolean(document.querySelector('input[autocomplete=current-password]'))", 'login after recovered logout');
   await signIn(recoveryBrowser, primaryEmail, recoveredPassword);
   await poll(recoveryBrowser, "Boolean(document.querySelector('.app'))", 'login with recovered password');
