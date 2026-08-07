@@ -117,12 +117,20 @@ function weatherCodeToKey(code: number): WeatherKey {
   return 'cloudy';
 }
 
-const lifeAreas = [
-  { key: 'work', label: 'Work', status: 'Focused', progress: 5, icon: stillAssets.tabs.work },
-  { key: 'love', label: 'Love', status: 'Needs attention', progress: 3, icon: stillAssets.tabs.love },
-  { key: 'health', label: 'Health', status: 'Doing well', progress: 6, icon: stillAssets.tabs.health },
-  { key: 'money', label: 'Money', status: 'On budget', progress: 5, icon: stillAssets.tabs.finance },
-] as const;
+type LifeGardenArea = {
+  key: 'work' | 'love' | 'health' | 'money';
+  label: string;
+  status: string;
+  route?: '/work' | '/money';
+  icon: string;
+};
+
+const lifeAreas: LifeGardenArea[] = [
+  { key: 'work', label: 'Work', status: 'Open work', route: '/work', icon: stillAssets.tabs.work },
+  { key: 'love', label: 'Love', status: 'Not connected yet', icon: stillAssets.tabs.love },
+  { key: 'health', label: 'Health', status: 'Not connected yet', icon: stillAssets.tabs.health },
+  { key: 'money', label: 'Money', status: 'Open money', route: '/money', icon: stillAssets.tabs.finance },
+];
 
 function useCurrentTime() {
   const [now, setNow] = useState(() => new Date());
@@ -665,26 +673,21 @@ export function DashboardPage() {
 
       <section className="section life-garden-section">
         <div className="section-head">
-          <div><p className="section-kicker">Life garden</p><p className="micro-copy garden-subtitle">Nurture what matters.</p></div>
-          <button className="link-btn" type="button">View all</button>
+          <div><p className="section-kicker">Life garden</p><p className="micro-copy garden-subtitle">Keep what matters in view.</p></div>
         </div>
         <div className="life-garden-grid">
           {lifeAreas.map((area) => (
-            <button className={`card garden-card ${area.key}`} onClick={() => area.key === 'work' ? navigate('/work') : area.key === 'money' ? navigate('/money') : undefined} type="button" key={area.key}>
+            <button
+              aria-label={area.route ? `Open ${area.label}` : `${area.label}: ${area.status}`}
+              className={`card garden-card ${area.key}`}
+              disabled={!area.route}
+              onClick={() => {
+                if (area.route) navigate(area.route);
+              }}
+              type="button"
+              key={area.key}
+            >
               <div className="garden-card-head"><img src={area.icon} alt="" /><strong>{area.label}</strong></div>
-              <div
-                className="garden-progress"
-                role="img"
-                aria-label={`${area.label}: ${area.progress} of 7`}
-              >
-                {Array.from({ length: 7 }, (_, index) => (
-                  <span
-                    key={index}
-                    className={index < area.progress ? 'filled' : ''}
-                    aria-hidden="true"
-                  />
-                ))}
-              </div>
               <span className="garden-status">{area.status}</span>
             </button>
           ))}
