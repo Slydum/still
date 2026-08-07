@@ -12,4 +12,6 @@ A useful report includes the affected commit or deployment, reproduction steps, 
 
 Still's browser bundle may contain Supabase publishable configuration because publishable keys are intended for client applications. Authorization is enforced by Supabase row-level security and security-invoker database functions. Service-role keys and other privileged secrets must never be committed or exposed to the client.
 
+Supabase cloud sync is account-scoped but is not an end-to-end encrypted vault with user-only keys. Product privacy language must not claim otherwise. See `DATA_AND_PRIVACY.md` for the canonical storage, synchronization, third-party weather, device-state, and recovery boundaries.
+
 Security-sensitive database changes should include pgTAP/RLS regression coverage and must pass the `database-security` CI job before release.
