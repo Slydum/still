@@ -1,5 +1,9 @@
 import { Cloud, LogOut, RefreshCw, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import {
+  signOutAndClearDevice,
+  signOutKeepingLocalCopy,
+} from '../../data/accountLifecycleCore';
 import { synchronizeCloudData } from '../../data/cloudSync';
 import { clearLocalStillData } from '../../data/localDataLifecycle';
 import {
@@ -31,25 +35,27 @@ export function CloudSyncSettings() {
     });
   }, []);
 
-  const syncNow = useCallback(async (quiet = false) => {
+  const performSync = useCallback(async () => {
+    const snapshot = await synchronizeCloudData();
+    applySnapshot(snapshot);
+    const completedAt = new Date();
+    setLastSyncedAt(completedAt);
+    return completedAt;
+  }, [applySnapshot]);
+
+  const syncNow = useCallback(async () => {
     setSyncing(true);
-    if (!quiet) setMessage('Synchronizing your local and cloud data…');
+    setMessage('Synchronizing your local and cloud data…');
 
     try {
-      const snapshot = await synchronizeCloudData();
-      applySnapshot(snapshot);
-      const completedAt = new Date();
-      setLastSyncedAt(completedAt);
+      const completedAt = await performSync();
       setMessage(`Synced at ${completedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`);
-      return snapshot;
     } catch (error) {
-      const syncMessage = error instanceof Error ? error.message : 'Still could not synchronize right now.';
-      setMessage(syncMessage);
-      return undefined;
+      setMessage(error instanceof Error ? error.message : 'Still could not synchronize right now.');
     } finally {
       setSyncing(false);
     }
-  }, [applySnapshot]);
+  }, [performSync]);
 
   useEffect(() => {
     let disposed = false;
@@ -87,9 +93,15 @@ export function CloudSyncSettings() {
 
   const disconnect = async () => {
     setLoading(true);
-    setMessage('');
+    setMessage('Syncing before logout…');
+
     try {
-      await signOutCloud();
+      await signOutKeepingLocalCopy({
+        sync: async () => {
+          await performSync();
+        },
+        signOut: signOutCloud,
+      });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Still could not sign out right now.');
       setLoading(false);
@@ -98,29 +110,27 @@ export function CloudSyncSettings() {
 
   const disconnectAndClear = async () => {
     const confirmation = window.prompt(
-      'Still will sync first, then remove this account\'s offline data from this device. Type CLEAR to continue.',
+      'Still will sync your cloud-backed records first, then remove all Still data and device-only preferences from this browser. Type CLEAR to continue.',
     );
     if (confirmation !== 'CLEAR') return;
 
     setLoading(true);
     setMessage('Syncing before clearing this device…');
 
-    const snapshot = await syncNow(true);
-    if (!snapshot) {
-      setMessage('This device was not cleared because Still could not confirm a cloud sync. Your offline copy is unchanged.');
-      setLoading(false);
-      return;
-    }
-
     try {
-      await signOutCloud();
-      await clearLocalStillData();
+      await signOutAndClearDevice({
+        sync: async () => {
+          await performSync();
+        },
+        signOut: signOutCloud,
+        clearLocal: clearLocalStillData,
+      });
       window.location.reload();
     } catch (error) {
       setMessage(
         error instanceof Error
-          ? `This device could not finish clearing: ${error.message}`
-          : 'This device could not finish clearing.',
+          ? `This device was not cleared because Still could not safely finish the operation: ${error.message}`
+          : 'This device was not cleared because Still could not safely finish the operation.',
       );
       setLoading(false);
     }
@@ -185,7 +195,7 @@ export function CloudSyncSettings() {
 
         {available && message && <p className="settings-message" role="status">{message}</p>}
         <p className="settings-footnote">
-          Logging out can keep the offline copy on this device. Clearing the device is allowed only after Still completes a cloud sync, so unsynced local changes are not intentionally discarded.
+          Ordinary logout attempts a final sync and keeps this browser's offline copy even if the network is unavailable. Clearing this device requires a successful sync first, then removes both synced local records and device-only preferences such as appearance and reminders.
         </p>
       </div>
     </section>
