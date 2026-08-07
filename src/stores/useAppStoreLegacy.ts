@@ -303,7 +303,7 @@ export const useAppStore = create<AppState>()(
       workProfile: DEFAULT_WORK_PROFILE,
       workShifts: [],
       workPrivacyBlur: true,
-      name: 'Tien',
+      name: '',
       appearanceTone: 'lavender',
       reduceMotion: false,
       notificationsEnabled: false,
