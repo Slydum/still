@@ -19,7 +19,7 @@ The login screen includes **Open demo sandbox**. Demo mode requires no account, 
 
 Browser-granted permissions such as notification or location access still belong to the browser/device rather than to a Still account, so the demo should not be treated as a separate browser permission profile.
 
-## Quality gates
+## Quality and release gates
 
 ```bash
 npm run format:check     # text-format baseline
@@ -30,7 +30,9 @@ npm run build            # production build
 npm run build:budget     # bundle-size guardrail (after build)
 ```
 
-CI also runs the headless-browser demo/IndexedDB integration test and a disposable local-Supabase pgTAP suite covering RLS and the sync RPC.
+CI also runs the headless-browser Demo Sandbox/IndexedDB integration test, a disposable local-Supabase pgTAP suite covering RLS and the sync RPC, and a disposable browser acceptance flow covering signup/login, password recovery, cross-browser synchronization, deletion propagation, account binding, and both logout modes.
+
+After a production GitHub Pages deployment, `live-pages-smoke` opens the actual deployed site in headless Chrome and verifies Demo Sandbox entry, direct nested routing, the `/still/` service-worker scope, and an offline reload of the cached app shell.
 
 ## Data, synchronization, and recovery
 
@@ -55,7 +57,7 @@ Reminders are local browser notifications driven by the running page/PWA process
 
 ## Deployment
 
-GitHub Pages is the active production deployment path. The workflow builds Still under `/still/`, verifies nested-base PWA output, uploads the Pages artifact, and deploys only for non-pull-request runs.
+GitHub Pages is the active production deployment path. The workflow builds Still under `/still/`, verifies nested-base PWA output, uploads the Pages artifact, deploys only for non-pull-request runs, and then smoke-tests the deployed PWA before the commit is considered release-ready.
 
 `vercel.json` remains as SPA rewrite configuration, but Vercel Git deployments are intentionally disabled with `git.deploymentEnabled: false`.
 
