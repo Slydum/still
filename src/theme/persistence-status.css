@@ -1,0 +1,31 @@
+.persistence-status-banner {
+  position: fixed;
+  z-index: 1200;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  display: flex;
+  width: min(92vw, 620px);
+  transform: translateX(-50%);
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(116, 73, 26, 0.28);
+  border-radius: 16px;
+  background: rgba(255, 247, 231, 0.98);
+  box-shadow: 0 12px 36px rgba(65, 42, 22, 0.16);
+  color: #513719;
+}
+
+.persistence-status-banner span {
+  display: grid;
+  gap: 2px;
+}
+
+.persistence-status-banner strong {
+  font-size: 0.9rem;
+}
+
+.persistence-status-banner small {
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
