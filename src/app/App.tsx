@@ -20,6 +20,7 @@ import { AuthPage } from '../features/auth/AuthPage';
 import { CalendarPage } from '../features/calendar/CalendarPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { JournalPage } from '../features/journal/JournalPage';
+import { LifeAreaPage } from '../features/life-area/LifeAreaPage';
 import { CheckInHistoryPage } from '../features/check-ins/CheckInHistoryPage';
 import { MoneyPage } from '../features/money/MoneyPage';
 import { MorePage } from '../features/more/MorePage';
@@ -100,6 +101,7 @@ function AppRoutes() {
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/work" element={<WorkPage />} />
         <Route path="/money" element={<MoneyPage />} />
+        <Route path="/life/:areaId" element={<LifeAreaPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <BottomNav />

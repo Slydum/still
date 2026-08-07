@@ -12,7 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   useAppStore,
   type EventCategory,
@@ -32,7 +32,9 @@ import {
   takePendingJournalDraftContext,
   type JournalDraftContext,
 } from '../../features/journal/journalDraftContext';
+import { isLifeAreaId, type LifeAreaId } from '../../domain/lifeAreas';
 import { getLocalDateKey } from '../../theme/stillContext';
+import { LifeAreaPicker } from './LifeAreaPicker';
 import { CheckInEditor } from './quick-add/CheckInEditor';
 import { ExpenseEditor } from './quick-add/ExpenseEditor';
 import { journalMoods } from './quick-add/quickAddOptions';
@@ -63,8 +65,9 @@ function MoreOptions({ children, open = false }: { children: ReactNode; open?: b
   );
 }
 
-function TaskEditor({ task, onCancel, onSave }: {
+function TaskEditor({ task, initialAreaId, onCancel, onSave }: {
   task?: StillTask;
+  initialAreaId?: LifeAreaId;
   onCancel: () => void;
   onSave: (input: TaskInput) => void;
 }) {
@@ -73,11 +76,12 @@ function TaskEditor({ task, onCancel, onSave }: {
   const [dueDate, setDueDate] = useState(task?.dueDate ?? '');
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? 'medium');
   const [repeat, setRepeat] = useState<TaskRepeat>(task?.repeat ?? 'none');
+  const [areaId, setAreaId] = useState<LifeAreaId | undefined>(task?.areaId ?? initialAreaId);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!title.trim()) return;
-    onSave({ title, note, dueDate, priority, repeat });
+    onSave({ title, note, dueDate, priority, repeat, areaId });
   };
 
   return (
@@ -86,6 +90,7 @@ function TaskEditor({ task, onCancel, onSave }: {
         <span>Task</span>
         <input autoFocus maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="What needs your attention?" required type="text" value={title} />
       </label>
+      <LifeAreaPicker value={areaId} onChange={setAreaId} />
 
       <MoreOptions open={Boolean(task?.note || task?.dueDate || task?.repeat !== 'none' || task?.priority !== 'medium')}>
         <div className="task-form-row">
@@ -129,16 +134,17 @@ function TaskEditor({ task, onCancel, onSave }: {
   );
 }
 
-function EventEditor({ event, initialDate, onCancel, onSave }: {
+function EventEditor({ event, initialDate, initialAreaId, onCancel, onSave }: {
   event?: StillEvent;
   initialDate?: string;
+  initialAreaId?: LifeAreaId;
   onCancel: () => void;
   onSave: (input: EventInput) => void;
 }) {
   const defaultDate = event?.startDate ?? initialDate ?? getLocalDateKey();
   const [title, setTitle] = useState(event?.title ?? '');
   const [note, setNote] = useState(event?.note ?? '');
-  const [category, setCategory] = useState<EventCategory>(event?.category ?? 'personal');
+  const [category, setCategory] = useState<EventCategory>(event?.category ?? initialAreaId ?? 'personal');
   const [startDate, setStartDate] = useState(defaultDate);
   const [endDate, setEndDate] = useState(event?.endDate ?? defaultDate);
   const [allDay, setAllDay] = useState(event?.allDay ?? false);
@@ -196,9 +202,9 @@ function EventEditor({ event, initialDate, onCancel, onSave }: {
         </div>
         <div className="task-form-row">
           <label className="task-field">
-            <span>Category</span>
+            <span>Life area</span>
             <select onChange={(inputEvent) => setCategory(inputEvent.target.value as EventCategory)} value={category}>
-              <option value="personal">Personal</option><option value="work">Work</option><option value="health">Health</option><option value="love">Love</option><option value="money">Money</option>
+              <option value="personal">Personal / not connected</option><option value="work">Work</option><option value="health">Health</option><option value="love">Love</option><option value="money">Money</option>
             </select>
           </label>
           <label className="task-field">
@@ -223,9 +229,10 @@ function EventEditor({ event, initialDate, onCancel, onSave }: {
   );
 }
 
-function JournalEditor({ entry, initialDate, draftContext, onCancel, onSave }: {
+function JournalEditor({ entry, initialDate, initialAreaId, draftContext, onCancel, onSave }: {
   entry?: JournalEntry;
   initialDate?: string;
+  initialAreaId?: LifeAreaId;
   draftContext?: JournalDraftContext;
   onCancel: () => void;
   onSave: (input: JournalInput) => void;
@@ -235,6 +242,7 @@ function JournalEditor({ entry, initialDate, draftContext, onCancel, onSave }: {
   const [body, setBody] = useState(entry?.body ?? '');
   const [entryDate, setEntryDate] = useState(entry?.entryDate ?? initialDate ?? getLocalDateKey());
   const [mood, setMood] = useState<JournalMood | undefined>(entry?.mood ?? draftContext?.suggestedMood);
+  const [areaId, setAreaId] = useState<LifeAreaId | undefined>(entry?.areaId ?? initialAreaId);
   const [tags, setTags] = useState(entry?.tags.filter((tag) => tag !== 'check-in').join(', ') ?? '');
   const [includeCheckInTag, setIncludeCheckInTag] = useState(entryHasCheckInTag || Boolean(draftContext));
   const suggestedMood = journalMoods.find((option) => option.value === draftContext?.suggestedMood);
@@ -244,7 +252,7 @@ function JournalEditor({ entry, initialDate, draftContext, onCancel, onSave }: {
     if (!body.trim()) return;
     const nextTags = tags.split(',');
     if (includeCheckInTag) nextTags.push('check-in');
-    onSave({ title, body, entryDate, mood, tags: nextTags });
+    onSave({ title, body, entryDate, mood, tags: nextTags, areaId });
   };
 
   return (
@@ -264,6 +272,7 @@ function JournalEditor({ entry, initialDate, draftContext, onCancel, onSave }: {
         <span>Date</span>
         <input onChange={(event) => setEntryDate(event.target.value)} required type="date" value={entryDate} />
       </label>
+      <LifeAreaPicker value={areaId} onChange={setAreaId} />
       <label className="task-field">
         <span>Reflection</span>
         <textarea
@@ -338,6 +347,9 @@ function JournalEditor({ entry, initialDate, draftContext, onCancel, onSave }: {
 
 export function QuickAddSheet() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const routeAreaId = location.pathname.startsWith('/life/') ? location.pathname.split('/')[2] : undefined;
+  const currentLifeAreaId = isLifeAreaId(routeAreaId) ? routeAreaId : undefined;
   const open = useAppStore((state) => state.quickAddOpen);
   const mode = useAppStore((state) => state.quickAddMode);
   const editingTaskId = useAppStore((state) => state.editingTaskId);
@@ -447,9 +459,9 @@ export function QuickAddSheet() {
             <button className="link-btn" onClick={close} aria-label="Close" type="button"><X /></button>
           </div>
 
-          {mode === 'task' ? <TaskEditor key={editingTask?.id ?? 'new-task'} task={editingTask} onCancel={close} onSave={saveTask} />
-            : mode === 'event' ? <EventEditor key={editingEvent?.id ?? `new-event-${eventDraftDate ?? 'today'}`} event={editingEvent} initialDate={eventDraftDate} onCancel={close} onSave={saveEvent} />
-            : mode === 'journal' ? <JournalEditor key={editingJournalEntry?.id ?? `new-journal-${journalDraftDate ?? 'today'}-${journalDraftContext?.answer ?? 'plain'}`} entry={editingJournalEntry} initialDate={journalDraftDate} draftContext={journalDraftContext} onCancel={close} onSave={saveJournalEntry} />
+          {mode === 'task' ? <TaskEditor key={editingTask?.id ?? 'new-task'} task={editingTask} initialAreaId={currentLifeAreaId} onCancel={close} onSave={saveTask} />
+            : mode === 'event' ? <EventEditor key={editingEvent?.id ?? `new-event-${eventDraftDate ?? 'today'}`} event={editingEvent} initialDate={eventDraftDate} initialAreaId={currentLifeAreaId} onCancel={close} onSave={saveEvent} />
+            : mode === 'journal' ? <JournalEditor key={editingJournalEntry?.id ?? `new-journal-${journalDraftDate ?? 'today'}-${journalDraftContext?.answer ?? 'plain'}`} entry={editingJournalEntry} initialDate={journalDraftDate} initialAreaId={currentLifeAreaId} draftContext={journalDraftContext} onCancel={close} onSave={saveJournalEntry} />
             : mode === 'expense' ? <ExpenseEditor currency={expenseCurrency} onCancel={close} onSave={saveExpense} />
             : mode === 'check-in' ? <CheckInEditor currentEnergy={currentEnergy} currentMood={currentMood} onCancel={close} onSave={saveCheckIn} />
             : <>

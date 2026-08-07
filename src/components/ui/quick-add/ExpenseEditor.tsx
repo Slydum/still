@@ -37,6 +37,7 @@ export function ExpenseEditor({ currency, onCancel, onSave }: {
           <input onChange={(event) => setExpenseDate(event.target.value)} required type="date" value={expenseDate} />
         </label>
       </div>
+      <p className="subtle">Expenses connect to Money automatically.</p>
 
       <details className="editor-more-options">
         <summary><span>More options</span><ChevronDown size={16} aria-hidden="true" /></summary>
