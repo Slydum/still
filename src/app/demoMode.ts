@@ -1,4 +1,5 @@
 const DEMO_SESSION_KEY = 'still-demo-mode-v1';
+const DEMO_PENDING_KEY = 'still-demo-entry-pending-v1';
 const APP_STATE_KEY = 'still-app-state-v1';
 const DEMO_STATE_KEY = 'still-demo-app-state-v1';
 const PRIMARY_BACKUP_KEY = 'still-demo-primary-backup-v1';
@@ -30,6 +31,7 @@ export function beginDemoSession() {
   const demo = storage.getItem(DEMO_STATE_KEY);
   if (demo === null) storage.removeItem(APP_STATE_KEY);
   else storage.setItem(APP_STATE_KEY, demo);
+  storage.setItem(DEMO_PENDING_KEY, '1');
   window.sessionStorage.setItem(DEMO_SESSION_KEY, '1');
 }
 
@@ -43,6 +45,7 @@ export function endDemoSession() {
   if (primary === null || primary === PRIMARY_EMPTY_SENTINEL) storage.removeItem(APP_STATE_KEY);
   else storage.setItem(APP_STATE_KEY, primary);
   storage.removeItem(PRIMARY_BACKUP_KEY);
+  storage.removeItem(DEMO_PENDING_KEY);
   window.sessionStorage.removeItem(DEMO_SESSION_KEY);
 }
 
@@ -58,6 +61,7 @@ export function appDatabaseName() {
 
 export const demoModeStorageKeys = {
   session: DEMO_SESSION_KEY,
+  pending: DEMO_PENDING_KEY,
   appState: APP_STATE_KEY,
   demoState: DEMO_STATE_KEY,
   primaryBackup: PRIMARY_BACKUP_KEY,

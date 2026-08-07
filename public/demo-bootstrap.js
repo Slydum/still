@@ -1,5 +1,6 @@
 (() => {
   const sessionKey = 'still-demo-mode-v1';
+  const pendingKey = 'still-demo-entry-pending-v1';
   const appStateKey = 'still-app-state-v1';
   const demoStateKey = 'still-demo-app-state-v1';
   const backupKey = 'still-demo-primary-backup-v1';
@@ -7,7 +8,8 @@
 
   try {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('demo') === '1') {
+    const pendingDemo = localStorage.getItem(pendingKey) === '1';
+    if (params.get('demo') === '1' || pendingDemo) {
       if (localStorage.getItem(backupKey) === null) {
         const primary = localStorage.getItem(appStateKey);
         localStorage.setItem(backupKey, primary ?? emptyPrimary);
@@ -16,6 +18,7 @@
       if (demo === null) localStorage.removeItem(appStateKey);
       else localStorage.setItem(appStateKey, demo);
       sessionStorage.setItem(sessionKey, '1');
+      localStorage.removeItem(pendingKey);
       return;
     }
 
@@ -30,6 +33,7 @@
     if (primaryBackup === emptyPrimary) localStorage.removeItem(appStateKey);
     else localStorage.setItem(appStateKey, primaryBackup);
     localStorage.removeItem(backupKey);
+    localStorage.removeItem(pendingKey);
   } catch {
     // Storage access can be unavailable in hardened/private browsing contexts.
   }
