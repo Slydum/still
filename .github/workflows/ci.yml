@@ -13,7 +13,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,7 +24,29 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Run tests
+      - name: Run unit tests
         run: npm test
       - name: Build production app
         run: npm run build
+      - name: Run browser demo and IndexedDB integration test
+        run: node scripts/e2e-demo-browser.mjs
+
+  database-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Start isolated Supabase database
+        run: >-
+          npx -y supabase@2.109.1 start
+          -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+      - name: Run database and RLS tests
+        run: npx -y supabase@2.109.1 test db
+      - name: Stop isolated Supabase stack
+        if: always()
+        run: npx -y supabase@2.109.1 stop --no-backup

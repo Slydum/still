@@ -30,6 +30,7 @@ type AuthPageProps = {
   recoveryMode?: boolean;
   initialNotice?: string;
   onRecoveryComplete?: () => void;
+  onEnterDemo?: () => void;
 };
 
 const modeCopy: Record<AuthMode, { title: string; subtitle: string; action: string }> = {
@@ -55,7 +56,7 @@ const modeCopy: Record<AuthMode, { title: string; subtitle: string; action: stri
   },
 };
 
-export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryComplete }: AuthPageProps) {
+export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryComplete, onEnterDemo }: AuthPageProps) {
   const [mode, setMode] = useState<AuthMode>(recoveryMode ? 'recovery' : 'login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -188,16 +189,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
                 <span>Your name</span>
                 <div className="auth-input-wrap">
                   <UserRound size={20} />
-                  <input
-                    autoComplete="name"
-                    disabled={busy}
-                    maxLength={40}
-                    onChange={(event) => setName(event.target.value)}
-                    placeholder="What should Still call you?"
-                    required
-                    type="text"
-                    value={name}
-                  />
+                  <input autoComplete="name" disabled={busy} maxLength={40} onChange={(event) => setName(event.target.value)} placeholder="What should Still call you?" required type="text" value={name} />
                 </div>
               </label>
             )}
@@ -207,18 +199,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
                 <span>Email</span>
                 <div className="auth-input-wrap">
                   <Mail size={20} />
-                  <input
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    disabled={busy}
-                    inputMode="email"
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@still.app"
-                    required
-                    spellCheck={false}
-                    type="email"
-                    value={email}
-                  />
+                  <input autoCapitalize="none" autoComplete="email" disabled={busy} inputMode="email" onChange={(event) => setEmail(event.target.value)} placeholder="you@still.app" required spellCheck={false} type="email" value={email} />
                 </div>
               </label>
             )}
@@ -228,23 +209,8 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
                 <span>{mode === 'recovery' ? 'New password' : 'Password'}</span>
                 <div className="auth-input-wrap">
                   <LockKeyhole size={20} />
-                  <input
-                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                    disabled={busy}
-                    minLength={8}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Enter your password"
-                    required
-                    type={passwordType}
-                    value={password}
-                  />
-                  <button
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="auth-password-toggle"
-                    disabled={busy}
-                    onClick={() => setShowPassword((visible) => !visible)}
-                    type="button"
-                  >
+                  <input autoComplete={mode === 'login' ? 'current-password' : 'new-password'} disabled={busy} minLength={8} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" required type={passwordType} value={password} />
+                  <button aria-label={showPassword ? 'Hide password' : 'Show password'} className="auth-password-toggle" disabled={busy} onClick={() => setShowPassword((visible) => !visible)} type="button">
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
@@ -256,16 +222,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
                 <span>Confirm password</span>
                 <div className="auth-input-wrap">
                   <KeyRound size={20} />
-                  <input
-                    autoComplete="new-password"
-                    disabled={busy}
-                    minLength={8}
-                    onChange={(event) => setConfirmation(event.target.value)}
-                    placeholder="Type it again"
-                    required
-                    type={passwordType}
-                    value={confirmation}
-                  />
+                  <input autoComplete="new-password" disabled={busy} minLength={8} onChange={(event) => setConfirmation(event.target.value)} placeholder="Type it again" required type={passwordType} value={confirmation} />
                 </div>
               </label>
             )}
@@ -273,44 +230,29 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
             {mode === 'login' && (
               <div className="auth-login-tools">
                 <span>Securely remembered on this device</span>
-                <button className="auth-text-action" onClick={() => changeMode('forgot')} type="button">
-                  Forgot password?
-                </button>
+                <button className="auth-text-action" onClick={() => changeMode('forgot')} type="button">Forgot password?</button>
               </div>
             )}
 
-            {!available && (
-              <p className="auth-status is-error" role="alert">
-                {getSupabaseConfigurationError() ?? 'Account access is not configured for this deployment.'}
-              </p>
-            )}
+            {!available && <p className="auth-status is-error" role="alert">{getSupabaseConfigurationError() ?? 'Account access is not configured for this deployment.'}</p>}
             {error && <p className="auth-status is-error" role="alert">{error}</p>}
             {message && <p className="auth-status" role="status">{message}</p>}
 
-            <button className="auth-submit" disabled={busy || !available} type="submit">
-              {busy ? 'Please wait…' : copy.action}
-            </button>
+            <button className="auth-submit" disabled={busy || !available} type="submit">{busy ? 'Please wait…' : copy.action}</button>
           </form>
+
+          {mode === 'login' && onEnterDemo && (
+            <div className="auth-demo-entry">
+              <span>Just testing?</span>
+              <button className="settings-test-notification" onClick={onEnterDemo} type="button">Open demo sandbox</button>
+              <small>No account, no cloud sync. Demo data stays isolated on this device.</small>
+            </div>
+          )}
         </section>
 
-        {mode === 'login' && (
-          <p className="auth-switch">
-            Don’t have an account?{' '}
-            <button onClick={() => changeMode('signup')} type="button">Create account</button>
-          </p>
-        )}
-
-        {mode === 'signup' && (
-          <p className="auth-switch">
-            Already have an account?{' '}
-            <button onClick={() => changeMode('login')} type="button">Log in</button>
-          </p>
-        )}
-
-        {mode === 'login' && (
-          <p className="auth-help">Used the old email-link login? Choose <strong>Forgot password</strong> once to create a password for the same account.</p>
-        )}
-
+        {mode === 'login' && <p className="auth-switch">Don’t have an account? <button onClick={() => changeMode('signup')} type="button">Create account</button></p>}
+        {mode === 'signup' && <p className="auth-switch">Already have an account? <button onClick={() => changeMode('login')} type="button">Log in</button></p>}
+        {mode === 'login' && <p className="auth-help">Used the old email-link login? Choose <strong>Forgot password</strong> once to create a password for the same account.</p>}
         <p className="auth-privacy"><ShieldCheck size={16} /> Your Still data stays private to your account.</p>
       </div>
     </main>
