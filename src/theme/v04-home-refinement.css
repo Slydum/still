@@ -1,7 +1,4 @@
 /* Still v0.4 Phase 1 — on-device Home refinements */
-
-/* Restore the softer, generously rounded navigation silhouette while keeping
-   the v0.4 glass material and compact iOS-style icon treatment. */
 .bottom-nav {
   width: min(calc(100% - 28px), 620px);
   min-height: 78px;
@@ -12,7 +9,6 @@
 .bottom-nav .nav-item {
   min-height: 58px;
   border-radius: 24px;
-  font-size: 10px;
 }
 
 .bottom-nav .add-button {
@@ -21,8 +17,6 @@
   border-radius: 50%;
 }
 
-/* Check-in needs breathing room on a phone. Two five-choice scales should not
-   be compressed into a single narrow row. */
 .dashboard-v2 .checkin-combined-card {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -31,20 +25,14 @@
   border-radius: 26px;
 }
 
-.dashboard-v2 .checkin-column {
-  min-width: 0;
-}
-
 .dashboard-v2 .checkin-combined-card .emoji-row {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 7px;
-  width: 100%;
 }
 
 .dashboard-v2 .checkin-combined-card .emoji-btn {
   width: 100%;
-  min-width: 0;
   max-width: 48px;
   aspect-ratio: 1;
   height: auto;
@@ -52,21 +40,14 @@
 }
 
 @media (max-width: 620px) {
-  .bottom-nav {
-    width: calc(100% - 28px);
-    min-height: 78px;
-    border-radius: 34px;
-  }
-
   .dashboard-v2 .checkin-combined-card {
     grid-template-columns: 1fr;
-    gap: 18px;
     padding: 18px 16px;
   }
 
   .dashboard-v2 .checkin-column + .checkin-column {
     padding-top: 16px;
-    border-top: 1px solid rgba(92, 78, 118, 0.10);
+    border-top: 1px solid rgba(92, 78, 118, 0.1);
   }
 
   .dashboard-v2 .checkin-combined-card .emoji-row {
@@ -76,19 +57,5 @@
 
   .dashboard-v2 .checkin-combined-card .emoji-btn {
     max-width: 52px;
-  }
-}
-
-@media (max-width: 390px) {
-  .dashboard-v2 .checkin-combined-card {
-    padding-inline: 14px;
-  }
-
-  .dashboard-v2 .checkin-combined-card .emoji-row {
-    gap: 7px;
-  }
-
-  .dashboard-v2 .checkin-combined-card .emoji-btn {
-    max-width: 48px;
   }
 }
