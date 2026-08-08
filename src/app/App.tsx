@@ -26,6 +26,7 @@ import { MoneyPage } from '../features/money/MoneyPage';
 import { MorePage } from '../features/more/MorePage';
 import { WeeklyReflectionPage } from '../features/reflection/WeeklyReflectionPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
+import { TasksPage } from '../features/tasks/TasksPage';
 import { WorkPage } from '../features/work/WorkPage';
 import { useAppStore } from '../stores/useAppStore';
 import {
@@ -92,6 +93,7 @@ function AppRoutes() {
       <RouteScrollManager />
       <Routes>
         <Route path="/" element={<DashboardPage />} />
+        <Route path="/tasks" element={<TasksPage />} />
         <Route path="/today" element={<JournalPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/check-ins" element={<CheckInHistoryPage />} />
