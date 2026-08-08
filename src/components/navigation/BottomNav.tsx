@@ -13,6 +13,7 @@ const items = [
 function isActivePath(itemPath: string, pathname: string) {
   if (itemPath === '/') {
     return pathname === '/'
+      || pathname === '/tasks'
       || pathname.startsWith('/life/')
       || pathname === '/work'
       || pathname === '/money'
