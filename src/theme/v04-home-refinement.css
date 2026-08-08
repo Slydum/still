@@ -1,0 +1,61 @@
+/* Still v0.4 Phase 1 — on-device Home refinements */
+.bottom-nav {
+  width: min(calc(100% - 28px), 620px);
+  min-height: 78px;
+  padding: 9px 10px max(9px, env(safe-area-inset-bottom));
+  border-radius: 34px;
+}
+
+.bottom-nav .nav-item {
+  min-height: 58px;
+  border-radius: 24px;
+}
+
+.bottom-nav .add-button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}
+
+.dashboard-v2 .checkin-combined-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 18px;
+  border-radius: 26px;
+}
+
+.dashboard-v2 .checkin-combined-card .emoji-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.dashboard-v2 .checkin-combined-card .emoji-btn {
+  width: 100%;
+  max-width: 48px;
+  aspect-ratio: 1;
+  height: auto;
+  justify-self: center;
+}
+
+@media (max-width: 620px) {
+  .dashboard-v2 .checkin-combined-card {
+    grid-template-columns: 1fr;
+    padding: 18px 16px;
+  }
+
+  .dashboard-v2 .checkin-column + .checkin-column {
+    padding-top: 16px;
+    border-top: 1px solid rgba(92, 78, 118, 0.1);
+  }
+
+  .dashboard-v2 .checkin-combined-card .emoji-row {
+    gap: 10px;
+    margin-top: 11px;
+  }
+
+  .dashboard-v2 .checkin-combined-card .emoji-btn {
+    max-width: 52px;
+  }
+}

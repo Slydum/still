@@ -1,0 +1,192 @@
+/* Still v0.4 Phase 1 — full on-device screenshot cleanup */
+
+/* The first visual pass still read too tall on a real iPhone. */
+@media (max-width: 620px) {
+  .dashboard-v2 .hero.hero-v3 {
+    min-height: 238px;
+    border-radius: 28px;
+  }
+
+  .dashboard-v2 .hero-v3-copy {
+    top: 20px;
+    left: 20px;
+    max-width: 235px;
+  }
+
+  .dashboard-v2 .hero-v3 h1 {
+    margin-bottom: 9px;
+    font-size: clamp(28px, 8vw, 34px);
+  }
+
+  .dashboard-v2 .hero-v3-quote {
+    max-width: 195px;
+    min-height: 36px;
+    font-size: 13px;
+  }
+
+  .dashboard-v2 .hero-v3-art,
+  .dashboard-v2 .hero-v3-art.companion-umbrella,
+  .dashboard-v2 .hero-v3-art.companion-sleeping {
+    right: 6px;
+    bottom: 26px;
+    width: 37%;
+    height: 43%;
+  }
+
+  .dashboard-v2 .hero-v3-weather {
+    left: 14px;
+    bottom: 12px;
+    min-height: 34px;
+    padding: 6px 11px 6px 8px;
+    font-size: 11px;
+  }
+}
+
+/* TODAY should be a compact glance surface, especially when empty. */
+.dashboard-v2 .dashboard-two-column::before {
+  padding: 13px 16px 2px;
+  font-size: 9px;
+}
+
+.dashboard-v2 .focus-card,
+.dashboard-v2 .upcoming-card {
+  padding: 10px 16px 13px;
+}
+
+.dashboard-v2 .upcoming-card {
+  padding-top: 13px;
+}
+
+.dashboard-v2 .focus-task-heading,
+.dashboard-v2 .upcoming-heading {
+  margin-bottom: 4px;
+}
+
+.dashboard-v2 .focus-task-heading .section-kicker,
+.dashboard-v2 .upcoming-heading .section-kicker {
+  font-size: 17px;
+}
+
+.dashboard-v2 .focus-task-heading .btn,
+.dashboard-v2 .upcoming-heading .btn {
+  min-height: 32px;
+  padding: 6px 10px;
+}
+
+.dashboard-v2 .task-empty-state,
+.dashboard-v2 .upcoming-empty {
+  padding-top: 7px;
+  padding-bottom: 3px;
+}
+
+.dashboard-v2 .task-empty-state {
+  grid-template-columns: 36px minmax(0, 1fr);
+  column-gap: 10px;
+}
+
+.dashboard-v2 .task-empty-state span {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(231, 224, 250, .64);
+  font-size: 19px;
+}
+
+.dashboard-v2 .task-empty-state strong,
+.dashboard-v2 .upcoming-empty strong {
+  font-size: 12.5px;
+}
+
+.dashboard-v2 .task-empty-state small,
+.dashboard-v2 .upcoming-empty small {
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+
+.dashboard-v2 .upcoming-empty {
+  min-height: 42px;
+}
+
+/* The calendar glyph looked like an empty lavender dot in the first device pass. */
+.dashboard-v2 .upcoming-empty svg {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  color: #7563a7;
+  fill: none;
+  stroke: currentColor;
+  background: transparent;
+}
+
+/* Life Areas were visually attractive but still much taller than their content. */
+.dashboard-v2 .garden-card {
+  min-height: 92px;
+  padding: 13px 14px;
+  border-radius: 21px;
+}
+
+.dashboard-v2 .garden-card-head img {
+  width: 31px;
+  height: 31px;
+}
+
+.dashboard-v2 .garden-card-head strong {
+  font-size: 15px;
+}
+
+.dashboard-v2 .garden-status {
+  margin-top: 9px;
+  font-size: 10px;
+}
+
+.dashboard-v2 .life-garden-section {
+  margin-top: 21px;
+}
+
+/* Weekly overview should close the page without leaving a large dead zone. */
+.dashboard-v2 .weekly-reflection-entry {
+  margin-top: 15px;
+}
+
+.dashboard-v2 .weekly-reflection-entry-card {
+  min-height: 64px;
+  padding: 11px 14px;
+}
+
+/* The demo persistence chip is useful, but on mobile it must not fight the nav. */
+@media (max-width: 620px) {
+  .sync-confidence-indicator {
+    right: 20px;
+    bottom: calc(94px + env(safe-area-inset-bottom));
+    min-height: 27px;
+    padding: 5px 8px;
+    font-size: .64rem;
+    opacity: .76;
+    box-shadow: 0 6px 18px rgba(56, 45, 76, .10);
+  }
+
+  /* The generic shell clearance was correct for dense screens, but left Home
+     with a conspicuous empty runway beneath Weekly Overview. */
+  .shell.dashboard-v2,
+  .dashboard-v2.shell,
+  .dashboard-v2 {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 390px) {
+  .dashboard-v2 .hero.hero-v3 {
+    min-height: 228px;
+  }
+
+  .dashboard-v2 .hero-v3 h1 {
+    font-size: 28px;
+  }
+
+  .dashboard-v2 .garden-card {
+    min-height: 88px;
+    padding: 12px;
+  }
+}
