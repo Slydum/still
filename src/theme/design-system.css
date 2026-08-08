@@ -1,0 +1,99 @@
+/* v0.3 Phase 6 — shared feature-page primitives */
+
+.still-page-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.still-page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex: 1;
+  min-width: 0;
+}
+
+.still-page-heading h1 {
+  margin: 2px 0 4px;
+}
+
+.still-page-heading-copy {
+  min-width: 0;
+}
+
+.still-page-heading-copy > :first-child {
+  margin-top: 0;
+}
+
+.still-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+}
+
+.still-filter-tabs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--lavender-soft);
+}
+
+.still-filter-tabs button {
+  min-height: 42px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.still-filter-tabs button:is(.is-active, [aria-pressed="true"], [aria-selected="true"]) {
+  background: var(--surface);
+  color: var(--text-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.still-summary-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.still-summary-tile {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 13px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+}
+
+.still-summary-tile > strong {
+  font-size: 1.25rem;
+  color: var(--text-strong);
+}
+
+.still-summary-tile > span,
+.still-summary-tile > small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 620px) {
+  .still-page-heading {
+    flex-direction: column;
+  }
+
+  .still-page-heading > .still-action-button,
+  .still-page-heading > .btn {
+    width: 100%;
+  }
+}
