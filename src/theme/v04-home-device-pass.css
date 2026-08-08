@@ -26,26 +26,17 @@
 .dashboard-v2 .weekly-reflection-entry-card small { display: none; }
 
 .dashboard-v2 .task-empty-state,
-.dashboard-v2 .upcoming-empty { min-height: 48px; padding: 6px 0 2px; }
-.dashboard-v2 .task-empty-state { grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; }
-.dashboard-v2 .task-empty-state span {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 11px;
-  background: rgba(231, 224, 250, .58);
+.dashboard-v2 .upcoming-empty {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 4px 0 0;
+  text-align: left;
 }
-.dashboard-v2 .upcoming-empty { justify-content: flex-start; gap: 10px; }
-.dashboard-v2 .upcoming-empty svg {
-  display: block !important;
-  width: 24px !important;
-  height: 24px !important;
-  min-width: 24px;
-  color: #7563a7 !important;
-  stroke: currentColor !important;
-  fill: none !important;
-}
+.dashboard-v2 .task-empty-state > span:first-child,
+.dashboard-v2 .upcoming-empty > svg { display: none !important; }
+.dashboard-v2 .task-empty-state strong,
+.dashboard-v2 .upcoming-empty strong { display: block; }
 
 .dashboard-v2 .garden-card { min-height: 80px; padding: 11px 13px; }
 .dashboard-v2 .garden-status { margin-top: 6px; }
