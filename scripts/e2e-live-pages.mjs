@@ -140,7 +140,7 @@ try {
   await cdp.send('Page.navigate', { url: reflectionUrl });
   await poll(
     cdp,
-    "document.querySelector('.weekly-reflection-page h1')?.textContent === 'Weekly reflection' && document.querySelector('#weekly-rhythm-title')?.textContent === 'Recorded activity by day' && Boolean(navigator.serviceWorker.controller)",
+    "document.querySelector('.weekly-reflection-page h1')?.textContent === 'Weekly overview' && document.querySelector('#weekly-rhythm-title')?.textContent === 'Recorded activity by day' && Boolean(navigator.serviceWorker.controller)",
     'controlled direct live /reflection route',
   );
 
