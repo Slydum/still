@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { accountSettingsFromState, accountSettingsStatePatch } from '../data/accountSettings';
+import { refreshCloudSyncStatus } from '../data/cloudSyncStatus';
 import { stillRepository, type PermanentDataCache } from '../data/repositories';
 import {
   diffCollectionChanges,
@@ -12,6 +13,9 @@ import { useAppStore } from '../stores/useAppStore';
 import { usePersistenceStatus } from '../stores/usePersistenceStatus';
 
 let bootstrapPromise: ReturnType<typeof stillRepository.bootstrap> | undefined;
+// Hydration and cloud acknowledgements update the view model, not user intent.
+// Suppress the store subscriber so those snapshots do not become fresh dirty writes.
+let applyingRepositorySnapshot = false;
 
 function accountSettingsFromStore() {
   const state = useAppStore.getState();
@@ -42,13 +46,33 @@ function cacheFromStore(): PermanentDataCache {
   };
 }
 
+export function applyPermanentDataSnapshot(snapshot: PermanentDataCache) {
+  applyingRepositorySnapshot = true;
+  try {
+    useAppStore.setState({
+      tasks: snapshot.tasks,
+      events: snapshot.events,
+      journalEntries: snapshot.journalEntries,
+      expenses: snapshot.expenses,
+      entityLinks: snapshot.entityLinks,
+      workShifts: snapshot.workShifts,
+      ...accountSettingsStatePatch(snapshot.accountSettings),
+    });
+  } finally {
+    applyingRepositorySnapshot = false;
+  }
+}
+
 function reportRepositoryError(error: unknown) {
   usePersistenceStatus.getState().setFailure(error);
   console.error('Still could not synchronize its permanent data repository:', error);
 }
 
 function reportRepositorySuccess() {
-  usePersistenceStatus.getState().clearFailure();
+  usePersistenceStatus.getState().markSaved();
+  void refreshCloudSyncStatus().catch((error) => {
+    console.warn('Still could not refresh cloud sync status after a local save:', error);
+  });
 }
 
 export function initializePermanentDataRepository() {
@@ -69,11 +93,20 @@ export function usePermanentDataRepository() {
   useEffect(() => {
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
+    let pendingWrites = 0;
 
     const enqueue = (write: () => Promise<void>) => {
+      pendingWrites += 1;
+      usePersistenceStatus.getState().markSaving();
       enqueueRepositoryWrite(write, {
-        onSuccess: reportRepositorySuccess,
-        onError: reportRepositoryError,
+        onSuccess: () => {
+          pendingWrites = Math.max(0, pendingWrites - 1);
+          if (pendingWrites === 0) reportRepositorySuccess();
+        },
+        onError: (error) => {
+          pendingWrites = Math.max(0, pendingWrites - 1);
+          reportRepositoryError(error);
+        },
       });
     };
 
@@ -90,17 +123,11 @@ export function usePermanentDataRepository() {
       const snapshot = await initializePermanentDataRepository();
       if (disposed) return;
 
-      useAppStore.setState({
-        tasks: snapshot.tasks,
-        events: snapshot.events,
-        journalEntries: snapshot.journalEntries,
-        expenses: snapshot.expenses,
-        entityLinks: snapshot.entityLinks,
-        workShifts: snapshot.workShifts,
-        ...accountSettingsStatePatch(snapshot.accountSettings),
-      });
+      applyPermanentDataSnapshot(snapshot);
 
       unsubscribe = useAppStore.subscribe((state, previousState) => {
+        if (applyingRepositorySnapshot) return;
+
         if (state.tasks !== previousState.tasks) {
           persistCollection(previousState.tasks, state.tasks, (changes) => stillRepository.persistTasks(changes));
         }

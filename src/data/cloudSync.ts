@@ -7,6 +7,11 @@ import {
   maxServerRevision,
   mergeByKey,
 } from './cloudSyncCore';
+import {
+  markCloudSyncFailure,
+  markCloudSyncing,
+  recordCloudSyncSuccess,
+} from './cloudSyncStatus';
 import { stillDb } from './localDb';
 import { localStillRepository } from './repositories/localStillRepository';
 import type { PermanentDataSnapshot } from './repositories/types';
@@ -292,4 +297,16 @@ async function runCloudSync(): Promise<PermanentDataSnapshot> {
   return localStillRepository.load();
 }
 
-export const synchronizeCloudData = createSingleFlight(runCloudSync);
+async function runTrackedCloudSync() {
+  markCloudSyncing();
+  try {
+    const synced = await runCloudSync();
+    await recordCloudSyncSuccess();
+    return synced;
+  } catch (error) {
+    await markCloudSyncFailure(error);
+    throw error;
+  }
+}
+
+export const synchronizeCloudData = createSingleFlight(runTrackedCloudSync);
