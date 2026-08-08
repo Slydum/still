@@ -2,7 +2,8 @@
 
 Before merging a change to `main`:
 
-- `app-quality` passes: formatting baseline, TypeScript/source hygiene, unit tests, dependency audit, production build, bundle budget, and browser demo/IndexedDB integration.
+- `app-quality` passes: formatting baseline, TypeScript/source hygiene, unit tests, dependency audit, production build, bundle budget, browser demo/IndexedDB integration, and the v0.3 responsive/keyboard release QA matrix.
+- The release QA matrix covers primary routes at 320px, 390px, 768px, and 1280px, rejects horizontal overflow or missing page headings, verifies the displayed release version, and exercises modal focus plus Escape behavior.
 - `database-security` passes: migrations apply cleanly, pgTAP verifies RLS plus synchronization behavior, and the disposable browser acceptance flow covers signup/login, password recovery, cross-browser sync, deletion propagation, logout/local-copy behavior, account binding, and sync-gated local clearing.
 - GitHub Pages `build` passes, including nested-base PWA verification.
 - Database migrations required by the release are applied to production only after the disposable local-database tests pass.
