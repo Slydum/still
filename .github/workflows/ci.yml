@@ -42,6 +42,8 @@ jobs:
         run: npm run build:budget
       - name: Run browser demo and IndexedDB integration test
         run: node scripts/e2e-demo-browser.mjs
+      - name: Run v0.3 responsive and keyboard release QA
+        run: node scripts/e2e-release-qa.mjs
 
   database-security:
     name: database-security
