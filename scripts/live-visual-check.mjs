@@ -71,6 +71,11 @@ async function poll(cdp, expression, label, attempts = 120) {
   throw new Error(`Timed out waiting for ${label}`);
 }
 
+async function capture(cdp, name) {
+  const screenshot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true });
+  await writeFile(`${artifactDir}/${name}.png`, Buffer.from(screenshot.data, 'base64'));
+}
+
 await rm(profileDir, { recursive: true, force: true });
 await mkdir(artifactDir, { recursive: true });
 let chrome;
@@ -111,11 +116,34 @@ try {
   if (alignment.delta > 2) {
     throw new Error(`Today empty rows are misaligned by ${alignment.delta.toFixed(1)}px (${alignment.taskLeft.toFixed(1)} vs ${alignment.calendarLeft.toFixed(1)}).`);
   }
+  await capture(cdp, 'home-mobile');
 
-  const screenshot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true });
-  await writeFile(`${artifactDir}/home-mobile.png`, Buffer.from(screenshot.data, 'base64'));
-  await writeFile(`${artifactDir}/metrics.json`, JSON.stringify({ url: liveUrl.toString(), alignment }, null, 2));
-  console.log(`Live visual QA passed. Today empty-row delta: ${alignment.delta.toFixed(1)}px`);
+  const workUrl = new URL('work', liveUrl).toString();
+  await evaluate(cdp, `window.history.pushState({}, '', ${JSON.stringify(workUrl)}); window.dispatchEvent(new PopStateEvent('popstate')); true`);
+  await poll(cdp, "Boolean(document.querySelector('.still-work-page'))", 'Work page');
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  const workMetrics = await evaluate(cdp, `(() => {
+    const page = document.querySelector('.still-work-page');
+    const live = document.querySelector('.still-work-live');
+    const summary = document.querySelector('.still-work-summary');
+    const pulse = [...document.querySelectorAll('.still-work-section h2')].find((node) => node.textContent?.includes('Your work at a glance'));
+    const settings = document.querySelector('#work-settings details');
+    if (!page || !live || !summary || !pulse || !settings) return null;
+    return {
+      width: page.getBoundingClientRect().width,
+      summaryCards: summary.children.length,
+      settingsCollapsed: !settings.open,
+      hasHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+    };
+  })()`);
+  if (!workMetrics) throw new Error('Work visual QA could not find the Phase 2 overview structure.');
+  if (workMetrics.summaryCards !== 4) throw new Error(`Expected 4 Work overview cards, found ${workMetrics.summaryCards}.`);
+  if (!workMetrics.settingsCollapsed) throw new Error('Work schedule & pay settings should be collapsed by default.');
+  if (workMetrics.hasHorizontalOverflow) throw new Error('Work page has horizontal overflow at the mobile viewport.');
+  await capture(cdp, 'work-mobile');
+
+  await writeFile(`${artifactDir}/metrics.json`, JSON.stringify({ url: liveUrl.toString(), alignment, work: workMetrics }, null, 2));
+  console.log(`Live visual QA passed. Home delta: ${alignment.delta.toFixed(1)}px; Work overview cards: ${workMetrics.summaryCards}.`);
 } finally {
   cdp?.close();
   chrome?.kill('SIGTERM');
