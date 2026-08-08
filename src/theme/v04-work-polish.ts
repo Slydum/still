@@ -1,3 +1,5 @@
+export {};
+
 const styleId = 'still-v04-work-polish';
 
 if (!document.getElementById(styleId)) {
