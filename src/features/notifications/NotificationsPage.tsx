@@ -36,10 +36,19 @@ export function NotificationsPage() {
     window.requestAnimationFrame(() => window.dispatchEvent(new Event(CHECK_IN_FOCUS_EVENT)));
   };
 
+  const openNotification = (kind: AppNotificationKind) => {
+    if (kind === 'check-in') {
+      openCheckIn();
+      return;
+    }
+    if (kind === 'task') navigate('/tasks');
+    if (kind === 'event') navigate('/calendar');
+  };
+
   return (
     <main className="shell notification-center-page">
       <header className="notification-center-header">
-        <button onClick={() => navigate('/')} type="button" aria-label="Back to Life"><ArrowLeft size={19} /></button>
+        <button onClick={() => navigate('/')} type="button" aria-label="Back home"><ArrowLeft size={19} /></button>
         <div><p className="section-kicker">Your gentle reminders</p><h1>Notifications</h1><p className="subtle">Recent reminders from tasks, events, and daily check-ins.</p></div>
       </header>
 
@@ -53,20 +62,27 @@ export function NotificationsPage() {
       </section> : <section className="notification-center-list" aria-label="Recent notifications">
         {notifications.map((notification) => {
           const Icon = notificationIcons[notification.kind];
-          const actionable = notification.kind === 'check-in';
+          const actionable = notification.kind !== 'system';
+          const destination = notification.kind === 'task'
+            ? 'Open tasks.'
+            : notification.kind === 'event'
+              ? 'Open calendar.'
+              : notification.kind === 'check-in'
+                ? 'Open today’s check-in.'
+                : '';
 
           return <article
             className={`card notification-center-item${notification.read ? '' : ' is-unread'}${actionable ? ' is-actionable' : ''}`}
             key={notification.id}
-            onClick={actionable ? openCheckIn : undefined}
+            onClick={actionable ? () => openNotification(notification.kind) : undefined}
             onKeyDown={actionable ? (event) => {
               if (event.key !== 'Enter' && event.key !== ' ') return;
               event.preventDefault();
-              openCheckIn();
+              openNotification(notification.kind);
             } : undefined}
             role={actionable ? 'button' : undefined}
             tabIndex={actionable ? 0 : undefined}
-            aria-label={actionable ? `${notification.title}. Open today’s check-in.` : undefined}
+            aria-label={actionable ? `${notification.title}. ${destination}` : undefined}
           >
             <span className={`notification-kind-icon is-${notification.kind}`}><Icon size={18} /></span>
             <div><div><strong>{notification.title}</strong><time dateTime={new Date(notification.createdAt).toISOString()}>{formatNotificationTime(notification.createdAt)}</time></div><p>{notification.body}</p></div>

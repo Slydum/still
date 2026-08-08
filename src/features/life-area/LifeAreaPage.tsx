@@ -164,10 +164,10 @@ export function LifeAreaPage() {
               <div className="life-area-section-heading"><ReceiptText size={18} /><h2>{sectionTitle(sortedExpenses.length, 'expense')}</h2></div>
               <div className="life-area-record-list">
                 {sortedExpenses.map((expense) => (
-                  <article className="card life-area-record is-static" key={expense.id}>
+                  <button className="card life-area-record" key={expense.id} onClick={() => navigate('/money')} type="button" aria-label={`Open spending tracker for ${expense.title}`}>
                     <ReceiptText size={18} />
                     <span><strong>{expense.title}</strong><small>{dateLabel(expense.expenseDate)}{expense.amount !== undefined ? ` · ${new Intl.NumberFormat(undefined, { style: 'currency', currency: expense.currency }).format(expense.amount)}` : ''}</small></span>
-                  </article>
+                  </button>
                 ))}
               </div>
             </section>
@@ -178,10 +178,10 @@ export function LifeAreaPage() {
               <div className="life-area-section-heading"><BriefcaseBusiness size={18} /><h2>{sectionTitle(sortedShifts.length, 'shift')}</h2></div>
               <div className="life-area-record-list">
                 {sortedShifts.map((shift) => (
-                  <article className="card life-area-record is-static" key={shift.id}>
+                  <button className="card life-area-record" key={shift.id} onClick={() => navigate('/work')} type="button" aria-label="Open work tracker for this shift">
                     <BriefcaseBusiness size={18} />
                     <span><strong>{shift.endedAt ? 'Work shift' : 'Active work shift'}</strong><small>{shiftLabel(shift.startedAt, shift.endedAt)}</small></span>
-                  </article>
+                  </button>
                 ))}
               </div>
             </section>
