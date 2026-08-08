@@ -11,7 +11,6 @@ import { AuthPage } from '../features/auth/AuthPage';
 import { CalendarPage } from '../features/calendar/CalendarPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { JournalPage } from '../features/journal/JournalPage';
-import { LifeAreaPage } from '../features/life-area/LifeAreaPage';
 import { CheckInHistoryPage } from '../features/check-ins/CheckInHistoryPage';
 import { MoneyPage } from '../features/money/MoneyPage';
 import { MorePage } from '../features/more/MorePage';
@@ -27,6 +26,7 @@ import { getAppRoutePathname, toAppPath } from './appLocation';
 import { beginDemoSession, isDemoMode } from './demoMode';
 
 const LovePage = lazy(() => import('../features/love/LovePage').then((module) => ({ default: module.LovePage })));
+const LifeAreaPage = lazy(() => import('../features/life-area/LifeAreaPage').then((module) => ({ default: module.LifeAreaPage })));
 
 function replaceBrowserRoute(path: string) {
   window.history.replaceState({}, '', toAppPath(path));
@@ -77,7 +77,7 @@ function AppRoutes() {
     <Route path="/life/work" element={<Navigate to="/work" replace />} />
     <Route path="/money" element={<MoneyPage />} />
     <Route path="/life/love" element={<Suspense fallback={<AppLoading message="Opening Love…" />}><LovePage /></Suspense>} />
-    <Route path="/life/:areaId" element={<LifeAreaPage />} />
+    <Route path="/life/:areaId" element={<Suspense fallback={<AppLoading message="Opening your Life Area…" />}><LifeAreaPage /></Suspense>} />
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes><SyncConfidenceIndicator /><BottomNav /><QuickAddSheet /></div>;
 }
