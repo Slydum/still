@@ -2,6 +2,37 @@ import type { LifeEntityRef } from './lifeAreas';
 
 export type WorkPayType = 'hourly' | 'salary';
 export type WorkPayFrequency = 'weekly' | 'biweekly' | 'semimonthly' | 'monthly';
+export type WorkProjectKind = 'project' | 'goal';
+export type WorkProjectStatus = 'active' | 'paused' | 'done';
+export type WorkTimeOffType = 'vacation' | 'sick' | 'personal' | 'other';
+export type WorkTimeOffStatus = 'planned' | 'approved' | 'taken';
+
+export type WorkProject = {
+  id: string;
+  title: string;
+  kind: WorkProjectKind;
+  status: WorkProjectStatus;
+  progress: number;
+  dueDate?: string;
+  note?: string;
+};
+
+export type WorkTimeOff = {
+  id: string;
+  type: WorkTimeOffType;
+  status: WorkTimeOffStatus;
+  startDate: string;
+  endDate: string;
+  hours: number;
+  note?: string;
+};
+
+export type WorkContact = {
+  id: string;
+  name: string;
+  role?: string;
+  note?: string;
+};
 
 export type WorkScheduleDay = {
   day: number;
@@ -35,6 +66,18 @@ export type WorkProfile = {
   unpaidBreakMinutes: number;
   overtimeAfterHours: number;
   overtimeMultiplier: number;
+  employer?: string;
+  jobTitle?: string;
+  manager?: string;
+  team?: string;
+  workLocation?: string;
+  employmentStartDate?: string;
+  responsibilities?: string[];
+  careerNotes?: string;
+  ptoAllowanceHours?: number;
+  projects?: WorkProject[];
+  timeOff?: WorkTimeOff[];
+  contacts?: WorkContact[];
 };
 
 export type WorkShift = {
@@ -83,6 +126,11 @@ export const DEFAULT_WORK_PROFILE: WorkProfile = {
   unpaidBreakMinutes: 60,
   overtimeAfterHours: 8,
   overtimeMultiplier: 1.5,
+  responsibilities: [],
+  projects: [],
+  timeOff: [],
+  contacts: [],
+  ptoAllowanceHours: 0,
 };
 
 export function normalizedWorkSchedule(profile: WorkProfile) {
