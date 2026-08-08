@@ -33,6 +33,8 @@ import './theme/v04-home-device-pass.css';
 import './theme/v04-work';
 import './theme/v04-work-polish';
 
+void import('./theme/work-hub-fixes');
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter basename={APP_BASENAME}>
