@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BottomNav } from '../components/navigation/BottomNav';
 import { SyncConfidenceIndicator } from '../components/SyncConfidenceIndicator';
 import { QuickAddSheet } from '../components/ui/QuickAddSheet';
@@ -11,7 +11,6 @@ import { AuthPage } from '../features/auth/AuthPage';
 import { CalendarPage } from '../features/calendar/CalendarPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { JournalPage } from '../features/journal/JournalPage';
-import { LifeAreaPage } from '../features/life-area/LifeAreaPage';
 import { CheckInHistoryPage } from '../features/check-ins/CheckInHistoryPage';
 import { MoneyPage } from '../features/money/MoneyPage';
 import { MorePage } from '../features/more/MorePage';
@@ -25,6 +24,9 @@ import { applyPermanentDataSnapshot, initializePermanentDataRepository, usePerma
 import { useReminderEngine } from '../hooks/useReminderEngine';
 import { getAppRoutePathname, toAppPath } from './appLocation';
 import { beginDemoSession, isDemoMode } from './demoMode';
+
+const LovePage = lazy(() => import('../features/love/LovePage').then((module) => ({ default: module.LovePage })));
+const LifeAreaPage = lazy(() => import('../features/life-area/LifeAreaPage').then((module) => ({ default: module.LifeAreaPage })));
 
 function replaceBrowserRoute(path: string) {
   window.history.replaceState({}, '', toAppPath(path));
@@ -45,7 +47,7 @@ function RouteScrollManager() {
 }
 
 function AppLoading({ message = 'Preparing your space…' }: { message?: string }) {
-  return <main className="auth-loading" aria-live="polite"><div className="auth-loading-card"><div className="auth-brand">Still.</div><div className="auth-loading-spinner" aria-hidden="true" /><p>{message}</p></div></main>;
+  return <main className="auth-loading" aria-live="polite"><div className="auth-loading-card"><h1 className="auth-brand">Still.</h1><div className="auth-loading-spinner" aria-hidden="true" /><p>{message}</p></div></main>;
 }
 
 function applyCloudSnapshot(snapshot: Awaited<ReturnType<typeof synchronizeCloudData>>) { applyPermanentDataSnapshot(snapshot); }
@@ -74,7 +76,8 @@ function AppRoutes() {
     <Route path="/work/details" element={<WorkPage />} />
     <Route path="/life/work" element={<Navigate to="/work" replace />} />
     <Route path="/money" element={<MoneyPage />} />
-    <Route path="/life/:areaId" element={<LifeAreaPage />} />
+    <Route path="/life/love" element={<Suspense fallback={<AppLoading message="Opening Love…" />}><LovePage /></Suspense>} />
+    <Route path="/life/:areaId" element={<Suspense fallback={<AppLoading message="Opening your Life Area…" />}><LifeAreaPage /></Suspense>} />
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes><SyncConfidenceIndicator /><BottomNav /><QuickAddSheet /></div>;
 }
