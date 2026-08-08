@@ -1,0 +1,118 @@
+/* v0.3.1 mobile visual polish — physical-device corrections */
+
+:root {
+  --mobile-nav-clearance: 104px;
+}
+
+/* Keep page chrome clear of iOS standalone/browser safe areas. */
+.shell {
+  padding-top: max(20px, calc(env(safe-area-inset-top) + 14px));
+  padding-bottom: calc(42px + var(--mobile-nav-clearance) + env(safe-area-inset-bottom));
+}
+
+.dashboard-v2 {
+  padding-top: max(8px, calc(env(safe-area-inset-top) + 8px));
+}
+
+/* Mobile display type should retain Still's character without colliding with chrome. */
+@media (max-width: 520px) {
+  h1 {
+    font-size: clamp(32px, 9.5vw, 43px);
+    line-height: 1.01;
+    letter-spacing: -1px;
+  }
+
+  .life-area-heading h1 {
+    font-size: clamp(38px, 11vw, 48px);
+  }
+
+  .journal-page h1,
+  .calendar-page h1 {
+    font-size: clamp(39px, 11vw, 48px);
+  }
+
+  /* Give fixed navigation less visual weight while preserving touch targets. */
+  .bottom-nav {
+    min-height: 74px;
+    padding-top: 7px;
+    padding-bottom: max(7px, env(safe-area-inset-bottom));
+  }
+
+  .bottom-nav-item {
+    min-height: 58px;
+  }
+
+  .bottom-nav-add {
+    transform: translateY(-12px);
+  }
+
+  /* Empty Home previews should orient, not dominate the viewport. */
+  .focus-card:has(.empty-state),
+  .upcoming-card:has(.empty-state) {
+    min-height: 0;
+  }
+
+  .focus-card .empty-state,
+  .upcoming-card .empty-state {
+    min-height: 132px;
+    padding: 18px 16px;
+  }
+
+  .focus-card .empty-state img,
+  .upcoming-card .empty-state img {
+    width: 48px;
+    height: 48px;
+  }
+
+  /* Allow Quick Add descriptions to wrap instead of visibly truncating. */
+  .quick-add-option-copy,
+  .quick-add-option-copy small,
+  .quick-add-option-copy p {
+    min-width: 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .quick-add-option-copy small,
+  .quick-add-option-copy p {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Persistent save/sync confidence should not compete with the main nav. */
+  .sync-confidence-indicator {
+    right: 12px;
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    min-height: 30px;
+    padding: 6px 9px;
+    font-size: .7rem;
+    opacity: .9;
+  }
+}
+
+/* Life Areas use one empty-state explanation instead of repeating it twice. */
+.life-area-page.is-empty .life-area-summary {
+  padding: 18px 20px;
+  gap: 10px;
+}
+
+.life-area-page.is-empty .life-area-summary > p {
+  display: none;
+}
+
+.life-area-page.is-empty .life-area-empty {
+  padding: 24px 20px;
+}
+
+.life-area-page.is-empty .life-area-empty p {
+  max-width: 420px;
+}
+
+.life-area-page.is-empty .life-area-summary .btn {
+  border-color: rgba(139, 116, 222, .34);
+  color: #6755a8;
+  background: rgba(247, 243, 255, .92);
+}
