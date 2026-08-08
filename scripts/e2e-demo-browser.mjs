@@ -124,6 +124,7 @@ try {
 
   await evaluate(cdp, "document.querySelector('.auth-demo-entry button').click(); true");
   await poll(cdp, "Boolean(document.querySelector('.app')) && !location.pathname.endsWith('/auth')", 'demo application');
+  await poll(cdp, "document.querySelector('.sync-confidence-indicator')?.textContent?.includes('Saved in demo')", 'demo local save confidence');
 
   const databases = await evaluate(cdp, 'indexedDB.databases()');
   const demoDb = databases.find((database) => database.name === 'still-demo-local');

@@ -20,6 +20,7 @@ import './theme/checkin-reminder-navigation';
 import './theme/weekly-reflection';
 import './theme/weekly-intention';
 import './theme/persistence-status.css';
+import './theme/sync-confidence.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

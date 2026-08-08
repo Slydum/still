@@ -200,6 +200,7 @@ async function signUp(browser, email, password) {
   await poll(browser, "!document.querySelector('.auth-submit')?.disabled", 'enabled signup submit');
   await clickSelector(browser, '.auth-submit');
   await poll(browser, "Boolean(document.querySelector('.app'))", 'signed-up application');
+  await poll(browser, "document.querySelector('.sync-confidence-indicator')?.textContent?.includes('Saved & synced')", 'initial synced confidence');
 }
 
 async function signIn(browser, email, password) {
@@ -214,6 +215,7 @@ async function syncNow(browser) {
   await navigate(browser, '/more');
   await waitAndClickText(browser, 'button', 'Sync now');
   await poll(browser, "[...document.querySelectorAll('.settings-message')].some((item) => item.textContent?.includes('Synced at'))", 'successful cloud sync');
+  await poll(browser, "document.querySelector('.sync-confidence-indicator')?.textContent?.includes('Saved & synced')", 'synced confidence');
 }
 
 async function createTask(browser) {
@@ -226,6 +228,7 @@ async function createTask(browser) {
   await setValue(browser, 'input[placeholder="What needs your attention?"]', taskTitle);
   await clickText(browser, '.task-primary-button', 'Add task');
   await poll(browser, `document.body.innerText.includes(${JSON.stringify(taskTitle)})`, 'new task on dashboard');
+  await poll(browser, "document.querySelector('.sync-confidence-indicator')?.textContent?.includes('Saved here · waiting')", 'waiting-to-sync confidence');
 }
 
 async function readTaskSyncState(browser) {

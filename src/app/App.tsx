@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { BottomNav } from '../components/navigation/BottomNav';
+import { SyncConfidenceIndicator } from '../components/SyncConfidenceIndicator';
 import { QuickAddSheet } from '../components/ui/QuickAddSheet';
 import {
   accountSettingsStatePatch,
@@ -106,6 +107,7 @@ function AppRoutes() {
         <Route path="/life/:areaId" element={<LifeAreaPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <SyncConfidenceIndicator />
       <BottomNav />
       <QuickAddSheet />
     </div>

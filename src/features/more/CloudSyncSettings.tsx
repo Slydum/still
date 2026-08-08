@@ -14,6 +14,7 @@ import {
   subscribeToCloudSession,
   type CloudSession,
 } from '../../data/supabaseClient';
+import { useCloudSyncStatus } from '../../hooks/useCloudSyncStatus';
 import { useAppStore } from '../../stores/useAppStore';
 
 function DemoSandboxSettings() {
@@ -59,9 +60,9 @@ export function CloudSyncSettings() {
   const [session, setSession] = useState<CloudSession | null>(null);
   const [available, setAvailable] = useState(isSupabaseAvailable());
   const [loading, setLoading] = useState(!demoMode);
-  const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState('');
-  const [lastSyncedAt, setLastSyncedAt] = useState<Date>();
+  const cloudStatus = useCloudSyncStatus();
+  const syncing = cloudStatus.phase === 'syncing';
 
   const applySnapshot = useCallback((snapshot: Awaited<ReturnType<typeof synchronizeCloudData>>) => {
     useAppStore.setState({
@@ -78,21 +79,16 @@ export function CloudSyncSettings() {
   const performSync = useCallback(async () => {
     const snapshot = await synchronizeCloudData();
     applySnapshot(snapshot);
-    const completedAt = new Date();
-    setLastSyncedAt(completedAt);
-    return completedAt;
+    return new Date();
   }, [applySnapshot]);
 
   const syncNow = useCallback(async () => {
-    setSyncing(true);
     setMessage('Syncing local changes and checking for cloud updates…');
     try {
       const completedAt = await performSync();
       setMessage(`Synced at ${completedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Still could not synchronize right now. Your local copy has not been cleared.');
-    } finally {
-      setSyncing(false);
     }
   }, [performSync]);
 
@@ -150,7 +146,13 @@ export function CloudSyncSettings() {
         {!available ? <p className="settings-message" role="status">{message || 'Account access is not configured for this deployment.'}</p>
           : loading ? <p className="settings-message" role="status">Loading your account…</p>
             : session ? <>
-              <div className="settings-action-row"><span><strong>{session.user.email ?? 'Still account'}</strong><small>{lastSyncedAt ? `Last successful sync ${lastSyncedAt.toLocaleString()}` : 'Signed in. Still also attempts cloud sync when the signed-in app starts.'}</small></span><button className="settings-primary-action" disabled={syncing} onClick={() => void syncNow()} type="button"><RefreshCw size={15} /> {syncing ? 'Syncing…' : 'Sync now'}</button></div>
+              <div className="settings-action-row"><span><strong>{session.user.email ?? 'Still account'}</strong><small>{cloudStatus.pendingChanges > 0
+                ? `${cloudStatus.pendingChanges} local ${cloudStatus.pendingChanges === 1 ? 'change is' : 'changes are'} saved here and waiting for cloud sync.`
+                : cloudStatus.error
+                  ? 'The latest cloud check did not finish. Your local copy is still here.'
+                  : cloudStatus.lastSyncedAt
+                    ? `Last successful sync ${new Date(cloudStatus.lastSyncedAt).toLocaleString()}`
+                    : 'Signed in. Still also attempts cloud sync when the signed-in app starts.'}</small></span><button className="settings-primary-action" disabled={syncing} onClick={() => void syncNow()} type="button"><RefreshCw size={15} /> {syncing ? 'Syncing…' : 'Sync now'}</button></div>
               <div className="settings-reminder-options"><button className="settings-test-notification" disabled={loading || syncing} onClick={() => void disconnect()} type="button"><LogOut size={15} /> Log out — keep local copy</button><button className="settings-test-notification" disabled={loading || syncing} onClick={() => void disconnectAndClear()} type="button"><ShieldCheck size={15} /> Log out — clear local data</button></div>
             </> : <p className="settings-message" role="status">Your account session ended. Return to the login screen to continue.</p>}
         {available && message && <p className="settings-message" role="status">{message}</p>}

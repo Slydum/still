@@ -1,8 +1,14 @@
 import { create } from 'zustand';
 
+export type LocalPersistencePhase = 'idle' | 'saving' | 'saved' | 'error';
+
 type PersistenceStatusState = {
+  phase: LocalPersistencePhase;
+  savedAt?: number;
   error?: string;
   failedAt?: number;
+  markSaving: () => void;
+  markSaved: () => void;
   setFailure: (error: unknown) => void;
   clearFailure: () => void;
 };
@@ -13,8 +19,20 @@ function persistenceErrorMessage(error: unknown) {
 }
 
 export const usePersistenceStatus = create<PersistenceStatusState>((set) => ({
+  phase: 'idle',
+  savedAt: undefined,
   error: undefined,
   failedAt: undefined,
-  setFailure: (error) => set({ error: persistenceErrorMessage(error), failedAt: Date.now() }),
-  clearFailure: () => set({ error: undefined, failedAt: undefined }),
+  markSaving: () => set({ phase: 'saving', error: undefined, failedAt: undefined }),
+  markSaved: () => set({ phase: 'saved', savedAt: Date.now(), error: undefined, failedAt: undefined }),
+  setFailure: (error) => set({
+    phase: 'error',
+    error: persistenceErrorMessage(error),
+    failedAt: Date.now(),
+  }),
+  clearFailure: () => set((state) => ({
+    phase: state.phase === 'error' ? 'idle' : state.phase,
+    error: undefined,
+    failedAt: undefined,
+  })),
 }));

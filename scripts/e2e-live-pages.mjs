@@ -118,6 +118,7 @@ try {
   await poll(cdp, "Boolean(document.querySelector('.auth-demo-entry button'))", 'live demo entry button');
   await evaluate(cdp, "document.querySelector('.auth-demo-entry button').click(); true");
   await poll(cdp, "Boolean(document.querySelector('.app')) && !location.pathname.endsWith('/auth')", 'live demo application');
+  await poll(cdp, "document.querySelector('.sync-confidence-indicator')?.textContent?.includes('Saved in demo')", 'live demo local save confidence');
 
   const readyScope = await evaluate(cdp, 'navigator.serviceWorker.ready.then((registration) => registration.scope)');
   if (readyScope !== liveUrl.toString()) {

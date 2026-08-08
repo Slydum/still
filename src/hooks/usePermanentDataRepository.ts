@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { accountSettingsFromState, accountSettingsStatePatch } from '../data/accountSettings';
+import { refreshCloudSyncStatus } from '../data/cloudSyncStatus';
 import { stillRepository, type PermanentDataCache } from '../data/repositories';
 import {
   diffCollectionChanges,
@@ -48,7 +49,10 @@ function reportRepositoryError(error: unknown) {
 }
 
 function reportRepositorySuccess() {
-  usePersistenceStatus.getState().clearFailure();
+  usePersistenceStatus.getState().markSaved();
+  void refreshCloudSyncStatus().catch((error) => {
+    console.warn('Still could not refresh cloud sync status after a local save:', error);
+  });
 }
 
 export function initializePermanentDataRepository() {
@@ -69,11 +73,20 @@ export function usePermanentDataRepository() {
   useEffect(() => {
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
+    let pendingWrites = 0;
 
     const enqueue = (write: () => Promise<void>) => {
+      pendingWrites += 1;
+      usePersistenceStatus.getState().markSaving();
       enqueueRepositoryWrite(write, {
-        onSuccess: reportRepositorySuccess,
-        onError: reportRepositoryError,
+        onSuccess: () => {
+          pendingWrites = Math.max(0, pendingWrites - 1);
+          if (pendingWrites === 0) reportRepositorySuccess();
+        },
+        onError: (error) => {
+          pendingWrites = Math.max(0, pendingWrites - 1);
+          reportRepositoryError(error);
+        },
       });
     };
 
