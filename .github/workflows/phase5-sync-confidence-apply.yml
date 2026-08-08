@@ -28,6 +28,8 @@ jobs:
       - name: Apply Phase 5 changes
         run: |
           node scripts/apply-phase5-sync-confidence.mjs
+          sed -i "s|assert.match(view.detail, /2 local changes/);|assert.ok(view.detail.includes('2 local changes'));|g" tests/domain/syncConfidence.test.ts
+          sed -i "s|assert.match(view.detail, /local copy is safe/);|assert.ok(view.detail.includes('local copy is safe'));|g" tests/domain/syncConfidence.test.ts
           rm scripts/apply-phase5-sync-confidence.mjs
           rm .github/workflows/phase5-sync-confidence-apply.yml
       - name: Validate Phase 5
