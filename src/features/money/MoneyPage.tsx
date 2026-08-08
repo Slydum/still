@@ -26,7 +26,7 @@ export function MoneyPage() {
   const openQuickAdd = useAppStore((state) => state.openQuickAdd);
   const expenseCurrency = useAppStore((state) => state.workProfile.currency);
   const [editingExpense, setEditingExpense] = useState<StillExpense>();
-  const editDialogRef = useRef<HTMLElement>(null);
+  const editDialogRef = useRef<HTMLElement | null>(null);
   const editTriggerRef = useRef<HTMLElement | null>(null);
 
   const sorted = useMemo(
