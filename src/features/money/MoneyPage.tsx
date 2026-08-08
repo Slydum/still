@@ -1,7 +1,7 @@
 import { format, isSameMonth, isSameWeek, parseISO } from 'date-fns';
 import { ArrowLeft, Plus, ReceiptText, Trash2, WalletCards } from 'lucide-react';
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useBackNavigation } from '../../components/navigation/useBackNavigation';
 import { useAppStore, type StillExpense } from '../../stores/useAppStore';
 
 function currency(value: number, code: string) {
@@ -17,7 +17,7 @@ function totalsByCurrency(expenses: StillExpense[]) {
 }
 
 export function MoneyPage() {
-  const navigate = useNavigate();
+  const goBack = useBackNavigation('/life/money');
   const expenses = useAppStore((state) => state.expenses);
   const deleteExpense = useAppStore((state) => state.deleteExpense);
   const openQuickAdd = useAppStore((state) => state.openQuickAdd);
@@ -48,11 +48,11 @@ export function MoneyPage() {
   return (
     <main className="shell checkin-history-page">
       <header className="checkin-history-header">
-        <button className="checkin-back-button btn-icon" onClick={() => navigate('/')} type="button" aria-label="Back to Life"><ArrowLeft size={20} /></button>
+        <button className="checkin-back-button btn-icon" onClick={goBack} type="button" aria-label="Go back"><ArrowLeft size={20} /></button>
         <div>
-          <p className="section-kicker">Your spending</p>
-          <h1>Money</h1>
-          <p className="subtle">Capture it now and review it gently later.</p>
+          <p className="section-kicker">Money area · tracker</p>
+          <h1>Spending tracker</h1>
+          <p className="subtle">Capture expenses now and review them gently later.</p>
         </div>
       </header>
 
