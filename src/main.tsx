@@ -28,6 +28,7 @@ import './theme/persistence-status.css';
 import './theme/sync-confidence.css';
 import './theme/v031-mobile-polish.css';
 import './theme/v04-home.css';
+import './theme/v04-home-refinement.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
