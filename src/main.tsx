@@ -32,7 +32,8 @@ import './theme/v04-home-refinement.css';
 import './theme/v04-home-device-pass.css';
 import './theme/v04-work';
 import './theme/v04-work-polish';
-import './theme/work-hub-fixes';
+
+void import('./theme/work-hub-fixes');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
