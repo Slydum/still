@@ -1,81 +1,33 @@
-/* Still v0.4 Phase 1 — final screenshot-driven Home polish */
-
+/* Still v0.4 Phase 1 — final Home polish */
 @media (max-width: 620px) {
-  .dashboard-v2 .hero.hero-v3 {
-    min-height: 208px;
-    border-radius: 27px;
-  }
+  .dashboard-v2 .hero.hero-v3 { min-height: 208px; border-radius: 27px; }
+  .dashboard-v2 .hero-v3 h1 { font-size: clamp(27px, 7.6vw, 32px); }
+  .dashboard-v2 .hero-v3-art { width: 35%; height: 42%; bottom: 23px; }
+  .dashboard-v2 .hero-v3-weather { min-height: 32px; bottom: 10px; }
 
-  .dashboard-v2 .hero-v3-copy {
-    top: 18px;
-    left: 18px;
-    max-width: 225px;
-  }
-
-  .dashboard-v2 .hero-v3 h1 {
-    margin-bottom: 7px;
-    font-size: clamp(27px, 7.6vw, 32px);
-  }
-
-  .dashboard-v2 .hero-v3-quote {
-    max-width: 190px;
-    min-height: 32px;
-    font-size: 12.5px;
-  }
-
-  .dashboard-v2 .hero-v3-art,
-  .dashboard-v2 .hero-v3-art.companion-umbrella,
-  .dashboard-v2 .hero-v3-art.companion-sleeping {
-    right: 5px;
-    bottom: 23px;
-    width: 35%;
-    height: 42%;
-  }
-
-  .dashboard-v2 .hero-v3-weather {
-    left: 13px;
-    bottom: 10px;
-    min-height: 32px;
-    padding: 5px 10px 5px 7px;
-    font-size: 10.5px;
-  }
+  .sync-confidence-indicator { display: none; }
+  .shell.dashboard-v2,
+  .dashboard-v2.shell,
+  .dashboard-v2 { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
 }
 
-/* Today is a glance surface. Empty states get one message and one action. */
-.dashboard-v2 .dashboard-two-column::before {
-  padding: 11px 15px 1px;
-  font-size: 9px;
-}
-
+.dashboard-v2 .dashboard-two-column::before { padding: 11px 15px 1px; }
 .dashboard-v2 .focus-card,
-.dashboard-v2 .upcoming-card {
-  padding: 9px 15px 11px;
-}
-
-.dashboard-v2 .upcoming-card { padding-top: 11px; }
+.dashboard-v2 .upcoming-card { padding: 9px 15px 11px; }
 .dashboard-v2 .focus-task-heading,
 .dashboard-v2 .upcoming-heading { margin-bottom: 3px; }
-.dashboard-v2 .focus-task-heading .section-kicker,
-.dashboard-v2 .upcoming-heading .section-kicker { font-size: 16px; }
 
 .dashboard-v2 .focus-card:has(.task-empty-state) .focus-task-heading .micro-copy,
 .dashboard-v2 .upcoming-card:has(.upcoming-empty) .upcoming-heading .micro-copy,
 .dashboard-v2 .focus-card:has(.task-empty-state) .focus-task-heading .btn,
-.dashboard-v2 .upcoming-card:has(.upcoming-empty) .upcoming-heading .btn {
-  display: none;
-}
+.dashboard-v2 .upcoming-card:has(.upcoming-empty) .upcoming-heading .btn,
+.dashboard-v2 .task-empty-state small,
+.dashboard-v2 .upcoming-empty small,
+.dashboard-v2 .weekly-reflection-entry-card small { display: none; }
 
 .dashboard-v2 .task-empty-state,
-.dashboard-v2 .upcoming-empty {
-  min-height: 48px;
-  padding: 6px 0 2px;
-}
-
-.dashboard-v2 .task-empty-state {
-  grid-template-columns: 34px minmax(0, 1fr);
-  column-gap: 10px;
-}
-
+.dashboard-v2 .upcoming-empty { min-height: 48px; padding: 6px 0 2px; }
+.dashboard-v2 .task-empty-state { grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; }
 .dashboard-v2 .task-empty-state span {
   display: grid;
   width: 34px;
@@ -83,19 +35,8 @@
   place-items: center;
   border-radius: 11px;
   background: rgba(231, 224, 250, .58);
-  font-size: 18px;
 }
-
-.dashboard-v2 .task-empty-state small,
-.dashboard-v2 .upcoming-empty small { display: none; }
-.dashboard-v2 .task-empty-state strong,
-.dashboard-v2 .upcoming-empty strong { font-size: 12.5px; }
-
-.dashboard-v2 .upcoming-empty {
-  justify-content: flex-start;
-  gap: 10px;
-}
-
+.dashboard-v2 .upcoming-empty { justify-content: flex-start; gap: 10px; }
 .dashboard-v2 .upcoming-empty svg {
   display: block !important;
   width: 24px !important;
@@ -103,46 +44,16 @@
   min-width: 24px;
   color: #7563a7 !important;
   stroke: currentColor !important;
-  stroke-width: 2 !important;
   fill: none !important;
-  overflow: visible;
 }
 
-/* Life Areas should feel tappable without carrying empty-card height. */
-.dashboard-v2 .garden-card {
-  min-height: 80px;
-  padding: 11px 13px;
-  border-radius: 20px;
-}
-.dashboard-v2 .garden-card-head img { width: 29px; height: 29px; }
-.dashboard-v2 .garden-card-head strong { font-size: 15px; }
-.dashboard-v2 .garden-status { margin-top: 6px; font-size: 9.5px; }
+.dashboard-v2 .garden-card { min-height: 80px; padding: 11px 13px; }
+.dashboard-v2 .garden-status { margin-top: 6px; }
 .dashboard-v2 .life-garden-section { margin-top: 18px; }
-
 .dashboard-v2 .weekly-reflection-entry { margin-top: 13px; margin-bottom: 0; }
 .dashboard-v2 .weekly-reflection-entry-card { min-height: 58px; padding: 9px 13px; }
-.dashboard-v2 .weekly-reflection-entry-card small { display: none; }
-
-@media (max-width: 620px) {
-  .sync-confidence-indicator {
-    right: 18px;
-    bottom: calc(86px + env(safe-area-inset-bottom));
-    min-height: 24px;
-    padding: 4px 7px;
-    font-size: .58rem;
-    opacity: .48;
-    box-shadow: none;
-  }
-
-  .shell.dashboard-v2,
-  .dashboard-v2.shell,
-  .dashboard-v2 {
-    padding-bottom: calc(78px + env(safe-area-inset-bottom));
-  }
-}
 
 @media (max-width: 390px) {
   .dashboard-v2 .hero.hero-v3 { min-height: 202px; }
-  .dashboard-v2 .hero-v3 h1 { font-size: 27px; }
-  .dashboard-v2 .garden-card { min-height: 76px; padding: 10px 11px; }
+  .dashboard-v2 .garden-card { min-height: 76px; }
 }
