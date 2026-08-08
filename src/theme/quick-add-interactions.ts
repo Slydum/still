@@ -114,12 +114,45 @@ function onKeydown(event: KeyboardEvent) {
   trapTabKey(event, sheet);
 }
 
+function applyPhaseOnePolish(sheet: HTMLElement | null) {
+  document.querySelector<HTMLElement>('.dashboard-v2 .task-empty-state > span:first-child')?.style.setProperty('display', 'none');
+  document.querySelector<HTMLElement>('.dashboard-v2 .upcoming-empty > svg')?.style.setProperty('display', 'none');
+
+  document.querySelectorAll<HTMLElement>('.dashboard-v2 .task-empty-state, .dashboard-v2 .upcoming-empty').forEach((empty) => {
+    empty.style.gridTemplateColumns = '1fr';
+    empty.style.paddingInline = '0';
+  });
+
+  if (!sheet || !window.matchMedia('(pointer: coarse) and (max-width: 760px)').matches) return;
+  if (!sheet.querySelector('.task-editor, .event-editor')) return;
+
+  sheet.style.maxHeight = 'min(78dvh, 680px)';
+  sheet.querySelector<HTMLElement>('.task-editor-actions .task-secondary-button')?.style.setProperty('display', 'none');
+  const primary = sheet.querySelector<HTMLElement>('.task-editor-actions .task-primary-button');
+  if (primary) {
+    primary.style.width = '100%';
+    primary.style.minHeight = '50px';
+  }
+}
+
 const observer = new MutationObserver(() => {
   const sheet = getSheet();
+  applyPhaseOnePolish(sheet);
   if (sheet && !sheet.dataset.interactionsReady) {
     sheet.dataset.interactionsReady = 'true';
     dirty = false;
     returnFocus = document.activeElement as HTMLElement;
+
+    // Creation sheets should reveal themselves before iOS resizes for the keyboard.
+    // React's existing autoFocus props remain useful for edit/desktop flows, but on
+    // coarse-pointer phones we deliberately dismiss that initial focus. The user
+    // can then tap the field when they are ready to type.
+    if (window.matchMedia('(pointer: coarse) and (max-width: 760px)').matches) {
+      window.requestAnimationFrame(() => {
+        const active = document.activeElement as HTMLElement | null;
+        if (active && sheet.contains(active) && active.matches('input, textarea')) active.blur();
+      });
+    }
   }
   if (!sheet) {
     closeDiscardDialog();
@@ -135,6 +168,7 @@ const observer = new MutationObserver(() => {
 });
 
 observer.observe(document.documentElement, { childList: true, subtree: true });
+applyPhaseOnePolish(getSheet());
 document.addEventListener('click', onClickCapture, true);
 document.addEventListener('input', onInput, true);
 document.addEventListener('change', onInput, true);
