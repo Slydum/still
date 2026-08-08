@@ -47,7 +47,7 @@ function RouteScrollManager() {
 }
 
 function AppLoading({ message = 'Preparing your space…' }: { message?: string }) {
-  return <main className="auth-loading" aria-live="polite"><div className="auth-loading-card"><div className="auth-brand">Still.</div><div className="auth-loading-spinner" aria-hidden="true" /><p>{message}</p></div></main>;
+  return <main className="auth-loading" aria-live="polite"><div className="auth-loading-card"><h1 className="auth-brand">Still.</h1><div className="auth-loading-spinner" aria-hidden="true" /><p>{message}</p></div></main>;
 }
 
 function applyCloudSnapshot(snapshot: Awaited<ReturnType<typeof synchronizeCloudData>>) { applyPermanentDataSnapshot(snapshot); }
