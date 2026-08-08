@@ -120,30 +120,37 @@ try {
 
   const workUrl = new URL('work', liveUrl).toString();
   await evaluate(cdp, `window.history.pushState({}, '', ${JSON.stringify(workUrl)}); window.dispatchEvent(new PopStateEvent('popstate')); true`);
-  await poll(cdp, "Boolean(document.querySelector('.still-work-page'))", 'Work page');
+  await poll(cdp, "Boolean(document.querySelector('.still-work-refined'))", 'refined Work page');
   await new Promise((resolve) => setTimeout(resolve, 600));
   const workMetrics = await evaluate(cdp, `(() => {
     const page = document.querySelector('.still-work-page');
     const live = document.querySelector('.still-work-live');
     const summary = document.querySelector('.still-work-summary');
-    const pulse = [...document.querySelectorAll('.still-work-section h2')].find((node) => node.textContent?.includes('Your work at a glance'));
-    const settings = document.querySelector('#work-settings details');
-    if (!page || !live || !summary || !pulse || !settings) return null;
+    const changes = document.querySelector('.still-work-changes');
+    const notes = document.querySelector('.still-work-notebook');
+    const calmDetails = [...document.querySelectorAll('.still-work-calm-details')];
+    const profile = document.querySelector('#work-profile details');
+    if (!page || !live || !summary || !changes || !notes || calmDetails.length < 2 || !profile) return null;
     return {
       width: page.getBoundingClientRect().width,
       summaryCards: summary.children.length,
-      settingsCollapsed: !settings.open,
+      changesPresent: Boolean(changes.querySelector('h2')),
+      notesPresent: Boolean(notes.querySelector('h2')),
+      detailsCollapsed: calmDetails.every((details) => !details.open),
+      profileCollapsed: !profile.open,
       hasHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
     };
   })()`);
-  if (!workMetrics) throw new Error('Work visual QA could not find the Phase 2 overview structure.');
+  if (!workMetrics) throw new Error('Work visual QA could not find the refined Phase 2 structure.');
   if (workMetrics.summaryCards !== 4) throw new Error(`Expected 4 Work overview cards, found ${workMetrics.summaryCards}.`);
-  if (!workMetrics.settingsCollapsed) throw new Error('Work schedule & pay settings should be collapsed by default.');
+  if (!workMetrics.changesPresent) throw new Error('Work Changes section is missing from the deployed page.');
+  if (!workMetrics.notesPresent) throw new Error('Work Notes section is missing from the deployed page.');
+  if (!workMetrics.detailsCollapsed || !workMetrics.profileCollapsed) throw new Error('Secondary Work administration should be collapsed by default.');
   if (workMetrics.hasHorizontalOverflow) throw new Error('Work page has horizontal overflow at the mobile viewport.');
   await capture(cdp, 'work-mobile');
 
   await writeFile(`${artifactDir}/metrics.json`, JSON.stringify({ url: liveUrl.toString(), alignment, work: workMetrics }, null, 2));
-  console.log(`Live visual QA passed. Home delta: ${alignment.delta.toFixed(1)}px; Work overview cards: ${workMetrics.summaryCards}.`);
+  console.log(`Live visual QA passed. Home delta: ${alignment.delta.toFixed(1)}px; Work overview cards: ${workMetrics.summaryCards}; Changes + Notes present.`);
 } finally {
   cdp?.close();
   chrome?.kill('SIGTERM');
