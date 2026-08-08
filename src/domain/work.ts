@@ -2,11 +2,35 @@ import type { LifeEntityRef } from './lifeAreas';
 
 export type WorkPayType = 'hourly' | 'salary';
 export type WorkPayFrequency = 'weekly' | 'biweekly' | 'semimonthly' | 'monthly';
-export type WorkProjectKind = 'project' | 'goal';
-export type WorkProjectStatus = 'active' | 'paused' | 'done';
 export type WorkTimeOffType = 'vacation' | 'sick' | 'personal' | 'other';
 export type WorkTimeOffStatus = 'planned' | 'approved' | 'taken';
+export type WorkChangeStatus = 'planned' | 'in_progress' | 'testing' | 'ready' | 'completed' | 'cancelled';
+export type WorkNoteKind = 'note' | 'reminder' | 'reference' | 'handover';
 
+export type WorkChange = {
+  id: string;
+  title: string;
+  reference?: string;
+  system?: string;
+  environment?: string;
+  status: WorkChangeStatus;
+  plannedDate?: string;
+  owner?: string;
+  note?: string;
+};
+
+export type WorkNote = {
+  id: string;
+  text: string;
+  kind: WorkNoteKind;
+  createdAt: number;
+  reminderDate?: string;
+  pinned?: boolean;
+};
+
+/** Legacy v0.4 shape kept so existing local profiles never lose data. */
+export type WorkProjectKind = 'project' | 'goal';
+export type WorkProjectStatus = 'active' | 'paused' | 'done';
 export type WorkProject = {
   id: string;
   title: string;
@@ -75,6 +99,9 @@ export type WorkProfile = {
   responsibilities?: string[];
   careerNotes?: string;
   ptoAllowanceHours?: number;
+  changes?: WorkChange[];
+  notes?: WorkNote[];
+  /** Legacy data from the first Work-hub pass. */
   projects?: WorkProject[];
   timeOff?: WorkTimeOff[];
   contacts?: WorkContact[];
@@ -127,6 +154,8 @@ export const DEFAULT_WORK_PROFILE: WorkProfile = {
   overtimeAfterHours: 8,
   overtimeMultiplier: 1.5,
   responsibilities: [],
+  changes: [],
+  notes: [],
   projects: [],
   timeOff: [],
   contacts: [],
