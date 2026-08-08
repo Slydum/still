@@ -10,10 +10,12 @@
   --surface-soft: #fdf5fb;
   --text: #4e496a;
   --text-strong: #514961;
-  --muted: #8b849d;
-  --muted-soft: #a39aa9;
+  --muted: #6f687e;
+  --muted-soft: #746d82;
   --lavender: #b8a7f7;
   --lavender-soft: #ece7ff;
+  --accent-text: #6653a8;
+  --focus-ring: rgba(92, 72, 161, .52);
   --pink: #f8c8d8;
   --pink-soft: #fff0f5;
   --mint: #bfe8d0;
@@ -40,6 +42,8 @@
   --lavender: #d5a27d;
   --lavender-soft: #f8e6d8;
   --surface-soft: #fff5ee;
+  --accent-text: #8c5738;
+  --focus-ring: rgba(140, 87, 56, .5);
   --accent-gradient: linear-gradient(135deg, #c9895e, #e5ad83);
 }
 
@@ -48,5 +52,7 @@
   --lavender: #87ad9b;
   --lavender-soft: #dfefe7;
   --surface-soft: #eff8f2;
+  --accent-text: #436e5a;
+  --focus-ring: rgba(67, 110, 90, .5);
   --accent-gradient: linear-gradient(135deg, #628e78, #8db8a3);
 }
