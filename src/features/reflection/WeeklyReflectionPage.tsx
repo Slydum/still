@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useBackNavigation } from '../../components/navigation/useBackNavigation';
 import { listCheckIns, type CheckInRecord } from '../../data/stillDb';
 import {
   buildWeeklyReflection,
@@ -104,6 +105,7 @@ function buildReflectionForAnchor(
 
 export function WeeklyReflectionPage() {
   const navigate = useNavigate();
+  const goBack = useBackNavigation('/');
   const tasks = useAppStore((state) => state.tasks);
   const events = useAppStore((state) => state.events);
   const journalEntries = useAppStore((state) => state.journalEntries);
@@ -155,12 +157,12 @@ export function WeeklyReflectionPage() {
   return (
     <main className="shell weekly-reflection-page">
       <header className="weekly-reflection-header">
-        <button className="checkin-back-button" onClick={() => navigate('/')} type="button" aria-label="Back to Life">
+        <button className="checkin-back-button" onClick={goBack} type="button" aria-label="Go back">
           <ArrowLeft size={20} />
         </button>
         <div>
           <p className="section-kicker">Look back gently</p>
-          <h1>Weekly reflection</h1>
+          <h1>Weekly overview</h1>
           <p className="subtle">A factual view of what your own records say about the week.</p>
         </div>
       </header>
@@ -273,7 +275,7 @@ export function WeeklyReflectionPage() {
 
       <section className="weekly-reflection-note">
         <Sparkles size={18} />
-        <p>Still builds this reflection locally from the records already in your space. It does not send them to an AI service to interpret your week.</p>
+        <p>Still builds this overview locally from the records already in your space. It does not send them to an AI service to interpret your week.</p>
       </section>
     </main>
   );
