@@ -14,6 +14,7 @@ import './theme/quick-add-disclosure.css';
 import './theme/modal-interactions.css';
 import './theme/quick-add-interactions';
 import './theme/dashboard-hierarchy.css';
+import './theme/v03-ux-correctness.css';
 import './theme/checkin-history.css';
 import './theme/journal-checkin-links';
 import './theme/checkin-reminder-navigation';
