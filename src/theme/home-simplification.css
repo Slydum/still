@@ -31,6 +31,34 @@
   padding-right: 0.25rem;
 }
 
+/* Empty Today rows share one left edge and one visual rhythm. */
+.dashboard-v2 .task-empty-state,
+.dashboard-v2 .upcoming-empty {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 10px 0 2px;
+  text-align: left;
+}
+
+.dashboard-v2 .task-empty-state > span,
+.dashboard-v2 .task-empty-state > small,
+.dashboard-v2 .upcoming-empty > svg,
+.dashboard-v2 .upcoming-empty small {
+  display: none;
+}
+
+.dashboard-v2 .task-empty-state strong,
+.dashboard-v2 .upcoming-empty strong {
+  display: block;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
 .dashboard-v2 .home-list-disclosure {
   width: 100%;
   margin-top: 0.75rem;
