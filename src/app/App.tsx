@@ -4,7 +4,6 @@ import { BottomNav } from '../components/navigation/BottomNav';
 import { SyncConfidenceIndicator } from '../components/SyncConfidenceIndicator';
 import { QuickAddSheet } from '../components/ui/QuickAddSheet';
 import {
-  accountSettingsStatePatch,
   displayNameFromUserMetadata,
   shouldSeedSignupDisplayName,
 } from '../data/accountSettings';
@@ -30,6 +29,7 @@ import { NotificationsPage } from '../features/notifications/NotificationsPage';
 import { WorkPage } from '../features/work/WorkPage';
 import { useAppStore } from '../stores/useAppStore';
 import {
+  applyPermanentDataSnapshot,
   initializePermanentDataRepository,
   usePermanentDataRepository,
 } from '../hooks/usePermanentDataRepository';
@@ -58,15 +58,7 @@ function AppLoading({ message = 'Preparing your space…' }: { message?: string 
 }
 
 function applyCloudSnapshot(snapshot: Awaited<ReturnType<typeof synchronizeCloudData>>) {
-  useAppStore.setState({
-    tasks: snapshot.tasks,
-    events: snapshot.events,
-    journalEntries: snapshot.journalEntries,
-    expenses: snapshot.expenses,
-    entityLinks: snapshot.entityLinks,
-    workShifts: snapshot.workShifts,
-    ...accountSettingsStatePatch(snapshot.accountSettings),
-  });
+  applyPermanentDataSnapshot(snapshot);
 }
 
 function createSeedMutationId() {

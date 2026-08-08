@@ -2,7 +2,6 @@ import { Cloud, LogOut, RefreshCw, RotateCcw, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { clearDemoAppState, endDemoSession, isDemoMode } from '../../app/demoMode';
 import { signOutAndClearDevice, signOutKeepingLocalCopy } from '../../data/accountLifecycleCore';
-import { accountSettingsStatePatch } from '../../data/accountSettings';
 import { synchronizeCloudData } from '../../data/cloudSync';
 import { clearLocalStillData } from '../../data/localDataLifecycle';
 import { stillDb } from '../../data/localDb';
@@ -15,7 +14,7 @@ import {
   type CloudSession,
 } from '../../data/supabaseClient';
 import { useCloudSyncStatus } from '../../hooks/useCloudSyncStatus';
-import { useAppStore } from '../../stores/useAppStore';
+import { applyPermanentDataSnapshot } from '../../hooks/usePermanentDataRepository';
 
 function DemoSandboxSettings() {
   const [busy, setBusy] = useState(false);
@@ -65,15 +64,7 @@ export function CloudSyncSettings() {
   const syncing = cloudStatus.phase === 'syncing';
 
   const applySnapshot = useCallback((snapshot: Awaited<ReturnType<typeof synchronizeCloudData>>) => {
-    useAppStore.setState({
-      tasks: snapshot.tasks,
-      events: snapshot.events,
-      journalEntries: snapshot.journalEntries,
-      expenses: snapshot.expenses,
-      entityLinks: snapshot.entityLinks,
-      workShifts: snapshot.workShifts,
-      ...accountSettingsStatePatch(snapshot.accountSettings),
-    });
+    applyPermanentDataSnapshot(snapshot);
   }, []);
 
   const performSync = useCallback(async () => {

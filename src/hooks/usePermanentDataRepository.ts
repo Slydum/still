@@ -13,6 +13,7 @@ import { useAppStore } from '../stores/useAppStore';
 import { usePersistenceStatus } from '../stores/usePersistenceStatus';
 
 let bootstrapPromise: ReturnType<typeof stillRepository.bootstrap> | undefined;
+let applyingRepositorySnapshot = false;
 
 function accountSettingsFromStore() {
   const state = useAppStore.getState();
@@ -41,6 +42,23 @@ function cacheFromStore(): PermanentDataCache {
     workShifts: state.workShifts,
     accountSettings: accountSettingsFromStore(),
   };
+}
+
+export function applyPermanentDataSnapshot(snapshot: PermanentDataCache) {
+  applyingRepositorySnapshot = true;
+  try {
+    useAppStore.setState({
+      tasks: snapshot.tasks,
+      events: snapshot.events,
+      journalEntries: snapshot.journalEntries,
+      expenses: snapshot.expenses,
+      entityLinks: snapshot.entityLinks,
+      workShifts: snapshot.workShifts,
+      ...accountSettingsStatePatch(snapshot.accountSettings),
+    });
+  } finally {
+    applyingRepositorySnapshot = false;
+  }
 }
 
 function reportRepositoryError(error: unknown) {
@@ -103,17 +121,11 @@ export function usePermanentDataRepository() {
       const snapshot = await initializePermanentDataRepository();
       if (disposed) return;
 
-      useAppStore.setState({
-        tasks: snapshot.tasks,
-        events: snapshot.events,
-        journalEntries: snapshot.journalEntries,
-        expenses: snapshot.expenses,
-        entityLinks: snapshot.entityLinks,
-        workShifts: snapshot.workShifts,
-        ...accountSettingsStatePatch(snapshot.accountSettings),
-      });
+      applyPermanentDataSnapshot(snapshot);
 
       unsubscribe = useAppStore.subscribe((state, previousState) => {
+        if (applyingRepositorySnapshot) return;
+
         if (state.tasks !== previousState.tasks) {
           persistCollection(previousState.tasks, state.tasks, (changes) => stillRepository.persistTasks(changes));
         }
