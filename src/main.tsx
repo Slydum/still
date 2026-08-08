@@ -27,6 +27,7 @@ import './theme/weekly-intention';
 import './theme/persistence-status.css';
 import './theme/sync-confidence.css';
 import './theme/v031-mobile-polish.css';
+import './theme/v04-home.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

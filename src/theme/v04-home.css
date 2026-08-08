@@ -1,0 +1,612 @@
+/* Still v0.4 — Home visual direction
+   iOS-inspired structure with Still's warm identity. */
+
+.dashboard-v2 {
+  --v04-glass: rgba(255, 255, 255, 0.66);
+  --v04-glass-strong: rgba(255, 255, 255, 0.82);
+  --v04-line: rgba(92, 78, 118, 0.11);
+  --v04-shadow: 0 18px 44px rgba(67, 55, 91, 0.09);
+  max-width: 720px;
+  padding-top: 10px;
+}
+
+.dashboard-v2::before {
+  content: '';
+  position: fixed;
+  z-index: -2;
+  inset: 0;
+  background:
+    radial-gradient(circle at 84% 5%, rgba(205, 195, 250, 0.36), transparent 28rem),
+    radial-gradient(circle at 2% 35%, rgba(255, 222, 224, 0.28), transparent 26rem),
+    linear-gradient(180deg, #fbf9ff 0%, #fffdfb 44%, #faf8ff 100%);
+  pointer-events: none;
+}
+
+/* Top chrome */
+.dashboard-v2 .topbar-v2 {
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 0 2px;
+}
+
+.dashboard-v2 .brand {
+  font-size: clamp(31px, 8vw, 38px);
+  letter-spacing: -1.4px;
+}
+
+.dashboard-v2 .topbar-date {
+  margin-top: 7px;
+  color: #8d849d;
+  font-size: 10px;
+  letter-spacing: .14em;
+}
+
+.dashboard-v2 .icon-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(115, 96, 151, 0.11);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 22px rgba(83, 67, 111, 0.08);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  backdrop-filter: blur(18px) saturate(130%);
+}
+
+/* Atmospheric hero instead of a heavy dashboard card. */
+.dashboard-v2 .hero.hero-v3 {
+  min-height: 286px;
+  border: 1px solid rgba(117, 98, 151, 0.1);
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 80% 18%, rgba(215, 206, 251, 0.72), transparent 34%),
+    radial-gradient(circle at 14% 92%, rgba(247, 222, 207, 0.6), transparent 35%),
+    linear-gradient(145deg, rgba(255,255,255,.9), rgba(247,243,255,.85) 54%, rgba(235,246,240,.82));
+  box-shadow: 0 22px 58px rgba(78, 66, 106, 0.10);
+  -webkit-backdrop-filter: blur(22px) saturate(120%);
+  backdrop-filter: blur(22px) saturate(120%);
+}
+
+.dashboard-v2 .hero-v3-copy {
+  top: 25px;
+  left: 23px;
+  max-width: 250px;
+}
+
+.dashboard-v2 .hero-v3 h1 {
+  margin-bottom: 11px;
+  font-size: clamp(31px, 8.4vw, 37px);
+  line-height: 1.02;
+  letter-spacing: -1px;
+}
+
+.dashboard-v2 .hero-v3-quote {
+  max-width: 210px;
+  color: #6f667f;
+  font-size: 14px;
+  line-height: 1.46;
+}
+
+.dashboard-v2 .hero-v3-art {
+  right: 10px;
+  bottom: 27px;
+  width: 40%;
+  height: 48%;
+  filter: drop-shadow(0 14px 18px rgba(69, 59, 92, 0.12));
+}
+
+.dashboard-v2 .hero-v3-weather {
+  left: 16px;
+  bottom: 14px;
+  min-height: 38px;
+  padding: 7px 13px 7px 9px;
+  border-color: rgba(100, 88, 126, 0.1);
+  background: rgba(255,255,255,.68);
+  box-shadow: none;
+  font-size: 12px;
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  backdrop-filter: blur(18px) saturate(135%);
+}
+
+/* Home section rhythm */
+.dashboard-v2 .section {
+  margin-top: 22px;
+}
+
+.dashboard-v2 .section-kicker {
+  color: #777087;
+  font-size: 11px;
+  letter-spacing: .09em;
+}
+
+.dashboard-v2 .micro-copy {
+  color: #8f8799;
+  font-size: 11px;
+}
+
+.dashboard-v2 .link-btn {
+  color: #7766b0;
+  font-weight: 700;
+}
+
+/* Check-in: one soft grouped control instead of another large card. */
+.dashboard-v2 .checkin-combined-card {
+  gap: 15px;
+  padding: 16px 17px;
+  border: 1px solid var(--v04-line);
+  border-radius: 23px;
+  background: rgba(255,255,255,.62);
+  box-shadow: 0 12px 34px rgba(79, 66, 103, 0.055);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+.dashboard-v2 .checkin-column > strong {
+  color: #5d566d;
+  font-size: 13px;
+}
+
+.dashboard-v2 .checkin-combined-card .emoji-row {
+  margin-top: 10px;
+}
+
+.dashboard-v2 .checkin-combined-card .emoji-btn {
+  width: 43px;
+  height: 43px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.52);
+  box-shadow: none;
+}
+
+.dashboard-v2 .checkin-combined-card .emoji-btn.active {
+  background: rgba(232,225,252,.94);
+  box-shadow: inset 0 0 0 1px rgba(122, 101, 174, .14);
+}
+
+/* TODAY — tasks and events now read as one adaptive iOS-style group. */
+.dashboard-v2 .dashboard-two-column {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--v04-line);
+  border-radius: 25px;
+  background: rgba(255,255,255,.70);
+  box-shadow: var(--v04-shadow);
+  -webkit-backdrop-filter: blur(22px) saturate(125%);
+  backdrop-filter: blur(22px) saturate(125%);
+}
+
+.dashboard-v2 .dashboard-two-column::before {
+  content: 'TODAY';
+  display: block;
+  padding: 16px 18px 5px;
+  color: #888092;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .14em;
+}
+
+.dashboard-v2 .focus-card,
+.dashboard-v2 .upcoming-card {
+  min-height: 0;
+  padding: 13px 18px 16px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.dashboard-v2 .upcoming-card {
+  border-top: 1px solid var(--v04-line);
+  padding-top: 16px;
+}
+
+.dashboard-v2 .focus-task-heading,
+.dashboard-v2 .upcoming-heading {
+  align-items: center;
+  margin-bottom: 7px;
+}
+
+.dashboard-v2 .focus-task-heading .section-kicker,
+.dashboard-v2 .upcoming-heading .section-kicker {
+  margin: 0;
+  color: #4f485e;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -.2px;
+  text-transform: none;
+}
+
+.dashboard-v2 .focus-task-heading .micro-copy,
+.dashboard-v2 .upcoming-heading .micro-copy {
+  margin-top: 2px;
+}
+
+.dashboard-v2 .focus-task-heading .btn,
+.dashboard-v2 .upcoming-heading .btn {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 999px;
+  color: #665791;
+  background: rgba(229, 222, 248, .66);
+  box-shadow: none;
+  font-size: 11px;
+}
+
+.dashboard-v2 .focus-list {
+  padding: 0;
+}
+
+.dashboard-v2 .task-record {
+  min-height: 52px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(91, 77, 116, .08);
+}
+
+.dashboard-v2 .task-record:last-child {
+  border-bottom: 0;
+}
+
+.dashboard-v2 .task-record .checkbox {
+  width: 23px;
+  height: 23px;
+  margin-top: 1px;
+  border-width: 1.5px;
+  border-color: #aaa0b8;
+  background: rgba(255,255,255,.55);
+}
+
+.dashboard-v2 .task-record .task-copy strong {
+  color: #4e485a;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.dashboard-v2 .task-record .task-note {
+  -webkit-line-clamp: 1;
+}
+
+.dashboard-v2 .task-record .task-meta {
+  margin-top: 4px;
+  gap: 5px 8px;
+}
+
+.dashboard-v2 .task-record-actions {
+  opacity: .42;
+}
+
+.dashboard-v2 .task-empty-state,
+.dashboard-v2 .upcoming-empty {
+  width: 100%;
+  min-height: 0;
+  margin: 3px 0 0;
+  padding: 12px 0 2px;
+  border: 0;
+  border-radius: 0;
+  color: #766e80;
+  background: transparent;
+  text-align: left;
+}
+
+.dashboard-v2 .task-empty-state {
+  display: grid;
+  grid-template-columns: 28px minmax(0,1fr);
+  grid-template-areas: 'icon title' 'icon copy';
+  align-items: center;
+  column-gap: 9px;
+}
+
+.dashboard-v2 .task-empty-state span {
+  grid-area: icon;
+  margin: 0;
+  font-size: 20px;
+}
+
+.dashboard-v2 .task-empty-state strong {
+  grid-area: title;
+  font-size: 13px;
+}
+
+.dashboard-v2 .task-empty-state small {
+  grid-area: copy;
+  margin: 1px 0 0;
+  font-size: 11px;
+}
+
+.dashboard-v2 .focus-pet {
+  display: none;
+}
+
+.dashboard-v2 .timeline {
+  margin-top: 2px;
+  padding-left: 0;
+}
+
+.dashboard-v2 .timeline::before {
+  display: none;
+}
+
+.dashboard-v2 .timeline-item {
+  min-height: 54px;
+  grid-template-columns: 7px 34px minmax(0,1fr);
+  gap: 10px;
+  border-bottom: 1px solid rgba(91, 77, 116, .08);
+}
+
+.dashboard-v2 .timeline-item:last-child {
+  border-bottom: 0;
+}
+
+.dashboard-v2 .timeline-dot {
+  width: 5px;
+  height: 5px;
+  background: #8d81a3;
+}
+
+.dashboard-v2 .timeline-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.dashboard-v2 .timeline-event-copy small {
+  color: #92899b;
+  font-size: 10px;
+}
+
+.dashboard-v2 .timeline-event-copy strong {
+  color: #4f495c;
+  font-size: 13px;
+}
+
+.dashboard-v2 .upcoming-empty {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-v2 .upcoming-empty svg {
+  width: 20px;
+  height: 20px;
+  color: #8b80a0;
+}
+
+.dashboard-v2 .upcoming-empty strong {
+  font-size: 13px;
+}
+
+.dashboard-v2 .upcoming-empty small {
+  display: block;
+  margin-top: 2px;
+  color: #948b9d;
+  font-size: 11px;
+}
+
+.dashboard-v2 .home-list-disclosure {
+  margin-top: 5px;
+  padding: 7px 0 1px;
+  border: 0;
+  color: #7665a5;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Life Areas — compact tinted tiles, not four white cards. */
+.dashboard-v2 .life-garden-section {
+  margin-top: 24px;
+}
+
+.dashboard-v2 .life-garden-grid {
+  gap: 10px;
+}
+
+.dashboard-v2 .garden-card {
+  min-height: 118px;
+  padding: 15px;
+  border: 1px solid rgba(100, 87, 126, .08);
+  border-radius: 22px;
+  box-shadow: none;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.dashboard-v2 .garden-card:active {
+  transform: scale(.985);
+}
+
+.dashboard-v2 .garden-card.work {
+  background: linear-gradient(145deg, rgba(238,232,255,.86), rgba(248,246,255,.8));
+}
+
+.dashboard-v2 .garden-card.love {
+  background: linear-gradient(145deg, rgba(255,232,238,.88), rgba(255,247,249,.82));
+}
+
+.dashboard-v2 .garden-card.health {
+  background: linear-gradient(145deg, rgba(226,243,233,.9), rgba(246,251,247,.82));
+}
+
+.dashboard-v2 .garden-card.money {
+  background: linear-gradient(145deg, rgba(255,241,211,.9), rgba(255,250,239,.82));
+}
+
+.dashboard-v2 .garden-card-head img {
+  width: 34px;
+  height: 34px;
+}
+
+.dashboard-v2 .garden-card-head strong {
+  font-size: 16px;
+}
+
+.dashboard-v2 .garden-status {
+  margin-top: 15px;
+  color: #726b7a;
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+
+/* Weekly overview becomes a quiet closing row. */
+.dashboard-v2 .weekly-reflection-entry {
+  margin-top: 18px;
+}
+
+.dashboard-v2 .weekly-reflection-entry-card {
+  min-height: 72px;
+  padding: 13px 15px;
+  border: 1px solid var(--v04-line);
+  border-radius: 21px;
+  background: rgba(255,255,255,.58);
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.dashboard-v2 .weekly-reflection-entry-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+}
+
+.dashboard-v2 .weekly-reflection-entry-copy strong {
+  font-size: 13px;
+}
+
+.dashboard-v2 .weekly-reflection-entry-copy small {
+  display: none;
+}
+
+.dashboard-v2 .weekly-reflection-entry-action {
+  font-size: 11px;
+}
+
+/* iOS-style glass navigation — intentionally shared so the app chrome starts
+   feeling like the new system immediately. */
+.bottom-nav {
+  bottom: max(8px, env(safe-area-inset-bottom));
+  width: min(calc(100% - 24px), 620px);
+  min-height: 66px;
+  padding: 7px 8px;
+  border: 1px solid rgba(100, 86, 129, .12);
+  border-radius: 25px;
+  background: rgba(249, 247, 252, .76);
+  box-shadow: 0 14px 38px rgba(54, 43, 73, .16);
+  -webkit-backdrop-filter: blur(26px) saturate(155%);
+  backdrop-filter: blur(26px) saturate(155%);
+}
+
+.bottom-nav .nav-item {
+  min-height: 50px;
+  gap: 3px;
+  border-radius: 18px;
+  color: #847c8f;
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.bottom-nav .nav-item svg {
+  stroke-width: 1.8;
+}
+
+.bottom-nav .nav-item.active {
+  color: #65558f;
+  background: rgba(230, 223, 247, .68);
+}
+
+.bottom-nav .add-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+  background: linear-gradient(145deg, #7b68aa, #66528f);
+  box-shadow: 0 8px 18px rgba(86, 66, 126, .22);
+}
+
+@media (max-width: 620px) {
+  .dashboard-v2 {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .dashboard-v2 .hero.hero-v3 {
+    min-height: 270px;
+    border-radius: 30px;
+  }
+
+  .dashboard-v2 .hero-v3-art {
+    right: 5px;
+    bottom: 30px;
+    width: 39%;
+    height: 44%;
+  }
+
+  .dashboard-v2 .checkin-combined-card {
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .dashboard-v2 .checkin-combined-card .emoji-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dashboard-v2 .life-garden-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+
+  .bottom-nav {
+    bottom: max(6px, env(safe-area-inset-bottom));
+    width: calc(100% - 18px);
+    min-height: 62px;
+    border-radius: 23px;
+  }
+}
+
+@media (max-width: 390px) {
+  .dashboard-v2 .hero.hero-v3 {
+    min-height: 258px;
+  }
+
+  .dashboard-v2 .hero-v3-copy {
+    top: 21px;
+    left: 19px;
+  }
+
+  .dashboard-v2 .hero-v3 h1 {
+    font-size: 29px;
+  }
+
+  .dashboard-v2 .hero-v3-quote {
+    max-width: 185px;
+    font-size: 13px;
+  }
+
+  .dashboard-v2 .focus-card,
+  .dashboard-v2 .upcoming-card {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .dashboard-v2 .focus-task-heading .btn,
+  .dashboard-v2 .upcoming-heading .btn {
+    padding-inline: 9px;
+  }
+
+  .dashboard-v2 .garden-card {
+    min-height: 110px;
+    padding: 13px;
+  }
+
+  .bottom-nav .nav-item {
+    font-size: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-v2 .garden-card,
+  .bottom-nav .nav-item {
+    transition: none !important;
+  }
+}
