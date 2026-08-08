@@ -1,0 +1,29 @@
+/* v0.3 Phase 1 — UX correctness
+   Temporary correctness guardrails while the dashboard hierarchy is moved
+   out of CSS and into component structure in later v0.3 phases. */
+
+/* Never hide user-created tasks when Home is their only management surface. */
+.dashboard-shell .focus-list > :nth-child(n + 4) {
+  display: initial;
+}
+
+/* Weekly overview belongs after Life Garden and before the closing thought. */
+.dashboard-shell > .weekly-reflection-entry {
+  order: 5;
+}
+
+.dashboard-shell > .closing-note-v2 {
+  order: 6;
+}
+
+/* Love and Health are real, routable Life Areas and must remain interactive. */
+.dashboard-shell .garden-card.love,
+.dashboard-shell .garden-card.health {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.dashboard-shell .garden-card.love::after,
+.dashboard-shell .garden-card.health::after {
+  content: "Open";
+}
