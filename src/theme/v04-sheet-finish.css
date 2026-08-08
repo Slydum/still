@@ -1,0 +1,64 @@
+/* Still v0.4 Phase 1 — final capture-sheet and Home empty-state pass */
+
+/* Empty Home states should communicate, not decorate. */
+.dashboard-v2 .task-empty-state > span:first-child,
+.dashboard-v2 .upcoming-empty > svg {
+  display: none;
+}
+
+.dashboard-v2 .task-empty-state,
+.dashboard-v2 .upcoming-empty {
+  grid-template-columns: 1fr;
+  padding-inline: 0;
+}
+
+/* New Task/Event sheets open as calm, compact capture surfaces. Advanced
+   controls remain available through More options instead of dominating entry. */
+@media (max-width: 760px) {
+  .task-sheet:has(.task-editor),
+  .task-sheet:has(.event-editor) {
+    max-height: min(78dvh, 680px);
+    border-radius: 30px 30px 0 0;
+  }
+
+  .task-sheet .task-editor,
+  .task-sheet .event-editor {
+    gap: 14px;
+  }
+
+  .task-sheet .task-field > span,
+  .task-sheet .event-all-day-toggle {
+    font-size: 13px;
+  }
+
+  .task-sheet .task-field input,
+  .task-sheet .task-field select,
+  .task-sheet .task-field textarea {
+    min-height: 48px;
+    border-radius: 15px;
+  }
+
+  .task-sheet .editor-more-options {
+    border-radius: 16px;
+  }
+
+  .task-sheet .editor-more-options > summary {
+    min-height: 48px;
+    padding: 12px 14px;
+  }
+
+  .task-sheet .task-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .task-sheet .task-editor-actions .task-secondary-button {
+    display: none;
+  }
+
+  .task-sheet .task-editor-actions .task-primary-button {
+    width: 100%;
+    min-height: 50px;
+    border-radius: 16px;
+  }
+}
