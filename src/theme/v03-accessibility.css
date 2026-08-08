@@ -1,0 +1,28 @@
+/* v0.3 Phase 2 — shared accessibility interaction layer. */
+
+:where(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.link-btn,
+.quick-advanced-toggle,
+.task-secondary-button {
+  color: var(--accent-text);
+}
+
+.still-work-modal[role="dialog"] {
+  outline: none;
+}
+
+.still-work-modal[role="dialog"] > form {
+  max-height: min(86vh, 680px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+}
