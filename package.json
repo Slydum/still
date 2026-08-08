@@ -11,7 +11,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
-    "lint": "npm run typecheck && node scripts/check-source-hygiene.mjs",
+    "lint": "npm run typecheck && node scripts/check-source-hygiene.mjs && node scripts/check-ux-correctness.mjs",
     "format:check": "node scripts/check-format.mjs",
     "security:audit": "node scripts/security-audit.mjs",
     "build:budget": "node scripts/check-build-budget.mjs",
