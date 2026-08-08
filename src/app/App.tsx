@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BottomNav } from '../components/navigation/BottomNav';
 import { SyncConfidenceIndicator } from '../components/SyncConfidenceIndicator';
 import { QuickAddSheet } from '../components/ui/QuickAddSheet';
@@ -25,6 +25,8 @@ import { applyPermanentDataSnapshot, initializePermanentDataRepository, usePerma
 import { useReminderEngine } from '../hooks/useReminderEngine';
 import { getAppRoutePathname, toAppPath } from './appLocation';
 import { beginDemoSession, isDemoMode } from './demoMode';
+
+const LovePage = lazy(() => import('../features/love/LovePage').then((module) => ({ default: module.LovePage })));
 
 function replaceBrowserRoute(path: string) {
   window.history.replaceState({}, '', toAppPath(path));
@@ -74,6 +76,7 @@ function AppRoutes() {
     <Route path="/work/details" element={<WorkPage />} />
     <Route path="/life/work" element={<Navigate to="/work" replace />} />
     <Route path="/money" element={<MoneyPage />} />
+    <Route path="/life/love" element={<Suspense fallback={<AppLoading message="Opening Love…" />}><LovePage /></Suspense>} />
     <Route path="/life/:areaId" element={<LifeAreaPage />} />
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes><SyncConfidenceIndicator /><BottomNav /><QuickAddSheet /></div>;
