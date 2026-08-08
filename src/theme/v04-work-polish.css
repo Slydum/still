@@ -1,0 +1,266 @@
+.still-work-refined {
+  --work-border: rgba(96, 82, 126, 0.1);
+  --work-border-soft: rgba(96, 82, 126, 0.065);
+  --work-surface: rgba(255, 255, 255, 0.58);
+  --work-surface-strong: rgba(255, 255, 255, 0.78);
+  --work-accent: #7561ae;
+}
+
+/* Keep the existing Work header, live shift card, and summary cards intact.
+   The refresh starts only after the summary. */
+.still-work-refined .still-work-summary + .still-work-section {
+  margin-top: 30px;
+}
+
+.still-work-refined .still-work-section {
+  position: relative;
+  margin-top: 28px;
+}
+
+.still-work-refined .still-work-section-heading {
+  min-height: 0;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.still-work-refined .still-work-section-heading .section-kicker {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 17px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.still-work-refined .still-work-section-heading > button,
+.still-work-refined .still-work-record-head button,
+.still-work-refined .still-work-subhead button {
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: rgba(117, 97, 174, 0.075);
+  color: var(--work-accent);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.still-work-refined .still-work-section-heading > button:hover,
+.still-work-refined .still-work-record-head button:hover,
+.still-work-refined .still-work-subhead button:hover {
+  background: rgba(117, 97, 174, 0.12);
+}
+
+/* Today should read as one composed workspace, not two unrelated cards. */
+.still-work-refined .still-work-record-grid {
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--work-border);
+  border-radius: 20px;
+  background: var(--work-border-soft);
+  box-shadow: 0 12px 34px rgba(71, 55, 100, 0.045);
+}
+
+.still-work-refined .still-work-record-card.card {
+  min-width: 0;
+  padding: 16px 17px 14px;
+  border: 0;
+  border-radius: 0;
+  background: var(--work-surface-strong);
+  box-shadow: none;
+}
+
+.still-work-refined .still-work-record-head {
+  min-height: 34px;
+  margin-bottom: 9px;
+}
+
+.still-work-refined .still-work-record-head > strong {
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+}
+
+.still-work-refined .still-work-quick-task {
+  grid-template-columns: 1fr 36px;
+  gap: 7px;
+  margin: 0 0 7px;
+}
+
+.still-work-refined .still-work-quick-task input {
+  min-height: 38px;
+  border: 1px solid var(--work-border);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+}
+
+.still-work-refined .still-work-quick-task button {
+  border-radius: 11px;
+  background: rgba(117, 97, 174, 0.11);
+}
+
+.still-work-refined .still-work-record-list {
+  gap: 0;
+}
+
+.still-work-refined .still-work-task-row,
+.still-work-refined .still-work-event-row {
+  min-height: 45px;
+  border-top: 1px solid var(--work-border-soft);
+  transition: background 0.15s ease;
+}
+
+.still-work-refined .still-work-task-row:hover,
+.still-work-refined .still-work-event-row:hover {
+  background: rgba(117, 97, 174, 0.04);
+}
+
+.still-work-refined .still-work-task-row strong,
+.still-work-refined .still-work-event-row strong {
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.35;
+}
+
+.still-work-refined .still-work-task-row small,
+.still-work-refined .still-work-event-row small,
+.still-work-refined .still-work-event-row span {
+  font-size: 10px;
+}
+
+/* Changes become a tidy record list instead of a stack of floating cards. */
+.still-work-refined .still-work-change-list {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--work-border);
+  border-radius: 18px;
+  background: var(--work-surface-strong);
+  box-shadow: 0 10px 30px rgba(71, 55, 100, 0.035);
+}
+
+.still-work-refined .still-work-change.card {
+  min-height: 68px;
+  padding: 13px 15px;
+  border: 0;
+  border-bottom: 1px solid var(--work-border-soft);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.still-work-refined .still-work-change:last-child {
+  border-bottom: 0;
+}
+
+.still-work-refined .still-work-change:hover {
+  background: rgba(117, 97, 174, 0.035);
+}
+
+.still-work-refined .still-work-change > strong {
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.still-work-refined .still-work-change > span {
+  font-size: 10px;
+}
+
+.still-work-refined .still-work-status {
+  padding: 3px 7px;
+  font-size: 8px;
+  letter-spacing: 0.055em;
+}
+
+.still-work-refined .still-work-empty-card.card {
+  min-height: 92px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--work-surface);
+  box-shadow: none;
+}
+
+/* Notes should feel like a quiet notebook, not another dashboard panel. */
+.still-work-refined .still-work-quick-note.card {
+  margin-bottom: 9px;
+  padding: 9px 11px;
+  border: 1px solid var(--work-border);
+  border-radius: 15px;
+  background: var(--work-surface-strong);
+  box-shadow: none;
+}
+
+.still-work-refined .still-work-quick-note input {
+  font-size: 12px;
+}
+
+.still-work-refined .still-work-note-list {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--work-border);
+  border-radius: 18px;
+  background: var(--work-surface-strong);
+}
+
+.still-work-refined .still-work-note.card {
+  min-height: 58px;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--work-border-soft);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.still-work-refined .still-work-note:last-child {
+  border-bottom: 0;
+}
+
+.still-work-refined .still-work-note:hover {
+  background: rgba(117, 97, 174, 0.035);
+}
+
+.still-work-refined .still-work-note strong {
+  font-size: 12px;
+  font-weight: 650;
+}
+
+/* Secondary admin tools stay visually secondary. */
+.still-work-refined .still-work-calm-details {
+  border-top: 1px solid var(--work-border-soft);
+  padding-top: 8px;
+}
+
+.still-work-refined .still-work-details-summary.card {
+  padding: 13px 14px;
+  border: 1px solid var(--work-border);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.44);
+  box-shadow: none;
+}
+
+.still-work-refined .still-work-details-summary span {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 620px) {
+  .still-work-refined .still-work-summary + .still-work-section {
+    margin-top: 24px;
+  }
+
+  .still-work-refined .still-work-section {
+    margin-top: 24px;
+  }
+
+  .still-work-refined .still-work-record-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .still-work-refined .still-work-record-card.card + .still-work-record-card.card {
+    border-top: 1px solid var(--work-border-soft);
+  }
+
+  .still-work-refined .still-work-section-heading .section-kicker {
+    font-size: 16px;
+  }
+}
