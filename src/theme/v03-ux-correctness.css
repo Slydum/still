@@ -4,7 +4,7 @@
 
 /* Never hide user-created tasks when Home is their only management surface. */
 .dashboard-shell .focus-list > :nth-child(n + 4) {
-  display: initial;
+  display: flex;
 }
 
 /* Weekly overview belongs after Life Garden and before the closing thought. */
