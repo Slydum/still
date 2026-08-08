@@ -7,6 +7,7 @@ import { PersistenceStatusBanner } from './components/PersistenceStatusBanner';
 import './theme/base-path-assets';
 import './theme/tokens.css';
 import './theme/global.css';
+import './theme/design-system.css';
 import './theme/auth.css';
 import './theme/auth-selected-fidelity.css';
 import './theme/uniformity.css';
