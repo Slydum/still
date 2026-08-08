@@ -46,6 +46,7 @@ export function LovePage() {
   const addEvent = useAppStore((state) => state.addEvent);
   const openEventEditor = useAppStore((state) => state.openEventEditor);
   const addJournalEntry = useAppStore((state) => state.addJournalEntry);
+  const updateJournalEntry = useAppStore((state) => state.updateJournalEntry);
   const openJournalEditor = useAppStore((state) => state.openJournalEditor);
 
   const today = dateKey();
@@ -65,6 +66,7 @@ export function LovePage() {
   const notes = loveEntries.filter((entry) => entry.tags.includes('love-note'));
   const checkIns = loveEntries.filter((entry) => entry.tags.includes('love-checkin'));
   const moments = loveEntries.filter((entry) => !entry.tags.includes('love-note') && !entry.tags.includes('love-checkin'));
+  const todayCheckIn = checkIns.find((entry) => entry.entryDate === today);
   const latestConnection = checkInValue(checkIns[0]?.title);
 
   const savePlan = (event: FormEvent) => {
@@ -95,7 +97,9 @@ export function LovePage() {
   };
 
   const saveConnection = (value: number) => {
-    addJournalEntry({ title: `Connection check-in · ${value}`, body: connectionLabels[value - 1], entryDate: today, tags: ['love', 'love-checkin'], areaId: 'love' });
+    const input = { title: `Connection check-in · ${value}`, body: connectionLabels[value - 1], entryDate: today, tags: ['love', 'love-checkin'], areaId: 'love' as const };
+    if (todayCheckIn) updateJournalEntry(todayCheckIn.id, input);
+    else addJournalEntry(input);
   };
 
   return (
