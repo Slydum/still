@@ -120,6 +120,17 @@ const observer = new MutationObserver(() => {
     sheet.dataset.interactionsReady = 'true';
     dirty = false;
     returnFocus = document.activeElement as HTMLElement;
+
+    // Creation sheets should reveal themselves before iOS resizes for the keyboard.
+    // React's existing autoFocus props remain useful for edit/desktop flows, but on
+    // coarse-pointer phones we deliberately dismiss that initial focus. The user
+    // can then tap the field when they are ready to type.
+    if (window.matchMedia('(pointer: coarse) and (max-width: 760px)').matches) {
+      window.requestAnimationFrame(() => {
+        const active = document.activeElement as HTMLElement | null;
+        if (active && sheet.contains(active) && active.matches('input, textarea')) active.blur();
+      });
+    }
   }
   if (!sheet) {
     closeDiscardDialog();
