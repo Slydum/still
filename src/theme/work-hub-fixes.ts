@@ -65,7 +65,8 @@ function openChangeSheet(existing?: WorkChange) {
   backdrop.addEventListener('click', (event) => { if (event.target === backdrop) close(); });
   sheet.querySelector<HTMLFormElement>('form')?.addEventListener('submit', (event) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget as HTMLFormElement;
+    const form = new FormData(formElement);
     const title = String(form.get('title') ?? '').trim();
     if (!title) return;
     const state = useAppStore.getState();
