@@ -30,7 +30,6 @@ import './theme/v031-mobile-polish.css';
 import './theme/v04-home.css';
 import './theme/v04-home-refinement.css';
 import './theme/v04-home-device-pass.css';
-import './theme/v04-sheet-finish.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
