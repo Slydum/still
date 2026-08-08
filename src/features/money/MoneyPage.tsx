@@ -94,32 +94,35 @@ export function MoneyPage() {
   return (
     <>
       <main className="shell checkin-history-page">
-        <header className="checkin-history-header">
-          <button className="checkin-back-button btn-icon" onClick={goBack} type="button" aria-label="Go back"><ArrowLeft size={20} /></button>
-          <div>
-            <p className="section-kicker">Money area · tracker</p>
-            <h1>Spending tracker</h1>
-            <p className="subtle">Capture expenses now and review them gently later.</p>
+        <header className="still-page-header">
+          <button className="btn-icon" onClick={goBack} type="button" aria-label="Go back"><ArrowLeft size={20} /></button>
+          <div className="still-page-heading">
+            <div className="still-page-heading-copy">
+              <p className="section-kicker">Money area · tracker</p>
+              <h1>Spending tracker</h1>
+              <p className="subtle">Capture expenses now and review them gently later.</p>
+            </div>
+            <button className="btn btn-secondary btn-compact still-action-button" onClick={() => openQuickAdd('expense')} type="button"><Plus size={16} /> Add expense</button>
           </div>
         </header>
 
-        <section className="checkin-summary-grid" aria-label="Spending summary">
-          <article className="card checkin-summary-card">
+        <section className="checkin-summary-grid still-summary-grid" aria-label="Spending summary">
+          <article className="card checkin-summary-card still-summary-tile">
             <ReceiptText size={20} />
             <strong>{expenses.length}</strong>
             <span>total expenses</span>
           </article>
-          <article className="card checkin-summary-card">
+          <article className="card checkin-summary-card still-summary-tile">
             <WalletCards size={20} />
             <strong>{weekly.length}</strong>
             <span>this week</span>
           </article>
-          <article className="card checkin-summary-card">
+          <article className="card checkin-summary-card still-summary-tile">
             <WalletCards size={20} />
             <strong>{weeklyTotals.length ? weeklyTotals.map(([code, total]) => currency(total, code)).join(', ') : '—'}</strong>
             <span>spent this week</span>
           </article>
-          <article className="card checkin-summary-card">
+          <article className="card checkin-summary-card still-summary-tile">
             <WalletCards size={20} />
             <strong>{monthlyTotals.length ? monthlyTotals.map(([code, total]) => currency(total, code)).join(', ') : '—'}</strong>
             <span>spent this month</span>
@@ -129,7 +132,6 @@ export function MoneyPage() {
         <section className="checkin-history-list-section" aria-labelledby="money-list-title">
           <div className="checkin-list-heading">
             <div><p className="section-kicker">All expenses</p><h2 id="money-list-title">History</h2></div>
-            <button className="btn btn-secondary btn-compact" onClick={() => openQuickAdd('expense')} type="button"><Plus size={16} /> Add expense</button>
           </div>
           {sorted.length === 0 ? (
             <button className="checkin-history-empty" onClick={() => openQuickAdd('expense')} type="button">
