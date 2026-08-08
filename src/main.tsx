@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './app/App';
 import { APP_BASENAME } from './app/appLocation';
 import { PersistenceStatusBanner } from './components/PersistenceStatusBanner';
+import './theme/base-path-assets';
 import './theme/tokens.css';
 import './theme/global.css';
 import './theme/auth.css';
