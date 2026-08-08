@@ -7,12 +7,12 @@ import {
   CheckSquare,
   Heart,
   HeartPulse,
-  Plus,
   ReceiptText,
   WalletCards,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useBackNavigation } from '../../components/navigation/useBackNavigation';
 import { LIFE_AREAS, isLifeAreaId, type LifeAreaId } from '../../domain/lifeAreas';
 import { recordsForLifeArea } from '../../domain/lifeAreaRecords';
 import { useAppStore } from '../../stores/useAppStore';
@@ -41,6 +41,7 @@ function sectionTitle(count: number, singular: string, plural = `${singular}s`) 
 
 export function LifeAreaPage() {
   const navigate = useNavigate();
+  const goBack = useBackNavigation('/');
   const { areaId: routeAreaId } = useParams();
   const tasks = useAppStore((state) => state.tasks);
   const events = useAppStore((state) => state.events);
@@ -84,10 +85,10 @@ export function LifeAreaPage() {
   return (
     <main className={`shell life-area-page life-area-${areaId}`}>
       <header className="life-area-header">
-        <button className="btn-icon" onClick={() => navigate('/')} type="button" aria-label="Back to Life Garden"><ArrowLeft size={20} /></button>
+        <button className="btn-icon" onClick={goBack} type="button" aria-label="Go back"><ArrowLeft size={20} /></button>
         <div className="life-area-heading">
           <span className="life-area-icon" aria-hidden="true"><AreaIcon size={22} /></span>
-          <div><p className="section-kicker">Life garden</p><h1>{definition.label}</h1><p className="subtle">{definition.description}</p></div>
+          <div><p className="section-kicker">Life area</p><h1>{definition.label}</h1><p className="subtle">{definition.description}</p></div>
         </div>
       </header>
 
@@ -96,7 +97,7 @@ export function LifeAreaPage() {
         <p>Only records you explicitly connect appear here. Still does not guess what belongs in your life areas.</p>
         {(areaId === 'work' || areaId === 'money') && (
           <button className="btn btn-secondary btn-compact" onClick={() => navigate(areaId === 'work' ? '/work' : '/money')} type="button">
-            Open {areaId === 'work' ? 'work tools' : 'money tools'}
+            Open {areaId === 'work' ? 'work tracker' : 'spending tracker'}
           </button>
         )}
       </section>
