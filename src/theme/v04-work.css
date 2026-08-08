@@ -1,0 +1,13 @@
+/* v0.4 Work — keep the overview glanceable on phones. */
+.still-work-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.still-work-summary .card {
+  min-height: 108px;
+  padding: 14px;
+}
+@media (max-width: 360px) {
+  .still-work-summary { gap: 8px; }
+  .still-work-summary .card { padding: 12px; }
+}
