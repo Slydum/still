@@ -13,6 +13,8 @@ import { useAppStore } from '../stores/useAppStore';
 import { usePersistenceStatus } from '../stores/usePersistenceStatus';
 
 let bootstrapPromise: ReturnType<typeof stillRepository.bootstrap> | undefined;
+// Hydration and cloud acknowledgements update the view model, not user intent.
+// Suppress the store subscriber so those snapshots do not become fresh dirty writes.
 let applyingRepositorySnapshot = false;
 
 function accountSettingsFromStore() {
