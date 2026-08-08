@@ -1,31 +1,33 @@
 import { ChevronDown } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
-import type { ExpenseInput } from '../../../stores/useAppStore';
+import type { ExpenseInput, StillExpense } from '../../../stores/useAppStore';
 import { getLocalDateKey } from '../../../theme/stillContext';
 
-export function ExpenseEditor({ currency, onCancel, onSave }: {
+export function ExpenseEditor({ currency, expense, onCancel, onSave }: {
   currency: string;
+  expense?: StillExpense;
   onCancel: () => void;
   onSave: (input: ExpenseInput) => void;
 }) {
-  const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
-  const [note, setNote] = useState('');
-  const [expenseDate, setExpenseDate] = useState(getLocalDateKey());
+  const [title, setTitle] = useState(expense?.title ?? '');
+  const [amount, setAmount] = useState(expense?.amount === undefined ? '' : String(expense.amount));
+  const [category, setCategory] = useState(expense?.category ?? '');
+  const [note, setNote] = useState(expense?.note ?? '');
+  const [expenseDate, setExpenseDate] = useState(expense?.expenseDate ?? getLocalDateKey());
+  const resolvedCurrency = expense?.currency || currency;
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!title.trim()) return;
     const parsedAmount = amount.trim() ? Number(amount) : undefined;
-    onSave({ title, amount: parsedAmount, currency, category, note, expenseDate, areaId: 'money' });
+    onSave({ title, amount: parsedAmount, currency: resolvedCurrency, category, note, expenseDate, areaId: 'money' });
   };
 
   return (
     <form className="task-editor" onSubmit={submit}>
       <label className="task-field">
         <span>Expense</span>
-        <input autoFocus maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="What did you spend on?" required type="text" value={title} />
+        <input data-autofocus maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="What did you spend on?" required type="text" value={title} />
       </label>
       <div className="task-form-row">
         <label className="task-field">
@@ -39,7 +41,7 @@ export function ExpenseEditor({ currency, onCancel, onSave }: {
       </div>
       <p className="subtle">Expenses connect to Money automatically.</p>
 
-      <details className="editor-more-options">
+      <details className="editor-more-options" open={Boolean(expense?.category || expense?.note)}>
         <summary><span>More options</span><ChevronDown size={16} aria-hidden="true" /></summary>
         <div className="editor-more-options-content">
           <label className="task-field">
@@ -55,7 +57,7 @@ export function ExpenseEditor({ currency, onCancel, onSave }: {
 
       <div className="task-editor-actions">
         <button className="task-secondary-button" onClick={onCancel} type="button">Cancel</button>
-        <button className="task-primary-button" disabled={!title.trim()} type="submit">Save expense</button>
+        <button className="task-primary-button" disabled={!title.trim()} type="submit">{expense ? 'Save changes' : 'Save expense'}</button>
       </div>
     </form>
   );
