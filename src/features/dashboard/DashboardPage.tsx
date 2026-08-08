@@ -16,17 +16,16 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSecondaryQuote } from '../../content/quoteEngine';
 import { saveCheckIn } from '../../data/stillDb';
 import { buildLifeGardenSummaries } from '../../domain/lifeGarden';
+import { useDailyQuote } from '../../hooks/useDailyQuote';
+import { useAppStore, type EventCategory } from '../../stores/useAppStore';
+import { eventTimeLabel, getEventOccurrences } from '../calendar/eventUtils';
 import {
   checkInEnergyOptions,
   checkInMoodOptions,
   getCheckInAnswer,
 } from '../check-ins/checkInScale';
-import { useDailyQuote } from '../../hooks/useDailyQuote';
-import { useAppStore, type EventCategory } from '../../stores/useAppStore';
-import { eventTimeLabel, getEventOccurrences } from '../calendar/eventUtils';
 import {
   createCheckInJournalDraft,
   setPendingJournalDraftContext,
@@ -36,9 +35,15 @@ import {
   loadCloudCompanionArt,
 } from '../../theme/companionArt';
 import { stillAssets } from '../../theme/stillAssets';
-import { createStillContext, getGreeting, getLocalDateKey, type WeatherKey } from '../../theme/stillContext';
+import {
+  createStillContext,
+  getGreeting,
+  getLocalDateKey,
+  type WeatherKey,
+} from '../../theme/stillContext';
 import { buildStillTheme } from '../../theme/themeEngine';
 import '../../theme/hero-v3.css';
+import '../../theme/home-simplification.css';
 
 const weatherOptions: Array<{ value: WeatherKey | ''; label: string }> = [
   { value: '', label: 'Set weather' },
@@ -78,43 +83,20 @@ const heroConditionSymbols: Record<WeatherKey, string> = {
   tornado: '🌪️',
 };
 
-type WeatherStatus =
-  | 'idle'
-  | 'requesting'
-  | 'ready'
-  | 'denied'
-  | 'error';
+type WeatherStatus = 'idle' | 'requesting' | 'ready' | 'denied' | 'error';
 
-const LOCATION_WEATHER_KEY =
-  'still-location-weather-enabled-v2';
+const LOCATION_WEATHER_KEY = 'still-location-weather-enabled-v2';
+const HOME_TASK_PREVIEW_COUNT = 3;
+const HOME_EVENT_PREVIEW_COUNT = 3;
 
 function weatherCodeToKey(code: number): WeatherKey {
   if (code <= 1) return 'partly-sunny';
   if (code === 2) return 'cloudy';
   if (code === 3) return 'overcast';
-
-  if (code === 45 || code === 48) {
-    return 'fog';
-  }
-
-  if (
-    [
-      51, 53, 55, 56, 57,
-      61, 63, 65, 66, 67,
-      80, 81, 82,
-    ].includes(code)
-  ) {
-    return 'rain';
-  }
-
-  if ([71, 73, 75, 77, 85, 86].includes(code)) {
-    return 'snow';
-  }
-
-  if ([95, 96, 99].includes(code)) {
-    return 'thunderstorm';
-  }
-
+  if (code === 45 || code === 48) return 'fog';
+  if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return 'rain';
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return 'snow';
+  if ([95, 96, 99].includes(code)) return 'thunderstorm';
   return 'cloudy';
 }
 
@@ -153,7 +135,6 @@ const eventCategoryIcons: Record<EventCategory, LucideIcon> = {
 
 function taskDueLabel(dueDate: string, today: string) {
   if (dueDate === today) return 'Today';
-
   const tomorrow = new Date(`${today}T12:00:00`);
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowKey = [
@@ -161,7 +142,6 @@ function taskDueLabel(dueDate: string, today: string) {
     String(tomorrow.getMonth() + 1).padStart(2, '0'),
     String(tomorrow.getDate()).padStart(2, '0'),
   ].join('-');
-
   if (dueDate === tomorrowKey) return 'Tomorrow';
   return format(new Date(`${dueDate}T12:00:00`), 'MMM d');
 }
@@ -191,19 +171,18 @@ export function DashboardPage() {
   const workShifts = useAppStore((state) => state.workShifts);
   const openEventEditor = useAppStore((state) => state.openEventEditor);
   const openJournalEditor = useAppStore((state) => state.openJournalEditor);
-  const [weatherStatus, setWeatherStatus] =
-    useState<WeatherStatus>('idle');
-  const [temperature, setTemperature] =
-    useState<number | null>(null);
+  const [weatherStatus, setWeatherStatus] = useState<WeatherStatus>('idle');
+  const [temperature, setTemperature] = useState<number | null>(null);
   const [draftMood, setDraftMood] = useState<number>();
   const [draftEnergy, setDraftEnergy] = useState<number>();
   const [editingCheckIn, setEditingCheckIn] = useState(false);
   const [checkInFlipped, setCheckInFlipped] = useState(false);
+  const [taskListExpanded, setTaskListExpanded] = useState(false);
   const requestedLocationWeather = useRef(false);
 
   const now = useCurrentTime();
   const todayKey = getLocalDateKey(now);
-  const isTodaysCheckIn = checkInDate === getLocalDateKey(now);
+  const isTodaysCheckIn = checkInDate === todayKey;
   const mood = isTodaysCheckIn ? storedMood : undefined;
   const energy = isTodaysCheckIn ? storedEnergy : undefined;
   const hasCompleteCheckIn = Boolean(mood && energy);
@@ -217,117 +196,54 @@ export function DashboardPage() {
     setCheckInFlipped(false);
   }, [energy, mood, todayKey]);
 
-  const selectedWeather =
-    weatherOptions.find((option) => option.value === (weather ?? '')) ??
-    weatherOptions[0];
+  const selectedWeather = weatherOptions.find((option) => option.value === (weather ?? '')) ?? weatherOptions[0];
+  const selectedWeatherAsset = weather ? weatherVisuals[weather] ?? stillAssets.sky.sunCloud : stillAssets.sky.sunCloud;
 
-  const selectedWeatherAsset = weather
-    ? weatherVisuals[weather] ?? stillAssets.sky.sunCloud
-    : stillAssets.sky.sunCloud;
+  const refreshWeatherFromLocation = useCallback((rememberPermission: boolean) => {
+    if (!navigator.geolocation) {
+      setWeatherStatus('error');
+      return;
+    }
 
-  const refreshWeatherFromLocation = useCallback(
-    (rememberPermission: boolean) => {
-      if (!navigator.geolocation) {
-        setWeatherStatus('error');
-        return;
-      }
-
-      setWeatherStatus('requesting');
-
-      navigator.geolocation.getCurrentPosition(
-        async ({ coords }) => {
-          try {
-            const endpoint = new URL(
-              'https://api.open-meteo.com/v1/forecast',
-            );
-
-            endpoint.searchParams.set(
-              'latitude',
-              String(coords.latitude),
-            );
-
-            endpoint.searchParams.set(
-              'longitude',
-              String(coords.longitude),
-            );
-
-            endpoint.searchParams.set(
-              'current',
-              'temperature_2m,weather_code',
-            );
-
-            endpoint.searchParams.set('timezone', 'auto');
-
-            const response = await fetch(endpoint);
-
-            if (!response.ok) {
-              throw new Error(
-                `Weather request failed: ${response.status}`,
-              );
-            }
-
-            const result = (await response.json()) as {
-              current?: {
-                temperature_2m?: number;
-                weather_code?: number;
-              };
-            };
-
-            const current = result.current;
-
-            if (
-              typeof current?.temperature_2m !== 'number' ||
-              typeof current?.weather_code !== 'number'
-            ) {
-              throw new Error('Current weather was unavailable.');
-            }
-
-            setTemperature(current.temperature_2m);
-            setWeather(weatherCodeToKey(current.weather_code));
-            setWeatherStatus('ready');
-
-            if (rememberPermission) {
-              window.localStorage.setItem(
-                LOCATION_WEATHER_KEY,
-                'true',
-              );
-            }
-          } catch (error) {
-            console.error(
-              'Still could not load local weather:',
-              error,
-            );
-
-            setWeatherStatus('error');
+    setWeatherStatus('requesting');
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const endpoint = new URL('https://api.open-meteo.com/v1/forecast');
+          endpoint.searchParams.set('latitude', String(coords.latitude));
+          endpoint.searchParams.set('longitude', String(coords.longitude));
+          endpoint.searchParams.set('current', 'temperature_2m,weather_code');
+          endpoint.searchParams.set('timezone', 'auto');
+          const response = await fetch(endpoint);
+          if (!response.ok) throw new Error(`Weather request failed: ${response.status}`);
+          const result = (await response.json()) as {
+            current?: { temperature_2m?: number; weather_code?: number };
+          };
+          const current = result.current;
+          if (typeof current?.temperature_2m !== 'number' || typeof current?.weather_code !== 'number') {
+            throw new Error('Current weather was unavailable.');
           }
-        },
-        (error) => {
-          if (error.code === 1) {
-            setWeatherStatus('denied');
-
-            window.localStorage.removeItem(
-              LOCATION_WEATHER_KEY,
-            );
-
-            return;
-          }
-
-          console.error(
-            'Still could not access location:',
-            error,
-          );
-
+          setTemperature(current.temperature_2m);
+          setWeather(weatherCodeToKey(current.weather_code));
+          setWeatherStatus('ready');
+          if (rememberPermission) window.localStorage.setItem(LOCATION_WEATHER_KEY, 'true');
+        } catch (error) {
+          console.error('Still could not load local weather:', error);
           setWeatherStatus('error');
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 12_000,
-          maximumAge: 30 * 60 * 1_000,
-        },
-      );
-    },
-    [setWeather],
-  );
+        }
+      },
+      (error) => {
+        if (error.code === 1) {
+          setWeatherStatus('denied');
+          window.localStorage.removeItem(LOCATION_WEATHER_KEY);
+          return;
+        }
+        console.error('Still could not access location:', error);
+        setWeatherStatus('error');
+      },
+      { enableHighAccuracy: false, timeout: 12_000, maximumAge: 30 * 60 * 1_000 },
+    );
+  }, [setWeather]);
 
   useEffect(() => {
     if (!autoWeather) {
@@ -336,30 +252,21 @@ export function DashboardPage() {
       setTemperature(null);
       return;
     }
-
     if (requestedLocationWeather.current) return;
     requestedLocationWeather.current = true;
-
-    const locationWeatherEnabled =
-      window.localStorage.getItem(
-        LOCATION_WEATHER_KEY,
-      ) === 'true';
-
+    const locationWeatherEnabled = window.localStorage.getItem(LOCATION_WEATHER_KEY) === 'true';
     refreshWeatherFromLocation(!locationWeatherEnabled);
   }, [autoWeather, refreshWeatherFromLocation]);
 
-  const weatherHeadline =
-    weatherStatus === 'ready' && temperature !== null
-      ? `${selectedWeather.label} · ${Math.round(
-          temperature,
-        )}°C`
-      : weatherStatus === 'requesting'
-        ? 'Finding your weather…'
-        : weatherStatus === 'denied'
-          ? 'Location blocked'
-          : weatherStatus === 'error'
-            ? 'Tap to try again'
-            : 'Use my location';
+  const weatherHeadline = weatherStatus === 'ready' && temperature !== null
+    ? `${selectedWeather.label} · ${Math.round(temperature)}°C`
+    : weatherStatus === 'requesting'
+      ? 'Finding your weather…'
+      : weatherStatus === 'denied'
+        ? 'Location blocked'
+        : weatherStatus === 'error'
+          ? 'Tap to try again'
+          : 'Use my location';
 
   const context = useMemo(
     () => createStillContext({ date: now, mood, energy, weather, occasion }),
@@ -377,40 +284,35 @@ export function DashboardPage() {
   useEffect(() => {
     let active = true;
     setHeroCompanionArt(undefined);
-
     void loadCloudCompanionArt(heroCompanionKey).then((art) => {
       if (active) setHeroCompanionArt(art);
     });
-
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [heroCompanionKey]);
 
   useEffect(() => { hydrateForToday(); }, [context.dateKey, hydrateForToday]);
   const theme = useMemo(() => buildStillTheme(context), [context]);
   const { quote, isLoading } = useDailyQuote(context);
-  const closingQuote = useMemo(() => getSecondaryQuote(context, quote.id), [context, quote.id]);
 
   const orderedTasks = useMemo(() => [...tasks].sort((left, right) => {
     if (left.completed !== right.completed) return left.completed ? 1 : -1;
-
     const leftDue = left.dueDate ?? '9999-12-31';
     const rightDue = right.dueDate ?? '9999-12-31';
     if (leftDue !== rightDue) return leftDue.localeCompare(rightDue);
-
     const priorityDifference = taskPriorityRank[left.priority] - taskPriorityRank[right.priority];
     if (priorityDifference !== 0) return priorityDifference;
     return left.createdAt - right.createdAt;
   }), [tasks]);
 
+  const visibleTasks = taskListExpanded ? orderedTasks : orderedTasks.slice(0, HOME_TASK_PREVIEW_COUNT);
+  const hiddenTaskCount = Math.max(0, orderedTasks.length - visibleTasks.length);
   const remainingTaskCount = tasks.filter((task) => !task.completed).length;
 
   const upcomingEvents = useMemo(() => getEventOccurrences(
     events,
     todayKey,
     format(addDays(now, 45), 'yyyy-MM-dd'),
-  ).slice(0, 4), [events, now, todayKey]);
+  ).slice(0, HOME_EVENT_PREVIEW_COUNT), [events, now, todayKey]);
 
   const lifeGardenSummaries = useMemo(() => buildLifeGardenSummaries({
     tasks,
@@ -473,21 +375,13 @@ export function DashboardPage() {
       <section className={`hero hero-v3 ${theme.paletteClass}`}>
         <div className="hero-v3-copy">
           <h1>
-            <span className="hero-v3-title-line">
-              {getGreeting(context.timeOfDay).replace('.', '')},
-            </span>
-            <span className="hero-v3-title-line">
-              {name}. <span className="hero-v3-sun" aria-hidden="true">{heroConditionSymbol}</span>
-            </span>
+            <span className="hero-v3-title-line">{getGreeting(context.timeOfDay).replace('.', '')},</span>
+            <span className="hero-v3-title-line">{name}. <span className="hero-v3-sun" aria-hidden="true">{heroConditionSymbol}</span></span>
           </h1>
           <p className={`hero-v3-quote ${isLoading ? 'is-loading' : ''}`}>{quote.text}</p>
         </div>
         {heroCompanionArt && (
-          <img
-            className={`hero-v3-art companion-${heroCompanionKey}`}
-            src={heroCompanionArt}
-            alt="A fluffy cloud companion matching the moment"
-          />
+          <img className={`hero-v3-art companion-${heroCompanionKey}`} src={heroCompanionArt} alt="A fluffy cloud companion matching the moment" />
         )}
         <button
           className={`hero-v3-weather weather-status-${weatherStatus}`}
@@ -509,7 +403,6 @@ export function DashboardPage() {
           <div><p className="section-kicker">How are you?</p></div>
           <button className="link-btn" onClick={() => navigate('/check-ins')} type="button">View history</button>
         </div>
-
         <article className={`card checkin-combined-card surface-checkin ${showCheckInAnswer ? 'is-answered' : 'is-selecting'}`}>
           {showCheckInAnswer ? (
             <div className={`checkin-answer-flip ${checkInFlipped ? 'is-flipped' : ''}`} aria-live="polite">
@@ -526,25 +419,17 @@ export function DashboardPage() {
                   <blockquote>{checkInAnswer}</blockquote>
                   <span className="checkin-flip-hint">Tap for options</span>
                 </button>
-                <div
-                  className="checkin-answer-face checkin-answer-back"
-                  id="checkin-answer-actions"
-                  aria-hidden={!checkInFlipped}
-                >
+                <div className="checkin-answer-face checkin-answer-back" id="checkin-answer-actions" aria-hidden={!checkInFlipped}>
                   <p>What would help right now?</p>
                   <div className="checkin-answer-actions">
                     <button className="checkin-change-button" onClick={changeAnswer} type="button" tabIndex={checkInFlipped ? 0 : -1}>
-                      <Pencil size={16} />
-                      Change answer
+                      <Pencil size={16} /> Change answer
                     </button>
                     <button className="checkin-journal-button" onClick={openCheckInJournal} type="button" tabIndex={checkInFlipped ? 0 : -1}>
-                      <BookOpen size={17} />
-                      Let it out
+                      <BookOpen size={17} /> Let it out
                     </button>
                   </div>
-                  <button className="checkin-back-button" onClick={() => setCheckInFlipped(false)} type="button" tabIndex={checkInFlipped ? 0 : -1}>
-                    Back to answer
-                  </button>
+                  <button className="checkin-back-button" onClick={() => setCheckInFlipped(false)} type="button" tabIndex={checkInFlipped ? 0 : -1}>Back to answer</button>
                 </div>
               </div>
             </div>
@@ -582,9 +467,7 @@ export function DashboardPage() {
             <div>
               <p className="section-kicker">Today’s focus</p>
               <p className="micro-copy">
-                {remainingTaskCount === 0
-                  ? 'Nothing waiting for you.'
-                  : `${remainingTaskCount} ${remainingTaskCount === 1 ? 'task' : 'tasks'} left`}
+                {remainingTaskCount === 0 ? 'Nothing waiting for you.' : `${remainingTaskCount} ${remainingTaskCount === 1 ? 'task' : 'tasks'} left`}
               </p>
             </div>
             <button className="btn btn-secondary btn-compact btn-equal" onClick={() => openTaskEditor()} type="button">
@@ -594,22 +477,13 @@ export function DashboardPage() {
           <div className="focus-list">
             {orderedTasks.length === 0 ? (
               <button className="task-empty-state" onClick={() => openTaskEditor()} type="button">
-                <span>🌱</span>
-                <strong>Add your first task</strong>
-                <small>Start with one small, meaningful step.</small>
+                <span>🌱</span><strong>Add your first task</strong><small>Start with one small, meaningful step.</small>
               </button>
-            ) : orderedTasks.map((task) => {
+            ) : visibleTasks.map((task) => {
               const overdue = Boolean(task.dueDate && task.dueDate < todayKey && !task.completed);
-
               return (
                 <div className={`task task-record ${task.completed ? 'is-complete' : ''}`} key={task.id}>
-                  <button
-                    className={`checkbox ${task.completed ? 'done' : ''}`}
-                    onClick={() => toggleTask(task.id)}
-                    type="button"
-                    aria-label={`${task.completed ? 'Mark incomplete' : 'Complete'} ${task.title}`}
-                    aria-pressed={task.completed}
-                  >
+                  <button className={`checkbox ${task.completed ? 'done' : ''}`} onClick={() => toggleTask(task.id)} type="button" aria-label={`${task.completed ? 'Mark incomplete' : 'Complete'} ${task.title}`} aria-pressed={task.completed}>
                     {task.completed ? '✓' : ''}
                   </button>
                   <div className="task-copy">
@@ -619,62 +493,49 @@ export function DashboardPage() {
                       <span className={`task-priority task-priority-${task.priority}`}>{task.priority}</span>
                       {task.dueDate && (
                         <span className={overdue ? 'task-overdue' : ''}>
-                          <CalendarDays size={13} />
-                          {overdue ? 'Overdue · ' : ''}{taskDueLabel(task.dueDate, todayKey)}
+                          <CalendarDays size={13} />{overdue ? 'Overdue · ' : ''}{taskDueLabel(task.dueDate, todayKey)}
                         </span>
                       )}
-                      {task.repeat !== 'none' && (
-                        <span><Repeat2 size={13} />{task.repeat}</span>
-                      )}
+                      {task.repeat !== 'none' && <span><Repeat2 size={13} />{task.repeat}</span>}
                     </div>
                   </div>
                   <div className="task-record-actions">
-                    <button className="btn-icon" onClick={() => openTaskEditor(task.id)} type="button" aria-label={`Edit ${task.title}`}>
-                      <Pencil size={15} />
-                    </button>
-                    <button
-                      className="btn-icon"
-                      onClick={() => {
-                        if (window.confirm(`Delete “${task.title}”?`)) deleteTask(task.id);
-                      }}
-                      type="button"
-                      aria-label={`Delete ${task.title}`}
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    <button className="btn-icon" onClick={() => openTaskEditor(task.id)} type="button" aria-label={`Edit ${task.title}`}><Pencil size={15} /></button>
+                    <button className="btn-icon" onClick={() => { if (window.confirm(`Delete “${task.title}”?`)) deleteTask(task.id); }} type="button" aria-label={`Delete ${task.title}`}><Trash2 size={15} /></button>
                   </div>
                 </div>
               );
             })}
           </div>
+          {orderedTasks.length > HOME_TASK_PREVIEW_COUNT && (
+            <button className="home-list-disclosure" type="button" onClick={() => setTaskListExpanded((value) => !value)} aria-expanded={taskListExpanded}>
+              {taskListExpanded ? 'Show less' : `Show ${hiddenTaskCount} more ${hiddenTaskCount === 1 ? 'task' : 'tasks'}`}
+            </button>
+          )}
           {orderedTasks.length === 0 && <img className="priority-pet focus-pet" src={theme.priorityAsset} alt="" aria-hidden="true" />}
         </article>
 
         <article className="card upcoming-card surface-upcoming">
           <div className="upcoming-heading">
-            <p className="section-kicker">Coming up</p>
-            <button className="btn btn-secondary btn-compact btn-equal" onClick={() => openEventEditor()} type="button">
-              <Plus size={16} /> Add event
-            </button>
+            <div>
+              <p className="section-kicker">Coming up</p>
+              <p className="micro-copy">Next on your calendar</p>
+            </div>
+            <button className="btn btn-secondary btn-compact btn-equal" onClick={() => openEventEditor()} type="button"><Plus size={16} /> Add event</button>
           </div>
           <div className="timeline">
             {upcomingEvents.length === 0 ? (
               <button className="upcoming-empty" onClick={() => openEventEditor()} type="button">
-                <CalendarDays size={24} />
-                <span><strong>Your calendar is open</strong><small>Add an event when you’re ready.</small></span>
+                <CalendarDays size={24} /><span><strong>Your calendar is open</strong><small>Add an event when you’re ready.</small></span>
               </button>
             ) : upcomingEvents.map((event) => {
               const EventIcon = eventCategoryIcons[event.category];
               const dateLabel = taskDueLabel(event.occurrenceStartDate, todayKey);
-
               return (
                 <button className="timeline-item timeline-event" key={event.occurrenceId} onClick={() => openEventEditor(event.id)} type="button">
                   <span className="timeline-dot" />
                   <span className={`timeline-icon ${event.category}`}><EventIcon size={18} /></span>
-                  <span className="timeline-event-copy">
-                    <small>{dateLabel} · {eventTimeLabel(event)}</small>
-                    <strong>{event.title}</strong>
-                  </span>
+                  <span className="timeline-event-copy"><small>{dateLabel} · {eventTimeLabel(event)}</small><strong>{event.title}</strong></span>
                 </button>
               );
             })}
@@ -684,23 +545,14 @@ export function DashboardPage() {
 
       <section className="section life-garden-section">
         <div className="section-head">
-          <div><p className="section-kicker">Life garden</p><p className="micro-copy garden-subtitle">Real records, grouped around what matters.</p></div>
+          <div><p className="section-kicker">Life areas</p><p className="micro-copy garden-subtitle">A quick pulse from the records already here.</p></div>
         </div>
         <div className="life-garden-grid">
           {lifeAreas.map((area) => {
             const summary = lifeGardenSummaries[area.key];
-            const status = summary.recordCount
-              ? `${summary.recordCount} connected · ${summary.detail}`
-              : summary.detail;
-
+            const status = summary.recordCount ? `${summary.recordCount} connected · ${summary.detail}` : summary.detail;
             return (
-              <button
-                aria-label={`Open ${area.label}. ${status}`}
-                className={`card garden-card ${area.key}`}
-                onClick={() => navigate(area.route)}
-                type="button"
-                key={area.key}
-              >
+              <button aria-label={`Open ${area.label}. ${status}`} className={`card garden-card ${area.key}`} onClick={() => navigate(area.route)} type="button" key={area.key}>
                 <div className="garden-card-head"><img src={area.icon} alt="" /><strong>{area.label}</strong></div>
                 <span className="garden-status">{status}</span>
               </button>
@@ -713,18 +565,12 @@ export function DashboardPage() {
         <button className="card weekly-reflection-entry-card" onClick={() => navigate('/reflection')} type="button">
           <span className="weekly-reflection-entry-icon"><Sparkles size={20} /></span>
           <span className="weekly-reflection-entry-copy">
-            <span className="section-kicker">Weekly reflection</span>
-            <strong>See the week in your own records</strong>
+            <span className="section-kicker">Weekly overview</span>
+            <strong>See the week in your records</strong>
             <small>Tasks, events, reflections, spending, work, check-ins, and Life Areas — summarized without guessing what they mean.</small>
           </span>
           <span className="weekly-reflection-entry-action">Look back</span>
         </button>
-      </section>
-
-      <section className="section closing-note closing-note-v2">
-        <div className="closing-icon"><Sparkles size={20} /></div>
-        <div><p className="section-kicker">Today’s reminder</p><p className="closing-quote">{closingQuote.text}</p></div>
-        <img className="closing-art" src={stillAssets.cozy.tea} alt="" aria-hidden="true" />
       </section>
     </main>
   );
