@@ -64,21 +64,21 @@ export function TasksPage() {
 
   return (
     <main className="shell tasks-page">
-      <header className="tasks-page-header">
+      <header className="still-page-header">
         <button className="btn-icon" onClick={goBack} type="button" aria-label="Go back"><ArrowLeft size={20} /></button>
-        <div className="tasks-page-heading">
-          <div><p className="section-kicker">Your list</p><h1>Tasks</h1><p className="subtle">A complete view of what is open, finished, and still worth keeping.</p></div>
-          <button className="btn btn-secondary btn-compact" onClick={() => openTaskEditor()} type="button"><Plus size={16} /> Add task</button>
+        <div className="still-page-heading">
+          <div className="still-page-heading-copy"><p className="section-kicker">Your list</p><h1>Tasks</h1><p className="subtle">A complete view of what is open, finished, and still worth keeping.</p></div>
+          <button className="btn btn-secondary btn-compact still-action-button" onClick={() => openTaskEditor()} type="button"><Plus size={16} /> Add task</button>
         </div>
       </header>
 
-      <section className="tasks-summary" aria-label="Task summary">
-        <div><strong>{openCount}</strong><span>open</span></div>
-        <div><strong>{completedCount}</strong><span>completed</span></div>
-        <div><strong>{tasks.length}</strong><span>total</span></div>
+      <section className="tasks-summary still-summary-grid" aria-label="Task summary">
+        <div className="still-summary-tile"><strong>{openCount}</strong><span>open</span></div>
+        <div className="still-summary-tile"><strong>{completedCount}</strong><span>completed</span></div>
+        <div className="still-summary-tile"><strong>{tasks.length}</strong><span>total</span></div>
       </section>
 
-      <div className="tasks-filter" role="group" aria-label="Filter tasks">
+      <div className="still-filter-tabs" role="group" aria-label="Filter tasks">
         {(['open', 'completed', 'all'] as TaskFilter[]).map((value) => (
           <button
             className={filter === value ? 'is-active' : ''}
@@ -97,7 +97,7 @@ export function TasksPage() {
           <CheckSquare size={28} />
           <h2>{emptyCopy.title}</h2>
           <p>{emptyCopy.body}</p>
-          {filter !== 'completed' && <button className="btn btn-secondary btn-compact" onClick={() => openTaskEditor()} type="button"><Plus size={16} /> Add task</button>}
+          {filter !== 'completed' && <button className="btn btn-secondary btn-compact still-action-button" onClick={() => openTaskEditor()} type="button"><Plus size={16} /> Add task</button>}
         </section>
       ) : (
         <section className="tasks-list" aria-label={`${filter} tasks`}>
