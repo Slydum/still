@@ -101,6 +101,7 @@ function AppRoutes() {
         <Route path="/reflection" element={<WeeklyReflectionPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/work" element={<WorkPage />} />
+        <Route path="/life/work" element={<Navigate to="/work" replace />} />
         <Route path="/money" element={<MoneyPage />} />
         <Route path="/life/:areaId" element={<LifeAreaPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
