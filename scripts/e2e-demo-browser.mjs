@@ -170,11 +170,11 @@ try {
   await cdp.send('Page.navigate', { url: appOrigin + '/reflection' });
   await poll(
     cdp,
-    "document.querySelector('.weekly-reflection-page h1')?.textContent === 'Weekly reflection' && document.querySelector('#weekly-rhythm-title')?.textContent === 'Recorded activity by day'",
-    'weekly reflection route',
+    "document.querySelector('.weekly-reflection-page h1')?.textContent === 'Weekly overview' && document.querySelector('#weekly-rhythm-title')?.textContent === 'Recorded activity by day'",
+    'weekly overview route',
   );
 
-  console.log('Browser demo isolation, IndexedDB migration, and weekly reflection route checks passed.');
+  console.log('Browser demo isolation, IndexedDB migration, and weekly overview route checks passed.');
 } finally {
   cdp?.close();
   chrome?.kill('SIGTERM');

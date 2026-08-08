@@ -126,7 +126,7 @@ export function MorePage() {
 
   return (
     <main className="shell more-page">
-      <header className="more-page-header"><p className="section-kicker">Make Still yours</p><h1>More</h1><p className="subtle">Preferences, privacy, and the details that shape your space.</p></header>
+      <header className="more-page-header"><p className="section-kicker">Make Still yours</p><h1>Settings</h1><p className="subtle">Preferences, privacy, and the details that shape your space.</p></header>
 
       <section className="settings-section" aria-labelledby="profile-settings-title">
         <div className="settings-section-heading"><span><UserRound size={19} /></span><div><h2 id="profile-settings-title">Profile</h2><p>The name Still uses when it greets you.</p></div></div>
