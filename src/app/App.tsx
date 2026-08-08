@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { BottomNav } from '../components/navigation/BottomNav';
 import { SyncConfidenceIndicator } from '../components/SyncConfidenceIndicator';
@@ -42,14 +42,18 @@ function replaceBrowserRoute(path: string) {
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
-function ScrollToTop() {
+function RouteScrollManager() {
   const { pathname } = useLocation();
+  const navigationType = useNavigationType();
+
   useEffect(() => {
-    if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
+    if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'auto';
+    if (navigationType === 'POP') return;
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     const frame = window.requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
     return () => window.cancelAnimationFrame(frame);
-  }, [pathname]);
+  }, [navigationType, pathname]);
+
   return null;
 }
 
@@ -85,7 +89,7 @@ async function seedDisplayNameForNewAccount(session: CloudSession) {
 function AppRoutes() {
   return (
     <div className="app">
-      <ScrollToTop />
+      <RouteScrollManager />
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/today" element={<JournalPage />} />
