@@ -7,6 +7,9 @@ const expect = (condition, message) => { if (!condition) failures.push(message);
 const app = read('src/app/App.tsx');
 const bottomNav = read('src/components/navigation/BottomNav.tsx');
 const tasks = read('src/features/tasks/TasksPage.tsx');
+const health = read('src/features/health/HealthPage.tsx');
+const journal = read('src/features/journal/JournalPage.tsx');
+const repository = read('src/data/repositories/localStillRepository.ts');
 const money = read('src/features/money/MoneyPage.tsx');
 const expenseEditor = read('src/components/ui/quick-add/ExpenseEditor.tsx');
 const lifeArea = read('src/features/life-area/LifeAreaPage.tsx');
@@ -19,6 +22,9 @@ expect(tasks.includes('openTaskEditor(task.id)') && tasks.includes('toggleTask(t
 expect(expenseEditor.includes('expense?: StillExpense') && expenseEditor.includes("expense ? 'Save changes'") && expenseEditor.includes('allowIncome'), 'The shared expense editor must support existing expense edits and Money income.');
 expect(money.includes('updateExpense(transactionEditor.id, input)') && money.includes('Edit transaction'), 'Money must expose transaction correction without delete-and-recreate.');
 expect(money.includes('trapTabKey(event, dialog)') && money.includes('focusFirst(dialog)'), 'Transaction editing must keep the shared accessible dialog keyboard contract.');
+expect(health.includes('listCheckIns') && health.includes('saveCheckIn') && health.includes('healthRoutines'), 'Health must reuse durable check-ins and keep routines in the Health settings model.');
+expect(health.includes("entry.tags.includes('health-note')") && journal.includes("!entry.tags.includes('health-note')"), 'Health Notes must stay dedicated to Health instead of duplicating into Journal.');
+expect(repository.includes('stripCheckInMetadata(existing)') && repository.includes('...record'), 'Partial check-in saves must merge with the existing daily record so Health signals survive Home edits.');
 expect(lifeArea.includes("navigate('/money')") && lifeArea.includes("navigate('/work')"), 'Money and Work records in Life Areas must not remain static dead ends.');
 expect(notifications.includes("if (kind === 'task') navigate('/tasks')") && notifications.includes("if (kind === 'event') navigate('/calendar')"), 'Task and event notifications must lead to actionable destinations.');
 
