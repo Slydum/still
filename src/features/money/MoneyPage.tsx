@@ -354,7 +354,7 @@ export function MoneyPage() {
   return (
     <>
       <main className="shell money-page">
-        <header className="money-header">
+        <header className="money-header still-page-header">
           <button className="btn-icon money-back" onClick={goBack} type="button" aria-label="Go back"><ArrowLeft size={20} /></button>
           <div className="money-heading-copy">
             <p className="section-kicker">Money</p>
@@ -388,20 +388,20 @@ export function MoneyPage() {
           <div className="money-section-head">
             <div><p className="section-kicker">This month</p><h2 id="money-month-title">A simple pulse</h2></div>
           </div>
-          <div className="money-month-grid">
-            <article className="card money-month-card">
+          <div className="money-month-grid still-summary-grid">
+            <article className="card money-month-card still-summary-tile">
               <ArrowDownLeft size={18} />
               <span>Income</span>
               <strong>{displayTotals(monthlyIncome, privacyHidden)}</strong>
               <small>{monthlyTransactions.filter((expense) => moneyTransactionKind(expense) === 'income').length} recorded</small>
             </article>
-            <article className="card money-month-card">
+            <article className="card money-month-card still-summary-tile">
               <ArrowUpRight size={18} />
               <span>Spending</span>
               <strong>{displayTotals(monthlySpending, privacyHidden)}</strong>
               <small>{monthlyTransactions.filter((expense) => moneyTransactionKind(expense) === 'expense').length} recorded</small>
             </article>
-            <article className="card money-month-card money-month-note">
+            <article className="card money-month-card money-month-note still-summary-tile">
               <ReceiptText size={18} />
               <span>Records</span>
               <strong>{monthlyTransactions.length || '—'}</strong>
