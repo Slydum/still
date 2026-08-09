@@ -180,9 +180,37 @@
 .task-sheet { position: relative; }
 .task-sheet .section-head .subtle:empty { display: none; }
 
+/* These were previously applied by a global MutationObserver. Keep them as
+   declarative layout rules so Home and Quick Add do not depend on JS timing. */
+.dashboard-v2 .task-empty-state > span:first-child,
+.dashboard-v2 .upcoming-empty > svg {
+  display: none;
+}
+
+.dashboard-v2 .task-empty-state,
+.dashboard-v2 .upcoming-empty {
+  grid-template-columns: 1fr;
+  padding-inline: 0;
+}
+
 @keyframes still-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes still-sheet-in { from { opacity: 0; transform: translateY(24px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes still-content-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (pointer: coarse) and (max-width: 760px) {
+  .sheet.task-sheet {
+    max-height: min(78dvh, 680px);
+  }
+
+  .task-sheet .task-editor-actions .task-secondary-button {
+    display: none;
+  }
+
+  .task-sheet .task-editor-actions .task-primary-button {
+    width: 100%;
+    min-height: 50px;
+  }
+}
 
 @media (max-width: 430px) {
   .still-toast { bottom: calc(96px + env(safe-area-inset-bottom)); max-width: calc(100vw - 32px); white-space: nowrap; }
