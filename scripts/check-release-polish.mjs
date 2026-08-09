@@ -7,6 +7,8 @@ const expect = (condition, message) => { if (!condition) failures.push(message);
 const packageJson = JSON.parse(read('package.json'));
 const versionSource = read('src/app/version.ts');
 const more = read('src/features/more/MorePage.tsx');
+const main = read('src/main.tsx');
+const quickAdd = read('src/components/ui/QuickAddSheet.tsx');
 const releaseQa = read('scripts/e2e-release-qa.mjs');
 const liveVisual = read('scripts/live-visual-check.mjs');
 const iosForms = read('src/theme/ios-form-fix.css');
@@ -22,6 +24,8 @@ expect(releaseQa.includes('packageJson.version'), 'Release QA must verify the ve
 expect(liveVisual.includes("'love-mobile'") && liveVisual.includes("'money-mobile'") && liveVisual.includes("'health-mobile'"), 'Live visual QA must cover Love, Money, and Health in addition to Home and Work.');
 
 expect(iosForms.includes('.app input') && iosForms.includes('.app select') && iosForms.includes('.app textarea'), 'iOS form protection must cover app-wide form controls, not only Quick Add.');
+expect(!main.includes('quick-add-interactions'), 'Quick Add interactions must not rely on a global MutationObserver side-effect import.');
+expect(quickAdd.includes('trapTabKey') && quickAdd.includes('discard-confirm') && quickAdd.includes('returnFocusRef'), 'Quick Add must own focus trapping, draft protection, and focus restoration in React.');
 
 if (failures.length) {
   console.error('Final release polish checks failed:');
