@@ -10,6 +10,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
+import { STILL_VERSION } from '../../app/version';
 import { useAppStore, type AppearanceTone } from '../../stores/useAppStore';
 import { CloudSyncSettings } from './CloudSyncSettings';
 
@@ -189,7 +190,7 @@ export function MorePage() {
 
       <section className="settings-section" aria-labelledby="about-settings-title">
         <div className="settings-section-heading"><span><Info size={19} /></span><div><h2 id="about-settings-title">About</h2><p>A calm daily space built around your own rhythm.</p></div></div>
-        <div className="card settings-about-card"><div><strong>Still</strong><span>Version 0.3.0</span></div><p>Offline use depends on this browser’s local copy. Clearing site data or using “Log out — clear local data” removes that copy. Another device can recover only records that previously completed a successful Supabase sync.</p></div>
+        <div className="card settings-about-card"><div><strong>Still</strong><span>Version {STILL_VERSION}</span></div><p>Offline use depends on this browser’s local copy. Clearing site data or using “Log out — clear local data” removes that copy. Another device can recover only records that previously completed a successful Supabase sync.</p></div>
       </section>
     </main>
   );
