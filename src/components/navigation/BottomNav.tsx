@@ -17,6 +17,7 @@ function isActivePath(itemPath: string, pathname: string) {
       || pathname.startsWith('/life/')
       || pathname === '/work'
       || pathname === '/money'
+      || pathname === '/health'
       || pathname === '/reflection'
       || pathname === '/check-ins'
       || pathname === '/notifications';
