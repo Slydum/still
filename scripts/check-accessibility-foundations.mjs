@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 const tokens = await readFile('src/theme/tokens.css', 'utf8');
 const main = await readFile('src/main.tsx', 'utf8');
 const helper = await readFile('src/components/ui/dialogAccessibility.ts', 'utf8');
-const quickAdd = await readFile('src/theme/quick-add-interactions.ts', 'utf8');
+const quickAdd = await readFile('src/components/ui/QuickAddSheet.tsx', 'utf8');
 const workModal = await readFile('src/theme/work-modal-interactions.ts', 'utf8');
 
 const failures = [];
@@ -38,8 +38,11 @@ for (const token of ['muted', 'muted-soft']) {
 if (!helper.includes('trapTabKey') || !helper.includes('focusFirst') || !helper.includes("aria-modal")) {
   failures.push('dialogAccessibility.ts: shared focus trap, initial focus, and modal semantics are required');
 }
-if (!quickAdd.includes("from '../components/ui/dialogAccessibility'")) {
-  failures.push('quick-add-interactions.ts: Quick Add must use shared dialog accessibility utilities');
+if (!quickAdd.includes("from './dialogAccessibility'") || !quickAdd.includes('trapTabKey') || !quickAdd.includes('focusFirst')) {
+  failures.push('QuickAddSheet.tsx: Quick Add must use shared dialog accessibility utilities directly');
+}
+if (!quickAdd.includes('role="alertdialog"') || !quickAdd.includes('returnFocusRef')) {
+  failures.push('QuickAddSheet.tsx: draft confirmation and focus restoration must remain explicit');
 }
 if (!workModal.includes("from '../components/ui/dialogAccessibility'")) {
   failures.push('work-modal-interactions.ts: Work shift editor must use shared dialog accessibility utilities');
