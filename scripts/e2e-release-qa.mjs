@@ -1,9 +1,10 @@
 import { spawn, spawnSync } from 'node:child_process';
-import { rm } from 'node:fs/promises';
+import { readFile, rm } from 'node:fs/promises';
 
 const origin = 'http://127.0.0.1:4174';
 const chromePort = 9224;
 const profileDir = '/tmp/still-release-qa-chrome';
+const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 
 function findChrome() {
   for (const candidate of ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser']) {
@@ -67,14 +68,33 @@ async function poll(cdp, expression, label, attempts = 80) {
   throw new Error(`Timed out waiting for ${label}`);
 }
 
-async function navigate(cdp, path) {
-  await cdp.send('Page.navigate', { url: `${origin}${path}` });
-  await poll(cdp, "document.readyState === 'complete' && Boolean(document.querySelector('main'))", path);
+async function navigate(cdp, route) {
+  await cdp.send('Page.navigate', { url: `${origin}${route.path}` });
+  await poll(
+    cdp,
+    `document.readyState === 'complete' && location.pathname === ${JSON.stringify(route.expected ?? route.path)} && Boolean(document.querySelector('main'))`,
+    route.path,
+  );
+  await new Promise((resolve) => setTimeout(resolve, 100));
 }
 
 const routes = [
-  '/', '/tasks', '/calendar', '/journal', '/check-ins', '/reflection',
-  '/life/work', '/life/money', '/life/love', '/life/health', '/work', '/money', '/notifications', '/more',
+  { path: '/' },
+  { path: '/tasks' },
+  { path: '/today' },
+  { path: '/calendar' },
+  { path: '/check-ins' },
+  { path: '/reflection' },
+  { path: '/life/work', expected: '/work' },
+  { path: '/life/money' },
+  { path: '/life/love' },
+  { path: '/life/health', expected: '/health' },
+  { path: '/work' },
+  { path: '/work/details' },
+  { path: '/money' },
+  { path: '/health' },
+  { path: '/notifications' },
+  { path: '/more' },
 ];
 const viewports = [
   { width: 320, height: 720, label: 'small phone' },
@@ -116,31 +136,58 @@ try {
         overflow: document.documentElement.scrollWidth - window.innerWidth,
         mainVisible: (() => { const el = document.querySelector('main'); if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; })(),
         h1Count: document.querySelectorAll('main h1').length,
-        versionText: document.body.innerText.includes('Version 0.3.0')
+        versionText: document.body.innerText.includes(${JSON.stringify(`Version ${packageJson.version}`)})
       })`);
-      if (!state.mainVisible) throw new Error(`${viewport.label} ${route}: main content is not visible.`);
-      if (state.overflow > 2) throw new Error(`${viewport.label} ${route}: horizontal overflow of ${state.overflow}px.`);
-      if (route !== '/' && state.h1Count < 1) throw new Error(`${viewport.label} ${route}: missing page heading.`);
-      if (route === '/more' && !state.versionText) throw new Error('Settings does not report Version 0.3.0.');
+      if (!state.mainVisible) throw new Error(`${viewport.label} ${route.path}: main content is not visible.`);
+      if (state.path !== (route.expected ?? route.path)) throw new Error(`${viewport.label} ${route.path}: resolved to unexpected route ${state.path}.`);
+      if (state.overflow > 2) throw new Error(`${viewport.label} ${route.path}: horizontal overflow of ${state.overflow}px.`);
+      if (route.path !== '/' && state.h1Count < 1) throw new Error(`${viewport.label} ${route.path}: missing page heading.`);
+      if (route.path === '/more' && !state.versionText) throw new Error(`Settings does not report Version ${packageJson.version}.`);
     }
   }
 
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
-  await navigate(cdp, '/tasks');
+  await navigate(cdp, { path: '/tasks' });
   const opened = await evaluate(cdp, `(() => {
     const button = [...document.querySelectorAll('button')].find((item) => item.textContent?.includes('Add task'));
     if (!button) return false;
-    button.click(); return true;
+    button.dataset.releaseQaTrigger = 'true';
+    button.focus();
+    button.click();
+    return true;
   })()`);
   if (!opened) throw new Error('Tasks Add task action is unavailable.');
   await poll(cdp, "Boolean(document.querySelector('[role=dialog][aria-modal=true]'))", 'task dialog');
   const focusInside = await evaluate(cdp, "document.querySelector('[role=dialog]')?.contains(document.activeElement) === true");
   if (!focusInside) throw new Error('Task dialog did not place keyboard focus inside the modal.');
+
+  for (let index = 0; index < 12; index += 1) {
+    await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab' });
+    await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab' });
+  }
+  const focusStillInside = await evaluate(cdp, "document.querySelector('[role=dialog]')?.contains(document.activeElement) === true");
+  if (!focusStillInside) throw new Error('Task dialog allowed keyboard focus to escape.');
+
+  const changedDraft = await evaluate(cdp, `(() => {
+    const input = document.querySelector('[role=dialog] input[type=text]');
+    if (!input) return false;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    setter?.call(input, 'Release QA draft');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    return input.value === 'Release QA draft';
+  })()`);
+  if (!changedDraft) throw new Error('Task dialog draft field could not be changed.');
   await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' });
   await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape' });
+  await poll(cdp, "Boolean(document.querySelector('[role=alertdialog][aria-modal=true]'))", 'discard confirmation');
+  const discardFocusInside = await evaluate(cdp, "document.querySelector('[role=alertdialog]')?.contains(document.activeElement) === true");
+  if (!discardFocusInside) throw new Error('Discard confirmation did not receive keyboard focus.');
+  await evaluate(cdp, "document.querySelector('[role=alertdialog] [data-discard]')?.click(); true");
   await poll(cdp, "!document.querySelector('[role=dialog][aria-modal=true]')", 'task dialog close');
+  const restoredFocus = await evaluate(cdp, "document.activeElement?.dataset.releaseQaTrigger === 'true'");
+  if (!restoredFocus) throw new Error('Task dialog did not restore focus to its opening control.');
 
-  console.log('v0.3 release QA passed: responsive routes, headings, version identity, and modal keyboard behavior.');
+  console.log(`v${packageJson.version} release QA passed: real routes, responsive headings, release identity, modal focus trap, draft protection, Escape handling, and focus restoration.`);
 } finally {
   cdp?.close();
   chrome?.kill('SIGTERM');
