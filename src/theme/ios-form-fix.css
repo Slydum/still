@@ -1,8 +1,12 @@
-/* Prevent iOS Safari from auto-zooming compact form controls on focus. */
+/* Prevent iOS Safari from auto-zooming compact form controls on focus.
+   Still uses intentionally compact controls in several feature pages, so this
+   protection must apply beyond Quick Add as well. */
 @supports (-webkit-touch-callout: none) {
-  .task-sheet input,
-  .task-sheet select,
-  .task-sheet textarea {
-    font-size: 16px;
+  @media (pointer: coarse) {
+    .app input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    .app select,
+    .app textarea {
+      font-size: 16px;
+    }
   }
 }

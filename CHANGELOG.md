@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.4.0
+
+Still v0.4 turns the four Life Areas into complete, calm working surfaces and finishes the cross-app release polish around them.
+
+### Home, Work, Love, Money, and Health
+
+- refines Home into a quiet daily orientation surface with bounded previews and clearer hierarchy
+- turns Work into a practical work hub with queue, shift/pay context, meetings, incidents, changes, notes, and supporting records
+- turns Love into a relationship collection for people, plans, moments, notes, and gentle connection check-ins
+- turns Money into a privacy-first finance overview with transactions, upcoming bills, savings goals, accounts, and minimal summary visuals
+- adds a dedicated Health overview for mood and energy, optional daily wellbeing observations, routines, Health Notes, and progressive history/settings
+- preserves existing data models where possible instead of creating duplicate ledgers, check-ins, or disconnected records
+
+### Final polish and release hardening
+
+- aligns feature pages around shared Still page-header and summary primitives without flattening their individual character
+- expands iPhone Safari form-zoom protection to compact controls across the whole app
+- corrects the release QA matrix so it exercises the real Journal route plus dedicated Health and Work detail surfaces
+- verifies modal focus trapping, unsaved-draft protection, Escape behavior, and focus restoration in the release browser suite
+- expands deployed mobile visual QA from Home and Work to Love, Money, Health, Journal, and Settings
+- centralizes the displayed release identity and guards it against package-version drift
+
+### Release safeguards
+
+The existing local-first, IndexedDB, Supabase/RLS, auth/recovery/cross-browser sync, bundle-budget, dependency-audit, nested-base PWA, deployment, offline reload, and live visual gates remain mandatory for this release.
+
+Still saves supported records locally first. Cloud sync is not continuous after every edit; another device can recover only records that previously completed a successful sync. Local browser reminders are not server push notifications and are not guaranteed while the browser is fully closed or suspended. Supabase data is account-scoped through row-level security, but Still does not claim end-to-end encryption with user-only keys.
+
+See `DATA_AND_PRIVACY.md` for the canonical data, privacy, sync, recovery, weather/location, reminder, and Demo Sandbox boundaries.
+
 ## 0.3.0
 
 Still v0.3 is the UX consolidation release. It keeps the local-first product model established earlier while making the daily experience more coherent, accessible, navigable, and complete.

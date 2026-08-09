@@ -2,8 +2,9 @@
 
 Before merging a change to `main`:
 
-- `app-quality` passes: formatting baseline, TypeScript/source hygiene, unit tests, dependency audit, production build, bundle budget, browser demo/IndexedDB integration, and the v0.3 responsive/keyboard release QA matrix.
-- The release QA matrix covers primary routes at 320px, 390px, 768px, and 1280px, rejects horizontal overflow or missing page headings, verifies the displayed release version, and exercises modal focus plus Escape behavior.
+- `app-quality` passes: formatting baseline, TypeScript/source hygiene, unit tests, dependency audit, production build, bundle budget, browser demo/IndexedDB integration, and the v0.4 responsive/keyboard release QA matrix.
+- The release QA matrix covers primary routes at 320px, 390px, 768px, and 1280px, rejects horizontal overflow or missing page headings, verifies the displayed release version against `package.json`, and exercises modal focus trapping, unsaved-draft protection, Escape behavior, and focus restoration.
+- The route matrix must exercise the real Journal (`/today`), dedicated Health (`/health`), and Work detail (`/work/details`) surfaces rather than relying on fallback or redirect routes to pass.
 - `database-security` passes: migrations apply cleanly, pgTAP verifies RLS plus synchronization behavior, and the disposable browser acceptance flow covers signup/login, password recovery, cross-browser sync, deletion propagation, logout/local-copy behavior, account binding, and sync-gated local clearing.
 - GitHub Pages `build` passes, including nested-base PWA verification.
 - Database migrations required by the release are applied to production only after the disposable local-database tests pass.
@@ -29,8 +30,9 @@ The GitHub app used by automated maintenance may not have permission to change b
 After a merge to `main`:
 
 - Confirm the `main` `app-quality` and `database-security` jobs pass on the merge commit.
-- Confirm the GitHub Pages `build`, **deploy**, and `live-pages-smoke` jobs complete successfully for the merge commit. A pull-request Pages build does not prove that production was deployed or that the deployed service worker can reload offline.
+- Confirm the GitHub Pages `build`, **deploy**, `live-pages-smoke`, and `live-visual-qa` jobs complete successfully for the merge commit. A pull-request Pages build does not prove that production was deployed or that the deployed service worker can reload offline.
 - `live-pages-smoke` must exercise the deployed Demo Sandbox, a direct nested route, the `/still/` service-worker scope, and an offline reload of the installed app shell.
+- `live-visual-qa` must cover the deployed mobile Home, Work, Love, Money, Health, Journal, and Settings surfaces and reject horizontal overflow on those feature pages.
 - For a release containing a production database migration, confirm the production schema/security boundary still matches the tested migration and review Supabase security advisors.
 - Smoke-check any release-specific browser/device behavior that cannot be automated reliably, especially notification and location permission UX on the intended mobile browsers.
 

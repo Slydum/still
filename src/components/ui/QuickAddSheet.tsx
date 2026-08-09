@@ -11,7 +11,15 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+} from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   useAppStore,
@@ -34,12 +42,14 @@ import {
 } from '../../features/journal/journalDraftContext';
 import { isLifeAreaId, type LifeAreaId } from '../../domain/lifeAreas';
 import { getLocalDateKey } from '../../theme/stillContext';
+import { focusFirst, trapTabKey } from './dialogAccessibility';
 import { LifeAreaPicker } from './LifeAreaPicker';
 import { CheckInEditor } from './quick-add/CheckInEditor';
 import { ExpenseEditor } from './quick-add/ExpenseEditor';
 import { journalMoods } from './quick-add/quickAddOptions';
 
 type QuickActionLabel = 'Task' | 'Event' | 'Expense' | 'Work' | 'Check-in' | 'Journal';
+type DiscardIntent = 'close' | 'menu';
 
 const primaryActions: Array<{ label: QuickActionLabel; icon: LucideIcon; hint: string }> = [
   { label: 'Task', icon: CheckSquare, hint: 'A small next step' },
@@ -88,7 +98,7 @@ function TaskEditor({ task, initialAreaId, onCancel, onSave }: {
     <form className="task-editor" onSubmit={submit}>
       <label className="task-field">
         <span>Task</span>
-        <input autoFocus maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="What needs your attention?" required type="text" value={title} />
+        <input data-autofocus maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="What needs your attention?" required type="text" value={title} />
       </label>
       <LifeAreaPicker value={areaId} onChange={setAreaId} />
 
@@ -166,7 +176,7 @@ function EventEditor({ event, initialDate, initialAreaId, onCancel, onSave }: {
     <form className="task-editor event-editor" onSubmit={submit}>
       <label className="task-field">
         <span>Event</span>
-        <input autoFocus maxLength={120} onChange={(inputEvent) => setTitle(inputEvent.target.value)} placeholder="What’s happening?" required type="text" value={title} />
+        <input data-autofocus maxLength={120} onChange={(inputEvent) => setTitle(inputEvent.target.value)} placeholder="What’s happening?" required type="text" value={title} />
       </label>
 
       <div className="task-form-row">
@@ -276,7 +286,7 @@ function JournalEditor({ entry, initialDate, initialAreaId, draftContext, onCanc
       <label className="task-field">
         <span>Reflection</span>
         <textarea
-          autoFocus
+          data-autofocus
           maxLength={5000}
           onChange={(event) => setBody(event.target.value)}
           placeholder={draftContext?.prompt ?? 'What’s on your mind?'}
@@ -381,6 +391,12 @@ export function QuickAddSheet() {
   const editingJournalEntry = journalEntries.find((entry) => entry.id === editingJournalId);
   const [journalDraftContext, setJournalDraftContext] = useState<JournalDraftContext>();
   const [toast, setToast] = useState('');
+  const [dirty, setDirty] = useState(false);
+  const [discardIntent, setDiscardIntent] = useState<DiscardIntent>();
+  const sheetRef = useRef<HTMLElement>(null);
+  const discardRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const editorFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!open || mode !== 'journal' || editingJournalId) {
@@ -400,14 +416,100 @@ export function QuickAddSheet() {
   useEffect(() => {
     if (!open) return undefined;
     const previousOverflow = document.body.style.overflow;
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     document.body.style.overflow = 'hidden';
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') close(); };
-    window.addEventListener('keydown', closeOnEscape);
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', closeOnEscape);
+      const target = returnFocusRef.current;
+      returnFocusRef.current = null;
+      window.requestAnimationFrame(() => target?.focus?.());
     };
-  }, [close, open]);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    setDirty(false);
+    setDiscardIntent(undefined);
+    const frame = window.requestAnimationFrame(() => {
+      const sheet = sheetRef.current;
+      if (!sheet) return;
+      if (window.matchMedia('(pointer: coarse) and (max-width: 760px)').matches) {
+        sheet.focus({ preventScroll: true });
+      } else {
+        focusFirst(sheet);
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [editingEventId, editingJournalId, editingTaskId, mode, open]);
+
+  useEffect(() => {
+    if (!discardIntent) return undefined;
+    const frame = window.requestAnimationFrame(() => focusFirst(discardRef.current ?? sheetRef.current!));
+    return () => window.cancelAnimationFrame(frame);
+  }, [discardIntent]);
+
+  const closeCleanly = useCallback(() => {
+    setDirty(false);
+    setDiscardIntent(undefined);
+    close();
+  }, [close]);
+
+  const requestIntent = useCallback((intent: DiscardIntent) => {
+    if (!dirty) {
+      if (intent === 'menu') {
+        setDirty(false);
+        openQuickAdd();
+      } else {
+        closeCleanly();
+      }
+      return;
+    }
+    editorFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setDiscardIntent(intent);
+  }, [closeCleanly, dirty, openQuickAdd]);
+
+  const keepEditing = () => {
+    setDiscardIntent(undefined);
+    const target = editorFocusRef.current;
+    window.requestAnimationFrame(() => target?.focus?.());
+  };
+
+  const discardDraft = () => {
+    const intent = discardIntent;
+    setDirty(false);
+    setDiscardIntent(undefined);
+    if (intent === 'menu') {
+      openQuickAdd();
+      return;
+    }
+    close();
+  };
+
+  const markInteractiveDirty = (event: ReactMouseEvent<HTMLElement>) => {
+    if (mode === 'menu' || discardIntent) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('[aria-pressed], summary')) setDirty(true);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (discardIntent) {
+      const dialog = discardRef.current;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        keepEditing();
+        return;
+      }
+      if (dialog) trapTabKey(event.nativeEvent, dialog);
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      requestIntent('close');
+      return;
+    }
+    if (sheetRef.current) trapTabKey(event.nativeEvent, sheetRef.current);
+  };
 
   const toastElement = toast ? (
     <div className="still-toast is-visible" role="status" aria-live="polite">
@@ -418,19 +520,38 @@ export function QuickAddSheet() {
 
   if (!open) return toastElement;
 
-  const saveTask = (input: TaskInput) => { editingTask ? updateTask(editingTask.id, input) : addTask(input); close(); };
-  const saveEvent = (input: EventInput) => { editingEvent ? updateEvent(editingEvent.id, input) : addEvent(input); close(); };
+  const saveTask = (input: TaskInput) => {
+    editingTask ? updateTask(editingTask.id, input) : addTask(input);
+    setToast(editingTask ? 'Task updated' : 'Task added');
+    closeCleanly();
+  };
+  const saveEvent = (input: EventInput) => {
+    editingEvent ? updateEvent(editingEvent.id, input) : addEvent(input);
+    setToast(editingEvent ? 'Event updated' : 'Event added');
+    closeCleanly();
+  };
   const saveJournalEntry = (input: JournalInput) => {
     editingJournalEntry ? updateJournalEntry(editingJournalEntry.id, input) : addJournalEntry(input);
     setToast(journalDraftContext && !editingJournalEntry
       ? 'You made space for this feeling.'
-      : 'Your reflection is saved.');
+      : editingJournalEntry ? 'Journal updated' : 'Your reflection is saved.');
     setJournalDraftContext(undefined);
-    close();
+    closeCleanly();
   };
-  const saveExpense = (input: ExpenseInput) => { addExpense(input); close(); };
-  const saveCheckIn = (mood?: number, energy?: number) => { replaceTodayCheckIn(mood, energy); close(); };
-  const openWork = () => { close(); navigate('/work'); };
+  const saveExpense = (input: ExpenseInput) => {
+    addExpense(input);
+    setToast('Expense logged');
+    closeCleanly();
+  };
+  const saveCheckIn = (mood?: number, energy?: number) => {
+    replaceTodayCheckIn(mood, energy);
+    setToast('Check-in updated');
+    closeCleanly();
+  };
+  const openWork = () => {
+    closeCleanly();
+    navigate('/work');
+  };
 
   const actionHandlers: Record<QuickActionLabel, () => void> = {
     Task: openTaskEditor,
@@ -446,24 +567,36 @@ export function QuickAddSheet() {
 
   return (
     <>
-      <div className="sheet-backdrop" onClick={close}>
-        <section className="sheet task-sheet" onClick={(event) => event.stopPropagation()} aria-modal="true" role="dialog" aria-labelledby="quick-add-title">
+      <div className="sheet-backdrop" onClick={(event) => { if (event.target === event.currentTarget) requestIntent('close'); }}>
+        <section
+          aria-labelledby="quick-add-title"
+          aria-modal="true"
+          className="sheet task-sheet"
+          onChangeCapture={() => { if (mode !== 'menu' && !discardIntent) setDirty(true); }}
+          onClick={(event) => event.stopPropagation()}
+          onClickCapture={markInteractiveDirty}
+          onInputCapture={() => { if (mode !== 'menu' && !discardIntent) setDirty(true); }}
+          onKeyDown={handleKeyDown}
+          ref={sheetRef}
+          role="dialog"
+          tabIndex={-1}
+        >
           <div className="sheet-handle" />
           <div className="section-head">
             <div className="task-sheet-heading">
               {mode !== 'menu' && !editingTask && !editingEvent && !editingJournalEntry && (
-                <button className="task-back-button" onClick={() => openQuickAdd()} aria-label="Back to quick add" type="button"><ChevronLeft size={20} /></button>
+                <button className="task-back-button" onClick={() => requestIntent('menu')} aria-label="Back to quick add" type="button"><ChevronLeft size={20} /></button>
               )}
               <div><h2 className="section-title" id="quick-add-title">{editorTitle}</h2><p className="subtle">{editorSubtitle}</p></div>
             </div>
-            <button className="link-btn" onClick={close} aria-label="Close" type="button"><X /></button>
+            <button className="link-btn" onClick={() => requestIntent('close')} aria-label="Close" type="button"><X /></button>
           </div>
 
-          {mode === 'task' ? <TaskEditor key={editingTask?.id ?? 'new-task'} task={editingTask} initialAreaId={currentLifeAreaId} onCancel={close} onSave={saveTask} />
-            : mode === 'event' ? <EventEditor key={editingEvent?.id ?? `new-event-${eventDraftDate ?? 'today'}`} event={editingEvent} initialDate={eventDraftDate} initialAreaId={currentLifeAreaId} onCancel={close} onSave={saveEvent} />
-            : mode === 'journal' ? <JournalEditor key={editingJournalEntry?.id ?? `new-journal-${journalDraftDate ?? 'today'}-${journalDraftContext?.answer ?? 'plain'}`} entry={editingJournalEntry} initialDate={journalDraftDate} initialAreaId={currentLifeAreaId} draftContext={journalDraftContext} onCancel={close} onSave={saveJournalEntry} />
-            : mode === 'expense' ? <ExpenseEditor currency={expenseCurrency} onCancel={close} onSave={saveExpense} />
-            : mode === 'check-in' ? <CheckInEditor currentEnergy={currentEnergy} currentMood={currentMood} onCancel={close} onSave={saveCheckIn} />
+          {mode === 'task' ? <TaskEditor key={editingTask?.id ?? 'new-task'} task={editingTask} initialAreaId={currentLifeAreaId} onCancel={() => requestIntent('close')} onSave={saveTask} />
+            : mode === 'event' ? <EventEditor key={editingEvent?.id ?? `new-event-${eventDraftDate ?? 'today'}`} event={editingEvent} initialDate={eventDraftDate} initialAreaId={currentLifeAreaId} onCancel={() => requestIntent('close')} onSave={saveEvent} />
+            : mode === 'journal' ? <JournalEditor key={editingJournalEntry?.id ?? `new-journal-${journalDraftDate ?? 'today'}-${journalDraftContext?.answer ?? 'plain'}`} entry={editingJournalEntry} initialDate={journalDraftDate} initialAreaId={currentLifeAreaId} draftContext={journalDraftContext} onCancel={() => requestIntent('close')} onSave={saveJournalEntry} />
+            : mode === 'expense' ? <ExpenseEditor currency={expenseCurrency} onCancel={() => requestIntent('close')} onSave={saveExpense} />
+            : mode === 'check-in' ? <CheckInEditor currentEnergy={currentEnergy} currentMood={currentMood} onCancel={() => requestIntent('close')} onSave={saveCheckIn} />
             : <>
                 <div className="quick-grid quick-grid-primary">
                   {primaryActions.map(({ label, icon: Icon, hint }) => (
@@ -478,6 +611,16 @@ export function QuickAddSheet() {
                   ))}
                 </div>
               </>}
+
+          {discardIntent && (
+            <div className="discard-confirm" ref={discardRef} role="alertdialog" aria-modal="true" aria-labelledby="discard-confirm-title" aria-describedby="discard-confirm-description">
+              <div><h3 id="discard-confirm-title">Discard this draft?</h3><p id="discard-confirm-description">You have unsaved changes.</p></div>
+              <div className="discard-confirm-actions">
+                <button className="task-secondary-button" type="button" data-keep onClick={keepEditing}>Keep editing</button>
+                <button className="discard-button" type="button" data-discard onClick={discardDraft}>Discard</button>
+              </div>
+            </div>
+          )}
         </section>
       </div>
       {toastElement}

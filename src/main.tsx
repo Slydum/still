@@ -14,7 +14,6 @@ import './theme/uniformity.css';
 import './theme/ios-form-fix.css';
 import './theme/quick-add-disclosure.css';
 import './theme/modal-interactions.css';
-import './theme/quick-add-interactions';
 import './theme/work-modal-interactions';
 import './theme/dashboard-hierarchy.css';
 import './theme/v03-ux-correctness.css';
