@@ -10,6 +10,11 @@ import {
 } from '../data/repositories/recordChanges';
 import { enqueueRepositoryWrite } from '../data/repositoryWriteQueue';
 import {
+  DEFAULT_HEALTH_SIGNAL_PREFERENCES,
+  EMPTY_HEALTH_ROUTINES,
+  type HealthSettingsState,
+} from '../domain/health';
+import {
   EMPTY_MONEY_ACCOUNTS,
   EMPTY_MONEY_BILLS,
   EMPTY_MONEY_SAVINGS_GOALS,
@@ -23,10 +28,12 @@ let bootstrapPromise: ReturnType<typeof stillRepository.bootstrap> | undefined;
 // Suppress the store subscriber so those snapshots do not become fresh dirty writes.
 let applyingRepositorySnapshot = false;
 
-type StoreWithMoney = ReturnType<typeof useAppStore.getState> & Partial<MoneySettingsState>;
+type StoreWithLifeSettings = ReturnType<typeof useAppStore.getState>
+  & Partial<MoneySettingsState>
+  & Partial<HealthSettingsState>;
 
 function accountSettingsFromStore() {
-  const state = useAppStore.getState() as StoreWithMoney;
+  const state = useAppStore.getState() as StoreWithLifeSettings;
   return accountSettingsFromState({
     name: state.name,
     appearanceTone: state.appearanceTone,
@@ -42,6 +49,8 @@ function accountSettingsFromStore() {
     moneyBills: state.moneyBills ?? EMPTY_MONEY_BILLS,
     moneySavingsGoals: state.moneySavingsGoals ?? EMPTY_MONEY_SAVINGS_GOALS,
     moneyPrivacyHidden: state.moneyPrivacyHidden ?? true,
+    healthRoutines: state.healthRoutines ?? EMPTY_HEALTH_ROUTINES,
+    healthSignalPreferences: state.healthSignalPreferences ?? DEFAULT_HEALTH_SIGNAL_PREFERENCES,
   });
 }
 
@@ -171,8 +180,8 @@ export function usePermanentDataRepository() {
           );
         }
 
-        const moneyState = state as StoreWithMoney;
-        const previousMoneyState = previousState as StoreWithMoney;
+        const lifeSettings = state as StoreWithLifeSettings;
+        const previousLifeSettings = previousState as StoreWithLifeSettings;
         const accountSettingsChanged =
           state.name !== previousState.name
           || state.appearanceTone !== previousState.appearanceTone
@@ -184,10 +193,12 @@ export function usePermanentDataRepository() {
           || state.eventReminderMinutes !== previousState.eventReminderMinutes
           || state.workProfile !== previousState.workProfile
           || state.workPrivacyBlur !== previousState.workPrivacyBlur
-          || moneyState.moneyAccounts !== previousMoneyState.moneyAccounts
-          || moneyState.moneyBills !== previousMoneyState.moneyBills
-          || moneyState.moneySavingsGoals !== previousMoneyState.moneySavingsGoals
-          || moneyState.moneyPrivacyHidden !== previousMoneyState.moneyPrivacyHidden;
+          || lifeSettings.moneyAccounts !== previousLifeSettings.moneyAccounts
+          || lifeSettings.moneyBills !== previousLifeSettings.moneyBills
+          || lifeSettings.moneySavingsGoals !== previousLifeSettings.moneySavingsGoals
+          || lifeSettings.moneyPrivacyHidden !== previousLifeSettings.moneyPrivacyHidden
+          || lifeSettings.healthRoutines !== previousLifeSettings.healthRoutines
+          || lifeSettings.healthSignalPreferences !== previousLifeSettings.healthSignalPreferences;
 
         if (accountSettingsChanged) {
           enqueue(() => stillRepository.persistAccountSettings(accountSettingsFromStore()));

@@ -201,7 +201,10 @@ export class LocalStillRepository implements StillRepository {
 
   async saveCheckIn(record: CheckInRecord) {
     const existing = await stillDb.checkIns.get(record.date);
-    const syncedRecord = withCheckInSyncMetadata(record);
+    const mergedRecord: CheckInRecord = existing
+      ? { ...stripCheckInMetadata(existing), ...record }
+      : record;
+    const syncedRecord = withCheckInSyncMetadata(mergedRecord);
     await stillDb.checkIns.put({
       ...syncedRecord,
       userId: existing?.userId ?? syncedRecord.userId,

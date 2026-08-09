@@ -37,6 +37,10 @@ describe('account settings sync model', () => {
     assert.equal(patch.moneyBills?.length, 0);
     assert.equal(patch.moneySavingsGoals?.length, 0);
     assert.equal(patch.moneyPrivacyHidden, true);
+    assert.equal(patch.healthRoutines?.length, 0);
+    assert.equal(patch.healthSignalPreferences?.sleep, true);
+    assert.equal(patch.healthSignalPreferences?.hydration, false);
+    assert.equal(patch.healthSignalPreferences?.movement, false);
     assert.equal('notificationsEnabled' in patch, false);
     assert.equal('autoWeather' in patch, false);
     assert.equal('weather' in patch, false);
@@ -72,6 +76,42 @@ describe('account settings sync model', () => {
     assert.equal(patch.moneyAccounts?.[0]?.name, 'Everyday');
     assert.equal(patch.moneyAccounts?.[0]?.balance, 1200);
     assert.equal(patch.moneyPrivacyHidden, false);
+  });
+
+  it('keeps Health routines and tracker preferences in the synced settings record', () => {
+    const settings = accountSettingsFromState({
+      name: 'Alex',
+      appearanceTone: 'warm',
+      reduceMotion: false,
+      taskReminders: true,
+      eventReminders: true,
+      dailyCheckInReminder: true,
+      reminderTime: '09:15',
+      eventReminderMinutes: 30,
+      workProfile: DEFAULT_WORK_PROFILE,
+      workPrivacyBlur: true,
+      healthRoutines: [{
+        id: 'routine-1',
+        title: 'Take medication',
+        cadence: 'daily',
+        note: 'With breakfast',
+        lastCompletedDate: '2026-08-09',
+        createdAt: 1,
+        updatedAt: 2,
+      }],
+      healthSignalPreferences: {
+        sleep: true,
+        hydration: true,
+        movement: false,
+      },
+    }, 789);
+
+    const patch = accountSettingsStatePatch(settings);
+    assert.equal(patch.healthRoutines?.[0]?.title, 'Take medication');
+    assert.equal(patch.healthRoutines?.[0]?.lastCompletedDate, '2026-08-09');
+    assert.equal(patch.healthSignalPreferences?.sleep, true);
+    assert.equal(patch.healthSignalPreferences?.hydration, true);
+    assert.equal(patch.healthSignalPreferences?.movement, false);
   });
 
   it('uses signup display metadata only when it contains a real name', () => {

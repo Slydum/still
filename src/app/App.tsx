@@ -24,6 +24,7 @@ import { useReminderEngine } from '../hooks/useReminderEngine';
 import { getAppRoutePathname, toAppPath } from './appLocation';
 import { beginDemoSession, isDemoMode } from './demoMode';
 
+const HealthPage = lazy(() => import('../features/health/HealthPage').then((module) => ({ default: module.HealthPage })));
 const LovePage = lazy(() => import('../features/love/LovePage').then((module) => ({ default: module.LovePage })));
 const MoneyPage = lazy(() => import('../features/money/MoneyPage').then((module) => ({ default: module.MoneyPage })));
 const LifeAreaPage = lazy(() => import('../features/life-area/LifeAreaPage').then((module) => ({ default: module.LifeAreaPage })));
@@ -76,6 +77,8 @@ function AppRoutes() {
     <Route path="/work/details" element={<WorkPage />} />
     <Route path="/life/work" element={<Navigate to="/work" replace />} />
     <Route path="/money" element={<Suspense fallback={<AppLoading message="Opening Money…" />}><MoneyPage /></Suspense>} />
+    <Route path="/health" element={<Suspense fallback={<AppLoading message="Opening Health…" />}><HealthPage /></Suspense>} />
+    <Route path="/life/health" element={<Navigate to="/health" replace />} />
     <Route path="/life/love" element={<Suspense fallback={<AppLoading message="Opening Love…" />}><LovePage /></Suspense>} />
     <Route path="/life/:areaId" element={<Suspense fallback={<AppLoading message="Opening your Life Area…" />}><LifeAreaPage /></Suspense>} />
     <Route path="*" element={<Navigate to="/" replace />} />

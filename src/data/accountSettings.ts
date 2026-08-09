@@ -1,4 +1,9 @@
 import type {
+  HealthRoutine,
+  HealthSignalPreferences,
+} from '../domain/health';
+import { DEFAULT_HEALTH_SIGNAL_PREFERENCES } from '../domain/health';
+import type {
   MoneyAccount,
   MoneyBill,
   MoneySavingsGoal,
@@ -23,6 +28,8 @@ export type AccountSettings = {
   moneyBills?: MoneyBill[];
   moneySavingsGoals?: MoneySavingsGoal[];
   moneyPrivacyHidden?: boolean;
+  healthRoutines?: HealthRoutine[];
+  healthSignalPreferences?: HealthSignalPreferences;
   updatedAt: number;
 };
 
@@ -37,6 +44,8 @@ export function accountSettingsFromState(source: AccountSettingsSource, updatedA
     moneyBills: source.moneyBills ?? [],
     moneySavingsGoals: source.moneySavingsGoals ?? [],
     moneyPrivacyHidden: source.moneyPrivacyHidden ?? true,
+    healthRoutines: source.healthRoutines ?? [],
+    healthSignalPreferences: source.healthSignalPreferences ?? DEFAULT_HEALTH_SIGNAL_PREFERENCES,
     updatedAt,
   };
 }
@@ -57,6 +66,8 @@ export function accountSettingsStatePatch(settings: AccountSettings): AccountSet
     moneyBills: settings.moneyBills ?? [],
     moneySavingsGoals: settings.moneySavingsGoals ?? [],
     moneyPrivacyHidden: settings.moneyPrivacyHidden ?? true,
+    healthRoutines: settings.healthRoutines ?? [],
+    healthSignalPreferences: settings.healthSignalPreferences ?? DEFAULT_HEALTH_SIGNAL_PREFERENCES,
   };
 }
 
