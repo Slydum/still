@@ -33,9 +33,9 @@ describe('account settings sync model', () => {
     assert.equal(patch.reduceMotion, true);
     assert.equal(patch.reminderTime, '08:30');
     assert.equal(patch.workProfile.currency, DEFAULT_WORK_PROFILE.currency);
-    assert.deepEqual(patch.moneyAccounts, []);
-    assert.deepEqual(patch.moneyBills, []);
-    assert.deepEqual(patch.moneySavingsGoals, []);
+    assert.equal(patch.moneyAccounts?.length, 0);
+    assert.equal(patch.moneyBills?.length, 0);
+    assert.equal(patch.moneySavingsGoals?.length, 0);
     assert.equal(patch.moneyPrivacyHidden, true);
     assert.equal('notificationsEnabled' in patch, false);
     assert.equal('autoWeather' in patch, false);
