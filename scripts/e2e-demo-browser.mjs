@@ -65,11 +65,18 @@ async function evaluate(cdp, expression) {
 }
 
 async function poll(cdp, expression, label, attempts = 80) {
+  let lastError;
   for (let index = 0; index < attempts; index += 1) {
-    if (await evaluate(cdp, expression)) return;
+    try {
+      if (await evaluate(cdp, expression)) return;
+    } catch (error) {
+      // Chrome can briefly expose no usable document while Page.navigate swaps
+      // execution contexts. Treat that hand-off as a retry, not an app failure.
+      lastError = error;
+    }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  throw new Error(`Timed out waiting for ${label}`);
+  throw lastError ?? new Error(`Timed out waiting for ${label}`);
 }
 
 await rm(profileDir, { recursive: true, force: true });
@@ -163,7 +170,7 @@ try {
   if (primaryCounts.total !== 0) throw new Error(`Demo data leaked into the primary IndexedDB database: ${JSON.stringify(primaryCounts)}`);
 
   await cdp.send('Page.navigate', { url: `${appOrigin}/more` });
-  await poll(cdp, "document.body.innerText.includes('Demo sandbox')", 'demo sandbox controls');
+  await poll(cdp, "document.body?.innerText.includes('Demo sandbox') === true", 'demo sandbox controls');
   const body = await evaluate(cdp, 'document.body.innerText');
   if (!body.includes('Reset demo data') || !body.includes('Exit demo')) throw new Error('Demo reset/exit controls are missing.');
 
