@@ -158,8 +158,7 @@ try {
   })()`);
   if (!opened) throw new Error('Tasks Add task action is unavailable.');
   await poll(cdp, "Boolean(document.querySelector('[role=dialog][aria-modal=true]'))", 'task dialog');
-  const focusInside = await evaluate(cdp, "document.querySelector('[role=dialog]')?.contains(document.activeElement) === true");
-  if (!focusInside) throw new Error('Task dialog did not place keyboard focus inside the modal.');
+  await poll(cdp, "document.querySelector('[role=dialog]')?.contains(document.activeElement) === true", 'task dialog keyboard focus');
 
   for (let index = 0; index < 12; index += 1) {
     await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab' });
@@ -180,12 +179,10 @@ try {
   await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' });
   await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape' });
   await poll(cdp, "Boolean(document.querySelector('[role=alertdialog][aria-modal=true]'))", 'discard confirmation');
-  const discardFocusInside = await evaluate(cdp, "document.querySelector('[role=alertdialog]')?.contains(document.activeElement) === true");
-  if (!discardFocusInside) throw new Error('Discard confirmation did not receive keyboard focus.');
+  await poll(cdp, "document.querySelector('[role=alertdialog]')?.contains(document.activeElement) === true", 'discard confirmation keyboard focus');
   await evaluate(cdp, "document.querySelector('[role=alertdialog] [data-discard]')?.click(); true");
   await poll(cdp, "!document.querySelector('[role=dialog][aria-modal=true]')", 'task dialog close');
-  const restoredFocus = await evaluate(cdp, "document.activeElement?.dataset.releaseQaTrigger === 'true'");
-  if (!restoredFocus) throw new Error('Task dialog did not restore focus to its opening control.');
+  await poll(cdp, "document.activeElement?.dataset.releaseQaTrigger === 'true'", 'task trigger focus restoration');
 
   console.log(`v${packageJson.version} release QA passed: real routes, responsive headings, release identity, modal focus trap, draft protection, Escape handling, and focus restoration.`);
 } finally {
