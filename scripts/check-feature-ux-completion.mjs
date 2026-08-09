@@ -16,9 +16,9 @@ expect(app.includes('path="/tasks"') && app.includes('<TasksPage />'), 'Tasks mu
 expect(bottomNav.includes("pathname === '/tasks'"), 'Tasks must remain in the Home navigation context.');
 expect(tasks.includes("type TaskFilter = 'open' | 'completed' | 'all'"), 'Tasks must support Open, Completed, and All filtering.');
 expect(tasks.includes('openTaskEditor(task.id)') && tasks.includes('toggleTask(task.id)') && tasks.includes('deleteTask(task.id)'), 'Tasks management must preserve edit, completion, and deletion actions.');
-expect(expenseEditor.includes('expense?: StillExpense') && expenseEditor.includes("expense ? 'Save changes' : 'Save expense'"), 'The shared expense editor must support editing existing expenses.');
-expect(money.includes('updateExpense(editingExpense.id, input)') && money.includes('Edit expense'), 'Money must expose expense correction without delete-and-recreate.');
-expect(money.includes('trapTabKey(event, dialog)') && money.includes('focusFirst(dialog)'), 'Expense editing must keep the shared accessible dialog keyboard contract.');
+expect(expenseEditor.includes('expense?: StillExpense') && expenseEditor.includes("expense ? 'Save changes'") && expenseEditor.includes('allowIncome'), 'The shared expense editor must support existing expense edits and Money income.');
+expect(money.includes('updateExpense(transactionEditor.id, input)') && money.includes('Edit transaction'), 'Money must expose transaction correction without delete-and-recreate.');
+expect(money.includes('trapTabKey(event, dialog)') && money.includes('focusFirst(dialog)'), 'Transaction editing must keep the shared accessible dialog keyboard contract.');
 expect(lifeArea.includes("navigate('/money')") && lifeArea.includes("navigate('/work')"), 'Money and Work records in Life Areas must not remain static dead ends.');
 expect(notifications.includes("if (kind === 'task') navigate('/tasks')") && notifications.includes("if (kind === 'event') navigate('/calendar')"), 'Task and event notifications must lead to actionable destinations.');
 

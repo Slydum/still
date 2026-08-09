@@ -9,6 +9,12 @@ import {
   type IdentifiedVersionedRecord,
 } from '../data/repositories/recordChanges';
 import { enqueueRepositoryWrite } from '../data/repositoryWriteQueue';
+import {
+  EMPTY_MONEY_ACCOUNTS,
+  EMPTY_MONEY_BILLS,
+  EMPTY_MONEY_SAVINGS_GOALS,
+  type MoneySettingsState,
+} from '../domain/money';
 import { useAppStore } from '../stores/useAppStore';
 import { usePersistenceStatus } from '../stores/usePersistenceStatus';
 
@@ -17,8 +23,10 @@ let bootstrapPromise: ReturnType<typeof stillRepository.bootstrap> | undefined;
 // Suppress the store subscriber so those snapshots do not become fresh dirty writes.
 let applyingRepositorySnapshot = false;
 
+type StoreWithMoney = ReturnType<typeof useAppStore.getState> & Partial<MoneySettingsState>;
+
 function accountSettingsFromStore() {
-  const state = useAppStore.getState();
+  const state = useAppStore.getState() as StoreWithMoney;
   return accountSettingsFromState({
     name: state.name,
     appearanceTone: state.appearanceTone,
@@ -30,6 +38,10 @@ function accountSettingsFromStore() {
     eventReminderMinutes: state.eventReminderMinutes,
     workProfile: state.workProfile,
     workPrivacyBlur: state.workPrivacyBlur,
+    moneyAccounts: state.moneyAccounts ?? EMPTY_MONEY_ACCOUNTS,
+    moneyBills: state.moneyBills ?? EMPTY_MONEY_BILLS,
+    moneySavingsGoals: state.moneySavingsGoals ?? EMPTY_MONEY_SAVINGS_GOALS,
+    moneyPrivacyHidden: state.moneyPrivacyHidden ?? true,
   });
 }
 
@@ -159,6 +171,8 @@ export function usePermanentDataRepository() {
           );
         }
 
+        const moneyState = state as StoreWithMoney;
+        const previousMoneyState = previousState as StoreWithMoney;
         const accountSettingsChanged =
           state.name !== previousState.name
           || state.appearanceTone !== previousState.appearanceTone
@@ -169,7 +183,11 @@ export function usePermanentDataRepository() {
           || state.reminderTime !== previousState.reminderTime
           || state.eventReminderMinutes !== previousState.eventReminderMinutes
           || state.workProfile !== previousState.workProfile
-          || state.workPrivacyBlur !== previousState.workPrivacyBlur;
+          || state.workPrivacyBlur !== previousState.workPrivacyBlur
+          || moneyState.moneyAccounts !== previousMoneyState.moneyAccounts
+          || moneyState.moneyBills !== previousMoneyState.moneyBills
+          || moneyState.moneySavingsGoals !== previousMoneyState.moneySavingsGoals
+          || moneyState.moneyPrivacyHidden !== previousMoneyState.moneyPrivacyHidden;
 
         if (accountSettingsChanged) {
           enqueue(() => stillRepository.persistAccountSettings(accountSettingsFromStore()));

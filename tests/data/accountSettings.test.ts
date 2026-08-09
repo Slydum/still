@@ -33,9 +33,45 @@ describe('account settings sync model', () => {
     assert.equal(patch.reduceMotion, true);
     assert.equal(patch.reminderTime, '08:30');
     assert.equal(patch.workProfile.currency, DEFAULT_WORK_PROFILE.currency);
+    assert.equal(patch.moneyAccounts?.length, 0);
+    assert.equal(patch.moneyBills?.length, 0);
+    assert.equal(patch.moneySavingsGoals?.length, 0);
+    assert.equal(patch.moneyPrivacyHidden, true);
     assert.equal('notificationsEnabled' in patch, false);
     assert.equal('autoWeather' in patch, false);
     assert.equal('weather' in patch, false);
+  });
+
+  it('keeps Money profile data in the synced settings record', () => {
+    const settings = accountSettingsFromState({
+      name: 'Alex',
+      appearanceTone: 'lavender',
+      reduceMotion: false,
+      taskReminders: true,
+      eventReminders: true,
+      dailyCheckInReminder: false,
+      reminderTime: '09:00',
+      eventReminderMinutes: 30,
+      workProfile: DEFAULT_WORK_PROFILE,
+      workPrivacyBlur: true,
+      moneyAccounts: [{
+        id: 'account-1',
+        name: 'Everyday',
+        kind: 'bank',
+        balance: 1200,
+        currency: 'PHP',
+        createdAt: 1,
+        updatedAt: 1,
+      }],
+      moneyBills: [],
+      moneySavingsGoals: [],
+      moneyPrivacyHidden: false,
+    }, 456);
+
+    const patch = accountSettingsStatePatch(settings);
+    assert.equal(patch.moneyAccounts?.[0]?.name, 'Everyday');
+    assert.equal(patch.moneyAccounts?.[0]?.balance, 1200);
+    assert.equal(patch.moneyPrivacyHidden, false);
   });
 
   it('uses signup display metadata only when it contains a real name', () => {

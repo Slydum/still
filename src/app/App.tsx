@@ -12,7 +12,6 @@ import { CalendarPage } from '../features/calendar/CalendarPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { JournalPage } from '../features/journal/JournalPage';
 import { CheckInHistoryPage } from '../features/check-ins/CheckInHistoryPage';
-import { MoneyPage } from '../features/money/MoneyPage';
 import { MorePage } from '../features/more/MorePage';
 import { WeeklyReflectionPage } from '../features/reflection/WeeklyReflectionPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
@@ -26,6 +25,7 @@ import { getAppRoutePathname, toAppPath } from './appLocation';
 import { beginDemoSession, isDemoMode } from './demoMode';
 
 const LovePage = lazy(() => import('../features/love/LovePage').then((module) => ({ default: module.LovePage })));
+const MoneyPage = lazy(() => import('../features/money/MoneyPage').then((module) => ({ default: module.MoneyPage })));
 const LifeAreaPage = lazy(() => import('../features/life-area/LifeAreaPage').then((module) => ({ default: module.LifeAreaPage })));
 
 function replaceBrowserRoute(path: string) {
@@ -75,7 +75,7 @@ function AppRoutes() {
     <Route path="/work" element={<WorkQueuePage />} />
     <Route path="/work/details" element={<WorkPage />} />
     <Route path="/life/work" element={<Navigate to="/work" replace />} />
-    <Route path="/money" element={<MoneyPage />} />
+    <Route path="/money" element={<Suspense fallback={<AppLoading message="Opening Money…" />}><MoneyPage /></Suspense>} />
     <Route path="/life/love" element={<Suspense fallback={<AppLoading message="Opening Love…" />}><LovePage /></Suspense>} />
     <Route path="/life/:areaId" element={<Suspense fallback={<AppLoading message="Opening your Life Area…" />}><LifeAreaPage /></Suspense>} />
     <Route path="*" element={<Navigate to="/" replace />} />

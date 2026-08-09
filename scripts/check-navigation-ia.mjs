@@ -22,7 +22,7 @@ expect(app.includes("window.history.scrollRestoration = 'auto'"), 'Browser scrol
 expect(back.includes('navigate(-1)') && back.includes('navigate(fallback'), 'Back navigation must use history with an explicit fallback.');
 expect(life.includes("useBackNavigation('/')"), 'Life Area pages must use history-aware Back behavior.');
 expect(life.includes("'work tracker'") && life.includes("'spending tracker'"), 'Life Areas must distinguish areas from specialized trackers.');
-expect(money.includes('<h1>Spending tracker</h1>') && money.includes("useBackNavigation('/life/money')"), 'Money tracker naming and fallback must remain explicit.');
+expect(money.includes('<h1>Where your money stands.</h1>') && money.includes("useBackNavigation('/life/money')"), 'Money overview naming and fallback must remain explicit.');
 expect(settings.includes('<h1>Settings</h1>'), 'The Settings tab destination must identify itself as Settings.');
 expect(overview.includes('<h1>Weekly overview</h1>') && overview.includes("useBackNavigation('/')"), 'The factual weekly records page must be named Weekly overview and use contextual Back behavior.');
 
