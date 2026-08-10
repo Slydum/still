@@ -17,6 +17,7 @@ async function walk(directory) {
 
 const correctnessCss = await readFile(path.join(root, 'src/theme/v03-ux-correctness.css'), 'utf8');
 const mainSource = await readFile(path.join(root, 'src/main.tsx'), 'utf8');
+const workHubSource = await readFile(path.join(root, 'src/features/work/WorkHubPage.tsx'), 'utf8');
 
 if (!/focus-list\s*>\s*:nth-child\(n \+ 4\)[\s\S]*display:\s*flex/.test(correctnessCss)) {
   failures.push('Home must keep task #4+ reachable until an All Tasks surface exists.');
@@ -29,6 +30,9 @@ if (!/weekly-reflection-entry[\s\S]*order:\s*5/.test(correctnessCss)) {
 }
 if (!mainSource.includes("import './theme/base-path-assets';")) {
   failures.push('Base-path asset normalization must load before app rendering.');
+}
+if (workHubSource.includes('unpaidBreakMinutes: 0')) {
+  failures.push('Work Hub must not rewrite the saved unpaid-break configuration just to hide break tracking in the hub UI.');
 }
 
 const sourceFiles = (await walk(path.join(root, 'src')))
