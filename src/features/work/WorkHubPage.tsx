@@ -120,7 +120,8 @@ export function WorkHubPage() {
   const [noteReminder, setNoteReminder] = useState('');
   const [meetingOpen, setMeetingOpen] = useState(false);
   const [now, setNow] = useState(Date.now());
-  const today = dateKey();
+  const nowDate = new Date(now);
+  const today = dateKey(nowDate);
   const [meeting, setMeeting] = useState<MeetingDraft>({ title: '', date: today, startTime: '09:00', endTime: '09:30', repeat: 'none', note: '' });
 
   const activeShift = shifts.find((shift) => !shift.endedAt);
@@ -130,13 +131,17 @@ export function WorkHubPage() {
   const changes = profile.changes ?? [];
 
   useEffect(() => {
-    if (profile.unpaidBreakMinutes !== 0) updateProfile({ ...profile, unpaidBreakMinutes: 0 } as WorkProfile);
-  }, [profile, updateProfile]);
-
-  useEffect(() => {
-    if (!activeShift) return undefined;
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
+    const refreshClock = () => setNow(Date.now());
+    refreshClock();
+    const timer = window.setInterval(refreshClock, activeShift ? 1000 : 30_000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshClock();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [activeShift]);
 
   const workTasks = useMemo(() => tasks.filter((task) => task.areaId === 'work'), [tasks]);
@@ -146,7 +151,7 @@ export function WorkHubPage() {
   const openChanges = changes.filter((item) => item.status !== 'completed' && item.status !== 'cancelled');
   const dueNotes = notes.filter((note) => note.reminderDate && note.reminderDate <= today);
 
-  const todayStart = new Date();
+  const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
   const todayShifts = shifts.filter((shift) => shift.startedAt >= todayStart.getTime());
   const earnedToday = todayShifts.reduce((total, shift) => total + shiftEarnings(shift, profile, now), 0);
@@ -158,9 +163,9 @@ export function WorkHubPage() {
 
   const queue = useMemo<QueueItem[]>(() => {
     const items: QueueItem[] = [];
+    const nowTime = new Date(now).toTimeString().slice(0, 5);
     workTasks.forEach((task) => items.push({ id: `task:${task.id}`, kind: 'task', title: task.title, meta: task.dueDate ? shortDate(task.dueDate) : 'Task', status: task.completed ? 'done' : (taskStates[task.id] ?? 'todo'), sort: task.dueDate ?? '9999' }));
     todayMeetings.forEach((event) => {
-      const nowTime = new Date().toTimeString().slice(0, 5);
       const status: QueueStatus = event.endTime && event.endTime < nowTime ? 'done' : 'todo';
       items.push({ id: `meeting:${event.id}`, kind: 'meeting', title: event.title, meta: event.allDay ? 'All day · Meeting' : `${timeLabel(event.startTime)} · Meeting`, status, sort: event.startTime ?? '00:00' });
     });
@@ -168,13 +173,12 @@ export function WorkHubPage() {
     changes.forEach((change) => items.push({ id: `change:${change.id}`, kind: 'change', title: `${change.reference ? `${change.reference} · ` : ''}${change.title}`, meta: `${change.plannedDate ? `${shortDate(change.plannedDate)} · ` : ''}Change`, status: change.status === 'completed' || change.status === 'cancelled' ? 'done' : change.status === 'in_progress' || change.status === 'testing' ? 'progress' : 'todo', sort: change.plannedDate ?? '9999' }));
     dueNotes.forEach((note) => items.push({ id: `reminder:${note.id}`, kind: 'reminder', title: note.text, meta: `Note reminder · ${shortDate(note.reminderDate)}`, status: 'todo', sort: note.reminderDate ?? today }));
     return items.sort((a, b) => a.sort.localeCompare(b.sort));
-  }, [changes, dueNotes, incidents, taskStates, today, todayMeetings, workTasks]);
+  }, [changes, dueNotes, incidents, now, taskStates, today, todayMeetings, workTasks]);
 
   const visible = queue.filter((item) => item.status === tab);
   const counts = { todo: queue.filter((item) => item.status === 'todo').length, progress: queue.filter((item) => item.status === 'progress').length, done: queue.filter((item) => item.status === 'done').length };
 
   const handleClockIn = () => {
-    if (profile.unpaidBreakMinutes !== 0) updateProfile({ ...profile, unpaidBreakMinutes: 0 } as WorkProfile);
     startWorkShift();
   };
 
@@ -191,7 +195,7 @@ export function WorkHubPage() {
     <header className="work-hub-header"><button className="work-hub-back" onClick={() => navigate('/')} type="button" aria-label="Back home"><ArrowLeft size={18} /></button><div><p className="work-hub-kicker">Life area</p><h1>Work</h1><p>{profile.jobTitle || profile.employer ? [profile.jobTitle, profile.employer].filter(Boolean).join(' · ') : 'Your workday at a glance.'}</p></div></header>
 
     <section className="work-live-card card" aria-label="Live work and pay tracker">
-      <div className="work-live-top"><span className="work-live-icon"><BriefcaseBusiness size={21} /></span><div className="work-live-copy"><small>{activeShift ? 'Working now' : 'Ready when you are'}</small><strong className={privacyBlur && activeShift ? 'is-private' : ''}>{activeShift ? money(liveEarnings, profile.currency) : new Date().toLocaleDateString(undefined, { weekday: 'long' })}</strong></div><button className="work-live-eye" onClick={() => setWorkPrivacyBlur(!privacyBlur)} type="button" aria-label={privacyBlur ? 'Show earnings' : 'Hide earnings'}>{privacyBlur ? <EyeOff size={19} /> : <Eye size={19} />}</button></div>
+      <div className="work-live-top"><span className="work-live-icon"><BriefcaseBusiness size={21} /></span><div className="work-live-copy"><small>{activeShift ? 'Working now' : 'Ready when you are'}</small><strong className={privacyBlur && activeShift ? 'is-private' : ''}>{activeShift ? money(liveEarnings, profile.currency) : nowDate.toLocaleDateString(undefined, { weekday: 'long' })}</strong></div><button className="work-live-eye" onClick={() => setWorkPrivacyBlur(!privacyBlur)} type="button" aria-label={privacyBlur ? 'Show earnings' : 'Hide earnings'}>{privacyBlur ? <EyeOff size={19} /> : <Eye size={19} />}</button></div>
       <div className="work-live-meta">{activeShift ? <><span>{durationLabel(liveElapsed)}</span><span className={privacyBlur ? 'is-private' : ''}>{money(livePerSecond, profile.currency, 4)} / sec</span><span className={privacyBlur ? 'is-private' : ''}>{money(earnedToday, profile.currency)} today</span></> : <><span>No break timer</span><span className={privacyBlur ? 'is-private' : ''}>{money(livePerSecond, profile.currency, 4)} / sec</span></>}</div>
       <div className="work-live-actions"><button disabled={Boolean(activeShift)} onClick={handleClockIn} type="button"><LogIn size={18} />Clock in</button><button disabled={!activeShift} onClick={endWorkShift} type="button"><LogOut size={18} />Clock out</button></div>
     </section>
