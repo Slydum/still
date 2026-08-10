@@ -17,6 +17,10 @@ async function walk(directory) {
 
 const correctnessCss = await readFile(path.join(root, 'src/theme/v03-ux-correctness.css'), 'utf8');
 const mainSource = await readFile(path.join(root, 'src/main.tsx'), 'utf8');
+const workHubSource = await readFile(path.join(root, 'src/features/work/WorkHubPage.tsx'), 'utf8');
+const moneySource = await readFile(path.join(root, 'src/features/money/MoneyPage.tsx'), 'utf8');
+const healthSource = await readFile(path.join(root, 'src/features/health/HealthPage.tsx'), 'utf8');
+const currentDateSource = await readFile(path.join(root, 'src/hooks/useCurrentDate.ts'), 'utf8');
 
 if (!/focus-list\s*>\s*:nth-child\(n \+ 4\)[\s\S]*display:\s*flex/.test(correctnessCss)) {
   failures.push('Home must keep task #4+ reachable until an All Tasks surface exists.');
@@ -29,6 +33,18 @@ if (!/weekly-reflection-entry[\s\S]*order:\s*5/.test(correctnessCss)) {
 }
 if (!mainSource.includes("import './theme/base-path-assets';")) {
   failures.push('Base-path asset normalization must load before app rendering.');
+}
+if (workHubSource.includes('unpaidBreakMinutes: 0')) {
+  failures.push('Work Hub must not rewrite the saved unpaid-break configuration just to hide break tracking in the hub UI.');
+}
+if (!currentDateSource.includes("document.addEventListener('visibilitychange'") || !currentDateSource.includes('window.setInterval')) {
+  failures.push('Date-sensitive pages need a shared clock that refreshes while open and when the app becomes visible again.');
+}
+if (!moneySource.includes('const now = useCurrentDate();') || !moneySource.includes('[expenses, now]') || !moneySource.includes('[bills, now]')) {
+  failures.push('Money month totals and bill status must refresh when the current date changes.');
+}
+if (!healthSource.includes('const now = useCurrentDate();') || healthSource.includes('subDays(new Date(), 6), end: new Date() }), [])') || !healthSource.includes('}, [today]);')) {
+  failures.push('Health must roll its seven-day summary forward when the local date changes.');
 }
 
 const sourceFiles = (await walk(path.join(root, 'src')))

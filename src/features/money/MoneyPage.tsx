@@ -42,6 +42,7 @@ import {
   type MoneySavingsGoalInput,
   type MoneySettingsState,
 } from '../../domain/money';
+import { useCurrentDate } from '../../hooks/useCurrentDate';
 import { useAppStore, type ExpenseInput, type StillExpense } from '../../stores/useAppStore';
 import { getLocalDateKey } from '../../theme/stillContext';
 import {
@@ -147,7 +148,7 @@ export function MoneyPage() {
   const [accountEditorId, setAccountEditorId] = useState<EditorId>();
   const editDialogRef = useRef<HTMLElement | null>(null);
   const editTriggerRef = useRef<HTMLElement | null>(null);
-  const now = new Date();
+  const now = useCurrentDate();
 
   const sortedTransactions = useMemo(
     () => [...expenses].sort((a, b) => b.expenseDate.localeCompare(a.expenseDate) || b.createdAt - a.createdAt),
@@ -155,7 +156,7 @@ export function MoneyPage() {
   );
   const monthlyTransactions = useMemo(
     () => expenses.filter((expense) => isSameMonth(parseISO(expense.expenseDate), now)),
-    [expenses],
+    [expenses, now],
   );
   const monthlyIncome = useMemo(
     () => totalsByCurrency(
@@ -181,11 +182,11 @@ export function MoneyPage() {
     () => bills
       .filter((bill) => !billPaidThisMonth(bill, now))
       .sort((a, b) => billDueDate(a, now).getTime() - billDueDate(b, now).getTime()),
-    [bills],
+    [bills, now],
   );
   const paidBills = useMemo(
     () => bills.filter((bill) => billPaidThisMonth(bill, now)).sort((a, b) => a.dueDay - b.dueDay),
-    [bills],
+    [bills, now],
   );
   const trackedGoals = savingsGoals.filter((goal) => Boolean(goal.targetAmount));
   const averageSavingsProgress = trackedGoals.length
@@ -281,7 +282,7 @@ export function MoneyPage() {
     const paid = billPaidThisMonth(bill, now);
     setMoneyState({
       moneyBills: bills.map((item) => item.id === bill.id
-        ? { ...item, lastPaidDate: paid ? undefined : getLocalDateKey(), updatedAt: Date.now() }
+        ? { ...item, lastPaidDate: paid ? undefined : getLocalDateKey(now), updatedAt: Date.now() }
         : item),
     });
   };
