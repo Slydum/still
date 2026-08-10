@@ -40,6 +40,7 @@ import {
   type HealthRoutineCadence,
   type HealthSettingsState,
 } from '../../domain/health';
+import { useCurrentDate } from '../../hooks/useCurrentDate';
 import { useAppStore, type JournalEntry } from '../../stores/useAppStore';
 import { getLocalDateKey } from '../../theme/stillContext';
 import { getCheckInEnergy, getCheckInMood } from '../check-ins/checkInScale';
@@ -81,7 +82,8 @@ function noteSort(left: JournalEntry, right: JournalEntry) {
 export function HealthPage() {
   const navigate = useNavigate();
   const goBack = useBackNavigation('/');
-  const today = getLocalDateKey();
+  const now = useCurrentDate();
+  const today = getLocalDateKey(now);
   const storedMood = useAppStore((state) => state.mood);
   const storedEnergy = useAppStore((state) => state.energy);
   const checkInDate = useAppStore((state) => state.checkInDate);
@@ -152,7 +154,10 @@ export function HealthPage() {
     return () => window.clearTimeout(timeout);
   }, [signalStatus]);
 
-  const recentDays = useMemo(() => eachDayOfInterval({ start: subDays(new Date(), 6), end: new Date() }), []);
+  const recentDays = useMemo(() => {
+    const anchor = new Date(`${today}T12:00:00`);
+    return eachDayOfInterval({ start: subDays(anchor, 6), end: anchor });
+  }, [today]);
   const recentRecords = useMemo(() => {
     const keys = new Set(recentDays.map((day) => format(day, 'yyyy-MM-dd')));
     return records.filter((record) => keys.has(record.date));
