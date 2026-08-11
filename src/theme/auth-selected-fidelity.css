@@ -210,46 +210,22 @@
 @media (min-width: 900px) {
   .auth-page--login .auth-native-shell {
     width: 100%;
-    max-width: none;
     padding-inline: 28px;
     align-items: center;
   }
 
-  .auth-page--login .auth-hero,
-  .auth-page--login .auth-card,
-  .auth-page--login .auth-switch,
-  .auth-page--login .auth-help,
-  .auth-page--login .auth-privacy {
+  .auth-page--login .auth-native-shell > * {
     width: min(100%, 520px);
   }
 
   .auth-page--login .auth-art {
     position: fixed;
     inset: 0;
-    z-index: 0;
     width: 100vw;
     height: 100dvh;
     margin: 0;
     pointer-events: none;
     -webkit-mask-image: none;
     mask-image: none;
-  }
-
-  .auth-page--login .auth-mascot {
-    object-position: center 48%;
-  }
-
-  .auth-page--login .auth-brand,
-  .auth-page--login .auth-hero-copy,
-  .auth-page--login .auth-card,
-  .auth-page--login .auth-switch,
-  .auth-page--login .auth-help,
-  .auth-page--login .auth-privacy {
-    position: relative;
-    z-index: 2;
-  }
-
-  .auth-page--login .auth-card {
-    padding: 27px 28px 24px;
   }
 }
