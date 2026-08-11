@@ -9,7 +9,6 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
-import { toAppPath } from '../../app/appLocation';
 import {
   getSupabaseConfigurationError,
   isSupabaseAvailable,
@@ -35,8 +34,8 @@ type AuthPageProps = {
 
 const modeCopy: Record<AuthMode, { title: string; subtitle: string; action: string }> = {
   login: {
-    title: 'Welcome back',
-    subtitle: 'Good to see you again.',
+    title: 'Make space for what matters.',
+    subtitle: 'Your life, gently organized.',
     action: 'Log in',
   },
   signup: {
@@ -158,25 +157,15 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
       <div className="auth-native-shell">
         <header className="auth-hero">
           <div className="auth-brand" aria-label="Still">Still</div>
-          <div className="auth-art" aria-hidden="true">
-            <img
-              alt=""
-              className="auth-mascot"
-              decoding="async"
-              draggable={false}
-              fetchPriority="high"
-              height="360"
-              src={toAppPath('/assets/auth/still-cloud-mascot.svg')}
-              width="640"
-            />
-          </div>
           <div className="auth-hero-copy">
             <h1 id="auth-title">{copy.title}</h1>
             <p>{copy.subtitle}</p>
           </div>
         </header>
 
-        <section className="auth-card" aria-labelledby="auth-title">
+        <section className="auth-card" aria-labelledby={mode === 'login' ? 'auth-card-title' : 'auth-title'}>
+          {mode === 'login' && <h2 className="auth-card-title" id="auth-card-title">Sign in</h2>}
+
           {(mode === 'forgot' || mode === 'recovery') && (
             <button className="auth-back" onClick={() => changeMode('login')} type="button">
               <ArrowLeft size={17} /> Back to login
@@ -229,7 +218,6 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
 
             {mode === 'login' && (
               <div className="auth-login-tools">
-                <span>Your sign-in session can stay on this device.</span>
                 <button className="auth-text-action" onClick={() => changeMode('forgot')} type="button">Forgot password?</button>
               </div>
             )}
@@ -243,17 +231,15 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
 
           {mode === 'login' && onEnterDemo && (
             <div className="auth-demo-entry">
-              <span>Just testing?</span>
-              <button className="settings-test-notification" onClick={onEnterDemo} type="button">Open demo sandbox</button>
-              <small>No account or cloud sync. Demo records use a separate local database on this browser.</small>
+              <span>Just exploring?</span>
+              <button className="settings-test-notification" onClick={onEnterDemo} type="button">Open demo</button>
             </div>
           )}
         </section>
 
-        {mode === 'login' && <p className="auth-switch">Don’t have an account? <button onClick={() => changeMode('signup')} type="button">Create account</button></p>}
+        {mode === 'login' && <p className="auth-switch">New to Still? <button onClick={() => changeMode('signup')} type="button">Create account</button></p>}
         {mode === 'signup' && <p className="auth-switch">Already have an account? <button onClick={() => changeMode('login')} type="button">Log in</button></p>}
-        {mode === 'login' && <p className="auth-help">Used the old email-link login? Choose <strong>Forgot password</strong> once to create a password for the same account.</p>}
-        <p className="auth-privacy"><ShieldCheck size={16} /> Cloud-synced Still records are scoped to your signed-in account.</p>
+        {mode !== 'login' && <p className="auth-privacy"><ShieldCheck size={16} /> Cloud-synced Still records are scoped to your signed-in account.</p>}
       </div>
     </main>
   );
