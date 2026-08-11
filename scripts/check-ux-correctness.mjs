@@ -53,6 +53,9 @@ if (!authSelectedCss.includes('@media (min-width: 900px)') || !authSelectedCss.i
 if (!authSelectedCss.includes('@media (max-height: 640px) and (orientation: landscape)')) {
   failures.push('The selected auth experience must remain usable on short landscape screens instead of clipping the form.');
 }
+if (!authSelectedCss.includes('position: fixed;') || !authSelectedCss.includes('width: 100vw;') || !authSelectedCss.includes('height: 100dvh;')) {
+  failures.push('Desktop auth artwork must cover the full browser viewport rather than remain a narrow centered strip.');
+}
 
 const sourceFiles = (await walk(path.join(root, 'src')))
   .filter((file) => ['.ts', '.tsx'].includes(path.extname(file)));
