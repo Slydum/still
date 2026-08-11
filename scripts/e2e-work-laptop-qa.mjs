@@ -126,6 +126,7 @@ try {
         navPosition: nav ? getComputedStyle(nav).position : '',
         navTransform: nav ? getComputedStyle(nav).transform : '',
         navLabels: nav ? [...nav.querySelectorAll('.nav-item')].map((item) => item.textContent?.trim()).filter(Boolean) : [],
+        activeNavLabels: nav ? [...nav.querySelectorAll('.nav-item.active')].map((item) => item.textContent?.trim()).filter(Boolean) : [],
         mainRect: rect('.work-hub-page'),
         mainDisplay: main ? getComputedStyle(main).display : '',
         header: rect('.work-hub-header'),
@@ -142,7 +143,8 @@ try {
     assert(state.overflow <= 2, `${viewport.label}: horizontal overflow of ${state.overflow}px.`);
     assert(state.navRect && Math.abs(state.navRect.left) <= 1 && Math.abs(state.navRect.width - 252) <= 2, `${viewport.label}: desktop sidebar is not anchored at 252px on the left edge.`);
     assert(state.navPosition === 'fixed' && state.navTransform === 'none', `${viewport.label}: desktop navigation is not a stable fixed rail.`);
-    assert(['Home', 'Journal', 'Add', 'Calendar', 'Settings'].every((label) => state.navLabels.includes(label)), `${viewport.label}: desktop navigation labels are incomplete.`);
+    assert(['Home', 'Work', 'Journal', 'Add', 'Calendar', 'Settings'].every((label) => state.navLabels.includes(label)), `${viewport.label}: desktop navigation labels are incomplete.`);
+    assert(state.activeNavLabels.length === 1 && state.activeNavLabels[0] === 'Work', `${viewport.label}: Work is not the single active desktop destination on the Work route.`);
     assert(state.mainRect && state.mainRect.left >= 252 && state.mainDisplay === 'grid', `${viewport.label}: Work is not using the desktop grid inside the app shell.`);
     assert(state.backDisplay === 'none', `${viewport.label}: redundant mobile back control is visible beside the desktop sidebar.`);
 
@@ -159,10 +161,12 @@ try {
   const detailsState = await evaluate(cdp, `(() => {
     const main = document.querySelector('.still-work-page');
     const box = main?.getBoundingClientRect();
-    return { overflow: document.documentElement.scrollWidth - innerWidth, left: box?.left ?? -1, width: box?.width ?? 0 };
+    const active = [...document.querySelectorAll('.bottom-nav .nav-item.active')].map((item) => item.textContent?.trim()).filter(Boolean);
+    return { overflow: document.documentElement.scrollWidth - innerWidth, left: box?.left ?? -1, width: box?.width ?? 0, active };
   })()`);
   assert(detailsState.overflow <= 2, `1366x768 work details: horizontal overflow of ${detailsState.overflow}px.`);
   assert(detailsState.left >= 252 && detailsState.width >= 760, '1366x768 work details: content is still using the narrow phone-width canvas.');
+  assert(detailsState.active.length === 1 && detailsState.active[0] === 'Work', '1366x768 work details: desktop sidebar does not keep Work active.');
 
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await navigate(cdp, '/work');
@@ -175,6 +179,8 @@ try {
       display: main ? getComputedStyle(main).display : '',
       navWidth: navBox?.width ?? 0,
       navBottom: navBox?.bottom ?? 0,
+      navLabels: nav ? [...nav.querySelectorAll('.nav-item')].map((item) => item.textContent?.trim()).filter(Boolean) : [],
+      activeNavLabels: nav ? [...nav.querySelectorAll('.nav-item.active')].map((item) => item.textContent?.trim()).filter(Boolean) : [],
       backDisplay: back ? getComputedStyle(back).display : '',
       overflow: document.documentElement.scrollWidth - innerWidth,
     };
@@ -182,9 +188,11 @@ try {
   assert(phoneState.overflow <= 2, `phone Work: horizontal overflow of ${phoneState.overflow}px.`);
   assert(phoneState.display !== 'grid', 'phone Work: desktop Work grid leaked below 1024px.');
   assert(phoneState.navWidth < 390 && Math.abs(phoneState.navBottom - 844) <= 16, 'phone Work: existing floating bottom navigation changed unexpectedly.');
+  assert(phoneState.navLabels.join('|') === ['Home', 'Journal', 'Add', 'Calendar', 'Settings'].join('|'), 'phone Work: desktop-only Work navigation leaked into the phone bottom bar.');
+  assert(phoneState.activeNavLabels.length === 1 && phoneState.activeNavLabels[0] === 'Home', 'phone Work: existing Home umbrella navigation state changed unexpectedly.');
   assert(phoneState.backDisplay !== 'none', 'phone Work: existing back control was removed by the desktop treatment.');
 
-  console.log('Work laptop QA passed at 1366x768 and 1440x900, with phone Work unchanged.');
+  console.log('Work laptop QA passed at 1366x768 and 1440x900, with desktop Work navigation and phone Work unchanged.');
 } finally {
   cdp?.close();
   chrome?.kill('SIGTERM');
