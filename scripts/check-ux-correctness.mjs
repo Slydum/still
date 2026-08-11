@@ -17,6 +17,7 @@ async function walk(directory) {
 
 const correctnessCss = await readFile(path.join(root, 'src/theme/v03-ux-correctness.css'), 'utf8');
 const authSelectedCss = await readFile(path.join(root, 'src/theme/auth-selected-fidelity.css'), 'utf8');
+const authSource = await readFile(path.join(root, 'src/features/auth/AuthPage.tsx'), 'utf8');
 const mainSource = await readFile(path.join(root, 'src/main.tsx'), 'utf8');
 const workHubSource = await readFile(path.join(root, 'src/features/work/WorkHubPage.tsx'), 'utf8');
 const moneySource = await readFile(path.join(root, 'src/features/money/MoneyPage.tsx'), 'utf8');
@@ -53,8 +54,14 @@ if (!authSelectedCss.includes('@media (min-width: 900px)') || !authSelectedCss.i
 if (!authSelectedCss.includes('@media (max-height: 640px) and (orientation: landscape)')) {
   failures.push('The selected auth experience must remain usable on short landscape screens instead of clipping the form.');
 }
-if (!authSelectedCss.includes('position: fixed;') || !authSelectedCss.includes('width: 100vw;') || !authSelectedCss.includes('height: 100dvh;')) {
-  failures.push('Desktop auth artwork must cover the full browser viewport rather than remain a narrow centered strip.');
+if (authSource.includes('still-cloud-mascot') || authSource.includes('auth-art')) {
+  failures.push('The selected login experience must stay illustration-free and rely on the gradient layout.');
+}
+if (!authSource.includes("title: 'Make space for what matters.'") || !authSource.includes("subtitle: 'Your life, gently organized.'") || !authSource.includes('>Sign in</h2>')) {
+  failures.push('Login must keep the concise Still message and a distinct Sign in card heading.');
+}
+if (!authSelectedCss.includes('grid-template-columns:') || !authSelectedCss.includes('grid-column: 1;') || !authSelectedCss.includes('grid-column: 2;')) {
+  failures.push('Desktop login must keep the editorial split layout while mobile remains single-column.');
 }
 
 const sourceFiles = (await walk(path.join(root, 'src')))
