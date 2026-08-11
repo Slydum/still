@@ -115,6 +115,32 @@ try {
   assert(optionOneState.quickDisplay === 'grid' && optionOneState.quickButtons === 4, 'Option 1 quick-access strip is not active on desktop.');
   assert(optionOneState.overviewColumns === 4, 'Option 1 work summary is not the four-column desktop strip.');
 
+  const geometry = await evaluate(cdp, `(() => {
+    const rect = (selector) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const box = element.getBoundingClientRect();
+      return { top: box.top, right: box.right, bottom: box.bottom, left: box.left, width: box.width, height: box.height };
+    };
+    return {
+      live: rect('.work-live-card'),
+      overview: rect('.work-overview'),
+      meetings: rect('.work-meetings'),
+      board: rect('.work-board'),
+      quick: rect('.work-quick-access'),
+    };
+  })()`);
+  const { live, overview, meetings, board, quick } = geometry;
+  assert(live && overview && meetings && board && quick, 'Option 1 desktop geometry is missing a primary region.');
+  assert(Math.abs(live.top - overview.top) <= 3, 'Option 1 live card and status strip must start on the same row.');
+  assert(meetings.left >= live.right + 8, 'Option 1 Meetings must sit in the right-hand stack, not below the live card.');
+  assert(Math.abs(meetings.top - board.top) <= 3, 'Option 1 Meetings and My work must share the same lower-right row.');
+  assert(overview.bottom <= meetings.top && meetings.top - overview.bottom <= 18, 'Option 1 status strip must sit directly above Meetings and My work.');
+  assert(Math.abs(live.bottom - Math.max(meetings.bottom, board.bottom)) <= 5, 'Option 1 live card must span the full height of the right-hand stack.');
+  assert(quick.top >= Math.max(live.bottom, meetings.bottom, board.bottom) && quick.top - Math.max(live.bottom, meetings.bottom, board.bottom) <= 20, 'Option 1 Quick access must sit immediately beneath the primary composition.');
+  assert(overview.height <= 100, `Option 1 status strip is too tall (${Math.round(overview.height)}px).`);
+  assert(quick.top < 500, `Option 1 desktop composition is too vertically spread out (Quick access starts at ${Math.round(quick.top)}px).`);
+
   await evaluate(cdp, `(() => {
     const button = [...document.querySelectorAll('.work-meetings .work-section-head button')].find((item) => item.textContent?.includes('Meeting'));
     button?.click();
@@ -158,7 +184,7 @@ try {
   assert(phoneState.quickDisplay === 'none', 'Option 1 desktop quick access leaked onto phone Work.');
   assert(phoneState.overflow <= 2, `Phone Work has ${phoneState.overflow}px horizontal overflow.`);
 
-  console.log('Work Option 1 and persisted meeting deletion QA passed.');
+  console.log('Work Option 1 geometry and persisted meeting deletion QA passed.');
 } finally {
   cdp?.close();
   chrome?.kill('SIGTERM');
