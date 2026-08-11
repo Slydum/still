@@ -16,6 +16,7 @@ async function walk(directory) {
 }
 
 const correctnessCss = await readFile(path.join(root, 'src/theme/v03-ux-correctness.css'), 'utf8');
+const authSelectedCss = await readFile(path.join(root, 'src/theme/auth-selected-fidelity.css'), 'utf8');
 const mainSource = await readFile(path.join(root, 'src/main.tsx'), 'utf8');
 const workHubSource = await readFile(path.join(root, 'src/features/work/WorkHubPage.tsx'), 'utf8');
 const moneySource = await readFile(path.join(root, 'src/features/money/MoneyPage.tsx'), 'utf8');
@@ -45,6 +46,12 @@ if (!moneySource.includes('const now = useCurrentDate();') || !moneySource.inclu
 }
 if (!healthSource.includes('const now = useCurrentDate();') || healthSource.includes('subDays(new Date(), 6), end: new Date() }), [])') || !healthSource.includes('}, [today]);')) {
   failures.push('Health must roll its seven-day summary forward when the local date changes.');
+}
+if (!authSelectedCss.includes('@media (min-width: 900px)') || !authSelectedCss.includes('@media (max-width: 480px)') || !authSelectedCss.includes('@media (max-width: 360px)')) {
+  failures.push('The selected auth experience must keep explicit desktop, phone, and small-phone responsive breakpoints.');
+}
+if (!authSelectedCss.includes('@media (max-height: 640px) and (orientation: landscape)')) {
+  failures.push('The selected auth experience must remain usable on short landscape screens instead of clipping the form.');
 }
 
 const sourceFiles = (await walk(path.join(root, 'src')))
