@@ -207,18 +207,11 @@
   }
 }
 
-/* Desktop uses the same artwork as a true full-viewport backdrop rather than a narrow mobile-sized strip. */
 @media (min-width: 900px) {
-  .auth-page--login {
-    min-height: 100dvh;
-    overflow: hidden;
-  }
-
   .auth-page--login .auth-native-shell {
     width: 100%;
     max-width: none;
-    min-height: 100dvh;
-    padding: clamp(26px, 3.5vh, 42px) clamp(28px, 4vw, 64px) clamp(20px, 3vh, 34px);
+    padding-inline: 28px;
     align-items: center;
   }
 
@@ -228,10 +221,6 @@
   .auth-page--login .auth-help,
   .auth-page--login .auth-privacy {
     width: min(100%, 520px);
-  }
-
-  .auth-page--login .auth-hero {
-    padding-top: 0;
   }
 
   .auth-page--login .auth-art {
@@ -246,21 +235,7 @@
     mask-image: none;
   }
 
-  .auth-page--login .auth-art::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(180deg, rgba(255, 250, 253, .18) 0%, rgba(250, 245, 255, .54) 48%, rgba(255, 250, 253, .72) 100%),
-      radial-gradient(circle at 50% 58%, rgba(255, 255, 255, .16), rgba(255, 255, 255, .46) 70%);
-  }
-
   .auth-page--login .auth-mascot {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
     object-position: center 48%;
   }
 
@@ -274,61 +249,7 @@
     z-index: 2;
   }
 
-  .auth-page--login .auth-brand {
-    font-size: clamp(58px, 4.5vw, 72px);
-    text-shadow: 0 10px 34px rgba(91, 67, 132, .14);
-  }
-
-  .auth-page--login .auth-hero-copy h1 {
-    font-size: clamp(44px, 3.5vw, 54px);
-  }
-
-  .auth-page--login .auth-hero-copy p {
-    margin-top: 7px;
-  }
-
   .auth-page--login .auth-card {
-    margin-top: 14px;
     padding: 27px 28px 24px;
-    background: rgba(255, 255, 255, .9);
-    box-shadow:
-      0 28px 66px rgba(85, 66, 117, .16),
-      inset 0 1px 0 rgba(255, 255, 255, .92);
-  }
-
-  .auth-page--login .auth-switch {
-    margin-top: 16px;
-  }
-
-  .auth-page--login .auth-help {
-    margin-top: 7px;
-  }
-
-  .auth-page--login .auth-privacy {
-    margin-top: auto;
-    padding-top: 14px;
-  }
-}
-
-@media (min-width: 900px) and (max-height: 760px) {
-  .auth-page--login {
-    overflow-y: auto;
-  }
-
-  .auth-page--login .auth-native-shell {
-    min-height: 760px;
-    padding-top: 18px;
-  }
-
-  .auth-page--login .auth-brand {
-    font-size: 52px;
-  }
-
-  .auth-page--login .auth-hero-copy h1 {
-    font-size: 40px;
-  }
-
-  .auth-page--login .auth-card {
-    margin-top: 8px;
   }
 }
