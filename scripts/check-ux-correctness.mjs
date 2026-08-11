@@ -43,8 +43,11 @@ if (!mainSource.includes("import './theme/desktop-home-option1';")) {
 if (!desktopHomeSource.includes('@media (min-width: 1024px)') || desktopHomeSource.includes('@media (max-width: 1023px)')) {
   failures.push('The Option 1 Home redesign must remain desktop-only so phone Home stays unchanged.');
 }
-if (!desktopHomeSource.includes('body:has(.dashboard-v2) .bottom-nav') || !desktopHomeSource.includes('grid-template-areas:') || !desktopHomeSource.includes("'upcoming checkin'")) {
-  failures.push('Desktop Home must keep the selected sidebar and wide focus / two-column content composition.');
+if (!desktopHomeSource.includes('.app .bottom-nav') || !desktopHomeSource.includes('transform: none !important') || !desktopHomeSource.includes('.app {\n    padding-left: 252px;')) {
+  failures.push('Desktop navigation must remain a fully visible persistent app shell instead of inheriting the mobile floating-nav transform.');
+}
+if (!desktopHomeSource.includes('grid-template-areas:') || !desktopHomeSource.includes("'upcoming checkin'")) {
+  failures.push('Desktop Home must keep the selected wide focus / two-column content composition.');
 }
 if (workHubSource.includes('unpaidBreakMinutes: 0')) {
   failures.push('Work Hub must not rewrite the saved unpaid-break configuration just to hide break tracking in the hub UI.');
