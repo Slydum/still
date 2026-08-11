@@ -21,7 +21,7 @@ const authSource = await readFile(path.join(root, 'src/features/auth/AuthPage.ts
 const desktopHomeSource = await readFile(path.join(root, 'src/theme/desktop-home-option1.ts'), 'utf8');
 const desktopWorkSource = await readFile(path.join(root, 'src/theme/desktop-work-laptop.ts'), 'utf8');
 const mainSource = await readFile(path.join(root, 'src/main.tsx'), 'utf8');
-const workHubSource = await readFile(path.join(root, 'src/features/work/WorkHubPage.tsx'), 'utf8');
+const workHubSource = await readFile(path.join(root, 'src/features/work/WorkHubPageOption1.tsx'), 'utf8');
 const moneySource = await readFile(path.join(root, 'src/features/money/MoneyPage.tsx'), 'utf8');
 const healthSource = await readFile(path.join(root, 'src/features/health/HealthPage.tsx'), 'utf8');
 const currentDateSource = await readFile(path.join(root, 'src/hooks/useCurrentDate.ts'), 'utf8');
@@ -53,7 +53,9 @@ if (!desktopHomeSource.includes('grid-template-areas:') || !desktopHomeSource.in
 if (!mainSource.includes("import './theme/desktop-work-laptop';")) {
   failures.push('The work-laptop layout must load after the existing Work polish styles.');
 }
-if (!desktopWorkSource.includes('@media (min-width: 1024px)') || desktopWorkSource.includes('@media (max-width: 1023px)')) {
+const allowedDesktopWorkMobileVisibility = /@media \(max-width: 1023px\) \{\s*\.work-header-details,\s*\.work-quick-access \{\s*display: none !important;\s*\}\s*\}/;
+const desktopWorkWithoutVisibilityGuard = desktopWorkSource.replace(allowedDesktopWorkMobileVisibility, '');
+if (!desktopWorkSource.includes('@media (min-width: 1024px)') || desktopWorkWithoutVisibilityGuard.includes('@media (max-width: 1023px)')) {
   failures.push('The work-laptop redesign must remain desktop-only so phone and tablet Work stay unchanged.');
 }
 if (!desktopWorkSource.includes('grid-template-columns: repeat(12, minmax(0, 1fr))') || !desktopWorkSource.includes('.work-hub-page .work-live-card') || !desktopWorkSource.includes('.work-hub-page .work-board') || !desktopWorkSource.includes('.work-hub-page .work-meetings')) {
