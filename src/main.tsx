@@ -32,6 +32,7 @@ import './theme/v04-home-device-pass.css';
 import './theme/desktop-home-option1';
 import './theme/v04-work';
 import './theme/v04-work-polish';
+import './theme/desktop-work-laptop';
 
 void import('./theme/work-hub-fixes');
 
