@@ -18,6 +18,7 @@ async function walk(directory) {
 const correctnessCss = await readFile(path.join(root, 'src/theme/v03-ux-correctness.css'), 'utf8');
 const authSelectedCss = await readFile(path.join(root, 'src/theme/auth-selected-fidelity.css'), 'utf8');
 const authSource = await readFile(path.join(root, 'src/features/auth/AuthPage.tsx'), 'utf8');
+const desktopHomeSource = await readFile(path.join(root, 'src/theme/desktop-home-option1.ts'), 'utf8');
 const mainSource = await readFile(path.join(root, 'src/main.tsx'), 'utf8');
 const workHubSource = await readFile(path.join(root, 'src/features/work/WorkHubPage.tsx'), 'utf8');
 const moneySource = await readFile(path.join(root, 'src/features/money/MoneyPage.tsx'), 'utf8');
@@ -35,6 +36,15 @@ if (!/weekly-reflection-entry[\s\S]*order:\s*5/.test(correctnessCss)) {
 }
 if (!mainSource.includes("import './theme/base-path-assets';")) {
   failures.push('Base-path asset normalization must load before app rendering.');
+}
+if (!mainSource.includes("import './theme/desktop-home-option1';")) {
+  failures.push('The selected desktop Home skin must load after the existing Home styles.');
+}
+if (!desktopHomeSource.includes('@media (min-width: 1024px)') || desktopHomeSource.includes('@media (max-width: 1023px)')) {
+  failures.push('The Option 1 Home redesign must remain desktop-only so phone Home stays unchanged.');
+}
+if (!desktopHomeSource.includes('body:has(.dashboard-v2) .bottom-nav') || !desktopHomeSource.includes('grid-template-areas:') || !desktopHomeSource.includes("'upcoming checkin'")) {
+  failures.push('Desktop Home must keep the selected sidebar and wide focus / two-column content composition.');
 }
 if (workHubSource.includes('unpaidBreakMinutes: 0')) {
   failures.push('Work Hub must not rewrite the saved unpaid-break configuration just to hide break tracking in the hub UI.');
