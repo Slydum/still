@@ -17,27 +17,36 @@ if (!document.getElementById(styleId)) {
     max-width: 1220px;
     min-height: 100dvh;
     margin: 0 auto;
-    padding: 28px clamp(28px, 3vw, 46px) 64px;
+    padding: 24px clamp(28px, 3vw, 46px) 64px;
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 16px 18px;
-    align-items: start;
+    grid-template-rows: 70px 84px minmax(128px, auto) auto;
+    column-gap: 16px;
+    row-gap: 10px;
+    align-items: stretch;
+    align-content: start;
   }
 
   .work-hub-page .work-hub-header {
     grid-column: 1 / -1;
-    min-height: 62px;
+    grid-row: 1;
+    min-height: 0;
+    height: 70px;
     margin: 0;
     align-items: flex-start;
   }
 
   .work-hub-page .work-hub-back { display: none; }
-  .work-hub-page .work-hub-header h1 { font-size: 2.45rem; }
-  .work-hub-page .work-hub-header > div > p:last-child { max-width: 620px; margin-top: 4px; }
+  .work-hub-page .work-hub-header h1 { font-size: 2.35rem; line-height: .94; }
+  .work-hub-page .work-hub-header > div > p:last-child {
+    max-width: 620px;
+    margin-top: 4px;
+    font-size: .82rem;
+  }
 
   .work-header-details {
     margin-left: auto;
-    min-height: 38px;
+    min-height: 36px;
     padding: 0 13px;
     border: 1px solid rgba(93,78,119,.09);
     border-radius: 12px;
@@ -52,17 +61,31 @@ if (!document.getElementById(styleId)) {
 
   .work-hub-page .work-live-card {
     grid-column: 1 / span 5;
-    min-height: 166px;
+    grid-row: 2 / span 2;
+    min-height: 0;
+    height: 100%;
     margin: 0;
-    padding: 19px 21px;
+    padding: 17px 19px 16px;
     border: 1px solid rgba(100,79,153,.11);
-    border-radius: 23px;
+    border-radius: 22px;
     background:
       radial-gradient(circle at 94% 8%, rgba(224,213,255,.46), transparent 12rem),
       linear-gradient(135deg, rgba(255,255,255,.86), rgba(249,244,255,.76));
     box-shadow: 0 15px 34px rgba(72,57,98,.045);
     backdrop-filter: blur(16px) saturate(108%);
+    display: flex;
+    flex-direction: column;
   }
+
+  .work-hub-page .work-live-top { gap: 10px; }
+  .work-hub-page .work-live-icon { width: 46px; height: 46px; border-radius: 15px; }
+  .work-hub-page .work-live-copy strong { font-size: 1.85rem; }
+  .work-hub-page .work-live-meta {
+    margin: 10px 0 11px;
+    padding-top: 10px;
+  }
+  .work-hub-page .work-live-actions { margin-top: auto; }
+  .work-hub-page .work-live-actions button { min-height: 44px; }
 
   .work-hub-page .work-live-actions button:not(:disabled) {
     border-color: transparent;
@@ -77,23 +100,25 @@ if (!document.getElementById(styleId)) {
 
   .work-hub-page .work-overview {
     grid-column: 6 / -1;
-    min-height: 166px;
-    align-self: stretch;
+    grid-row: 2;
+    min-height: 0;
+    height: 84px;
     margin: 0;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0;
     overflow: hidden;
     border: 1px solid rgba(93,78,119,.09);
-    border-radius: 22px;
+    border-radius: 20px;
     background: rgba(255,255,255,.48);
     box-shadow: none;
     backdrop-filter: blur(12px);
   }
 
   .work-hub-page .work-overview article {
-    min-height: 164px;
-    padding: 19px 15px;
+    min-height: 0;
+    height: 82px;
+    padding: 11px 14px;
     border: 0;
     border-right: 1px solid rgba(93,78,119,.07);
     border-radius: 0;
@@ -105,50 +130,139 @@ if (!document.getElementById(styleId)) {
   }
 
   .work-hub-page .work-overview article:last-child { border-right: 0; }
-  .work-hub-page .work-overview strong { margin-top: 7px; font-size: 1.22rem; }
-  .work-hub-page .work-overview span { margin-top: 4px; opacity: .74; white-space: normal; }
+  .work-hub-page .work-overview small {
+    font-size: .61rem;
+    line-height: 1.1;
+  }
+  .work-hub-page .work-overview strong {
+    margin-top: 5px;
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+  .work-hub-page .work-overview span {
+    margin-top: 4px;
+    font-size: .61rem;
+    opacity: .74;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   .work-hub-page .work-meetings {
-    grid-column: 1 / span 5;
+    grid-column: 6 / span 3;
+    grid-row: 3;
+    min-width: 0;
+    min-height: 0;
     margin: 0;
   }
 
   .work-hub-page .work-board {
-    grid-column: 6 / -1;
-    min-height: 232px;
+    grid-column: 9 / -1;
+    grid-row: 3;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
     margin: 0;
-    padding: 17px;
+    padding: 12px 13px;
     border: 1px solid rgba(93,78,119,.09);
-    border-radius: 22px;
+    border-radius: 19px;
     background: rgba(255,255,255,.58);
     box-shadow: none;
     backdrop-filter: blur(14px);
   }
 
-  .work-hub-page .work-section-head { margin-bottom: 9px; }
+  .work-hub-page .work-section-head {
+    min-height: 32px;
+    margin-bottom: 6px;
+  }
+  .work-hub-page .work-section-head h2 {
+    font-size: 1rem;
+    line-height: 1.05;
+  }
+  .work-hub-page .work-section-head p {
+    margin-top: 2px;
+    font-size: .62rem;
+  }
+  .work-hub-page .work-section-head > button {
+    min-height: 30px;
+    padding: 0 9px;
+    border-radius: 10px;
+    font-size: .65rem;
+  }
+
   .work-hub-page .work-meetings .work-list-card {
-    max-height: 180px;
+    height: 87px;
+    max-height: 87px;
     overflow: auto;
     scrollbar-gutter: stable;
     border-color: rgba(93,78,119,.09);
+    border-radius: 17px;
     background: rgba(255,255,255,.5);
     box-shadow: none;
   }
 
+  .work-hub-page .work-meetings .work-record {
+    min-height: 43px;
+    padding: 7px 11px;
+  }
+  .work-hub-page .work-meetings .work-record strong { font-size: .72rem; }
+  .work-hub-page .work-meetings .work-record small { margin-top: 1px; font-size: .6rem; }
+
+  .work-hub-page .work-board-top { min-height: 22px; }
+  .work-hub-page .work-board-top strong { font-size: .82rem; }
+  .work-hub-page .work-board-top span { font-size: .61rem; }
+
+  .work-hub-page .work-tabs {
+    margin: 6px 0 5px;
+    padding: 3px;
+    border-radius: 11px;
+  }
+  .work-hub-page .work-tabs button {
+    min-height: 27px;
+    padding: 5px 3px;
+    border-radius: 9px;
+    font-size: .61rem;
+  }
+
   .work-hub-page .work-board .work-queue-list {
-    max-height: 146px;
+    height: 38px;
+    max-height: 38px;
     overflow: auto;
     scrollbar-gutter: stable;
+  }
+  .work-hub-page .work-queue-row {
+    min-height: 38px;
+    padding: 4px 2px;
+  }
+  .work-hub-page .work-queue-row > span:first-child {
+    width: 27px;
+    height: 27px;
+    flex-basis: 27px;
+  }
+  .work-hub-page .work-queue-row strong { font-size: .7rem; }
+  .work-hub-page .work-queue-row small { margin-top: 1px; font-size: .58rem; }
+
+  .work-hub-page .work-task-add {
+    grid-template-columns: 1fr 34px;
+    gap: 6px;
+    margin-top: 5px;
+  }
+  .work-hub-page .work-task-add input,
+  .work-hub-page .work-task-add button {
+    min-height: 34px;
+    border-radius: 10px;
   }
 
   .work-quick-access {
     grid-column: 1 / -1;
-    min-height: 64px;
+    grid-row: 4;
+    min-height: 54px;
+    margin-top: 2px;
     display: grid;
     grid-template-columns: 128px repeat(3, minmax(118px, 1fr)) minmax(240px, 1.55fr);
     overflow: hidden;
     border: 1px solid rgba(93,78,119,.085);
-    border-radius: 18px;
+    border-radius: 17px;
     background: rgba(255,255,255,.43);
     box-shadow: 0 9px 28px rgba(72,57,98,.025);
     backdrop-filter: blur(12px);
@@ -157,20 +271,20 @@ if (!document.getElementById(styleId)) {
   .work-quick-label,
   .work-quick-access > button {
     min-width: 0;
-    min-height: 62px;
+    min-height: 52px;
     border: 0;
     border-right: 1px solid rgba(93,78,119,.07);
     background: transparent;
     display: flex;
     align-items: center;
-    gap: 9px;
-    padding: 0 14px;
+    gap: 8px;
+    padding: 0 13px;
     text-align: left;
   }
 
   .work-quick-label {
     color: #625672;
-    font-size: .74rem;
+    font-size: .7rem;
     font-weight: 850;
   }
 
@@ -181,8 +295,21 @@ if (!document.getElementById(styleId)) {
   .work-quick-access > button > span { flex: 1; min-width: 0; }
   .work-quick-access > button strong,
   .work-quick-access > button small { display: block; }
-  .work-quick-access > button strong { font-size: .76rem; font-weight: 830; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .work-quick-access > button small { margin-top: 2px; color: #8a8293; font-size: .62rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .work-quick-access > button strong {
+    font-size: .7rem;
+    font-weight: 830;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .work-quick-access > button small {
+    margin-top: 1px;
+    color: #8a8293;
+    font-size: .57rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .work-quick-access > button > svg:last-child { flex: 0 0 auto; color: #8b7aa9; }
 
   .work-mobile-secondary { display: none; }
@@ -365,42 +492,45 @@ if (!document.getElementById(styleId)) {
 @media (min-width: 1024px) and (max-height: 820px) {
   .work-hub-page {
     padding-top: 18px;
-    gap: 12px 16px;
+    grid-template-rows: 60px 76px minmax(116px, auto) auto;
+    column-gap: 14px;
+    row-gap: 8px;
   }
 
-  .work-hub-page .work-hub-header { min-height: 50px; }
-  .work-hub-page .work-hub-header h1 { font-size: 2.18rem; }
+  .work-hub-page .work-hub-header { height: 60px; }
+  .work-hub-page .work-hub-header h1 { font-size: 2.14rem; }
   .work-hub-page .work-hub-header > div > p:last-child { margin-top: 2px; }
   .work-header-details { min-height: 34px; }
 
-  .work-hub-page .work-live-card {
-    min-height: 146px;
-    padding: 15px 18px;
-  }
+  .work-hub-page .work-live-card { padding: 14px 17px; }
+  .work-hub-page .work-live-icon { width: 40px; height: 40px; border-radius: 13px; }
+  .work-hub-page .work-live-copy strong { font-size: 1.6rem; }
+  .work-hub-page .work-live-meta { margin: 7px 0 8px; padding-top: 7px; }
+  .work-hub-page .work-live-actions button { min-height: 40px; }
 
-  .work-hub-page .work-live-icon { width: 42px; height: 42px; border-radius: 13px; }
-  .work-hub-page .work-live-copy strong { font-size: 1.68rem; }
-  .work-hub-page .work-live-meta { margin: 9px 0; padding-top: 9px; }
-  .work-hub-page .work-live-actions button { min-height: 44px; }
+  .work-hub-page .work-overview { height: 76px; }
+  .work-hub-page .work-overview article { height: 74px; padding: 9px 11px; }
+  .work-hub-page .work-overview strong { margin-top: 3px; font-size: .98rem; }
+  .work-hub-page .work-overview span { margin-top: 2px; font-size: .57rem; }
 
-  .work-hub-page .work-overview { min-height: 146px; }
-  .work-hub-page .work-overview article { min-height: 144px; padding: 14px 11px; }
-  .work-hub-page .work-overview strong { margin-top: 4px; font-size: 1.05rem; }
-  .work-hub-page .work-overview span { margin-top: 2px; font-size: .61rem; }
+  .work-hub-page .work-section-head { min-height: 28px; margin-bottom: 4px; }
+  .work-hub-page .work-section-head h2 { font-size: .94rem; }
+  .work-hub-page .work-section-head p { display: none; }
+  .work-hub-page .work-section-head > button { min-height: 27px; }
 
-  .work-hub-page .work-meetings .work-list-card { max-height: 148px; }
-  .work-hub-page .work-record { min-height: 50px; padding-block: 7px; }
-
-  .work-hub-page .work-board { min-height: 204px; padding: 13px 15px; }
-  .work-hub-page .work-tabs { margin: 8px 0 6px; }
-  .work-hub-page .work-tabs button { padding-block: 7px; }
-  .work-hub-page .work-board .work-queue-list { max-height: 112px; }
-  .work-hub-page .work-queue-row { min-height: 44px; padding-block: 5px; }
-  .work-hub-page .work-task-add { margin-top: 6px; }
+  .work-hub-page .work-meetings .work-list-card { height: 82px; max-height: 82px; }
+  .work-hub-page .work-board { padding: 9px 11px; }
+  .work-hub-page .work-tabs { margin: 4px 0 3px; }
+  .work-hub-page .work-tabs button { min-height: 24px; padding-block: 3px; }
+  .work-hub-page .work-board .work-queue-list { height: 33px; max-height: 33px; }
+  .work-hub-page .work-queue-row { min-height: 33px; }
+  .work-hub-page .work-task-add { margin-top: 3px; }
+  .work-hub-page .work-task-add input,
+  .work-hub-page .work-task-add button { min-height: 31px; }
 
   .work-quick-access,
   .work-quick-label,
-  .work-quick-access > button { min-height: 56px; }
+  .work-quick-access > button { min-height: 49px; }
 }
 
 @media (min-width: 1440px) {
