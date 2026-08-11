@@ -33,6 +33,7 @@ import './theme/desktop-home-option1';
 import './theme/v04-work';
 import './theme/v04-work-polish';
 import './theme/desktop-work-laptop';
+import './theme/desktop-work-scale';
 
 void import('./theme/work-hub-fixes');
 
