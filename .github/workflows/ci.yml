@@ -46,6 +46,8 @@ jobs:
         run: node scripts/e2e-release-qa.mjs
       - name: Run Work laptop layout QA
         run: node scripts/e2e-work-laptop-qa.mjs
+      - name: Run Work Option 1 and meeting deletion QA
+        run: node scripts/e2e-work-meeting-delete.mjs
 
   database-security:
     name: database-security
