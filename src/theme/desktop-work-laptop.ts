@@ -506,7 +506,7 @@ if (!document.getElementById(styleId)) {
   .work-hub-page .work-live-icon { width: 40px; height: 40px; border-radius: 13px; }
   .work-hub-page .work-live-copy strong { font-size: 1.6rem; }
   .work-hub-page .work-live-meta { margin: 7px 0 8px; padding-top: 7px; }
-  .work-hub-page .work-live-actions button { min-height: 40px; }
+  .work-hub-page .work-live-actions button { min-height: 44px; }
 
   .work-hub-page .work-overview { height: 76px; }
   .work-hub-page .work-overview article { height: 74px; padding: 9px 11px; }
