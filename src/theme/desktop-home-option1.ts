@@ -5,18 +5,30 @@ if (!document.getElementById(styleId)) {
   style.id = styleId;
   style.textContent = `
 @media (min-width: 1024px) {
-  body:has(.dashboard-v2) .bottom-nav {
+  .app {
+    padding-left: 252px;
+    padding-bottom: 0;
+  }
+
+  .app .bottom-nav {
     position: fixed;
     inset: 0 auto 0 0;
+    left: 0;
+    right: auto;
+    top: 0;
+    bottom: 0;
     z-index: 30;
     width: 252px;
     height: 100dvh;
+    margin: 0;
     padding: 126px 22px 92px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
     gap: 7px;
+    transform: none !important;
+    overflow: visible;
     border: 0;
     border-right: 1px solid rgba(91, 76, 116, .09);
     border-radius: 0;
@@ -25,7 +37,7 @@ if (!document.getElementById(styleId)) {
     backdrop-filter: blur(24px) saturate(115%);
   }
 
-  body:has(.dashboard-v2) .bottom-nav::before {
+  .app .bottom-nav::before {
     content: 'Still.';
     position: absolute;
     top: 42px;
@@ -34,43 +46,67 @@ if (!document.getElementById(styleId)) {
     font-family: var(--font-display);
     font-size: 38px;
     font-weight: 700;
+    line-height: 1;
     letter-spacing: -1.5px;
   }
 
-  body:has(.dashboard-v2) .bottom-nav .nav-item {
+  .app .bottom-nav .nav-item {
     flex: none;
     width: 100%;
+    min-width: 0;
     min-height: 46px;
+    margin: 0;
     padding: 0 13px;
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
     gap: 12px;
+    transform: none;
     border-radius: 15px;
     color: #5e586d;
     font-size: 13px;
+    text-align: left;
   }
 
-  body:has(.dashboard-v2) .bottom-nav .nav-item.active {
+  .app .bottom-nav .nav-item svg {
+    flex: none;
+  }
+
+  .app .bottom-nav .nav-item > span:last-child {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    display: inline;
+    overflow: visible;
+    clip: auto;
+    opacity: 1;
+    white-space: nowrap;
+  }
+
+  .app .bottom-nav .nav-item.active {
     color: #51456e;
     background: linear-gradient(90deg, rgba(255, 228, 218, .66), rgba(244, 234, 255, .58));
   }
 
-  body:has(.dashboard-v2) .bottom-nav .add-button {
+  .app .bottom-nav .add-button {
+    flex: none;
     width: 22px;
     height: 22px;
+    margin: 0;
     display: grid;
     place-items: center;
+    transform: none;
     border-radius: 0;
     color: inherit;
     background: transparent;
     box-shadow: none;
   }
 
-  body:has(.dashboard-v2) .bottom-nav .add-button svg { width: 21px; height: 21px; }
+  .app .bottom-nav .add-button svg { width: 21px; height: 21px; }
 
-  body:has(.dashboard-v2) .sync-confidence-indicator {
+  .app .sync-confidence-indicator {
     position: fixed;
     left: 28px;
     right: auto;
@@ -85,7 +121,7 @@ if (!document.getElementById(styleId)) {
     max-width: none;
     min-height: 100dvh;
     margin: 0;
-    padding: 48px 58px 64px 310px;
+    padding: 48px 58px 64px;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 560px));
     grid-template-areas:

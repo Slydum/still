@@ -102,6 +102,7 @@ const viewports = [
   { width: 768, height: 1024, label: 'tablet' },
   { width: 1280, height: 900, label: 'desktop' },
 ];
+const expectedNavLabels = ['Home', 'Journal', 'Add', 'Calendar', 'Settings'];
 
 await rm(profileDir, { recursive: true, force: true });
 const preview = spawn('npm', ['run', 'preview', '--', '--host', '127.0.0.1', '--port', '4174'], { stdio: 'inherit' });
@@ -136,13 +137,58 @@ try {
         overflow: document.documentElement.scrollWidth - window.innerWidth,
         mainVisible: (() => { const el = document.querySelector('main'); if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; })(),
         h1Count: document.querySelectorAll('main h1').length,
-        versionText: document.body.innerText.includes(${JSON.stringify(`Version ${packageJson.version}`)})
+        versionText: document.body.innerText.includes(${JSON.stringify(`Version ${packageJson.version}`)}),
+        nav: (() => {
+          const el = document.querySelector('.bottom-nav');
+          if (!el) return null;
+          const rect = el.getBoundingClientRect();
+          const style = getComputedStyle(el);
+          const labels = [...el.querySelectorAll('.nav-item > span:last-child')].map((label) => {
+            const labelRect = label.getBoundingClientRect();
+            return { text: label.textContent?.trim() ?? '', width: labelRect.width, height: labelRect.height };
+          });
+          return {
+            left: rect.left,
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            width: rect.width,
+            height: rect.height,
+            position: style.position,
+            transform: style.transform,
+            labels,
+          };
+        })()
       })`);
       if (!state.mainVisible) throw new Error(`${viewport.label} ${route.path}: main content is not visible.`);
       if (state.path !== (route.expected ?? route.path)) throw new Error(`${viewport.label} ${route.path}: resolved to unexpected route ${state.path}.`);
       if (state.overflow > 2) throw new Error(`${viewport.label} ${route.path}: horizontal overflow of ${state.overflow}px.`);
       if (route.path !== '/' && state.h1Count < 1) throw new Error(`${viewport.label} ${route.path}: missing page heading.`);
       if (route.path === '/more' && !state.versionText) throw new Error(`Settings does not report Version ${packageJson.version}.`);
+      if (!state.nav) throw new Error(`${viewport.label} ${route.path}: primary navigation is missing.`);
+
+      if (viewport.width >= 1024) {
+        if (Math.abs(state.nav.left) > 1 || Math.abs(state.nav.top) > 1) {
+          throw new Error(`${viewport.label} ${route.path}: desktop sidebar is shifted off-screen (${state.nav.left}, ${state.nav.top}).`);
+        }
+        if (state.nav.width < 240 || state.nav.width > 260) {
+          throw new Error(`${viewport.label} ${route.path}: desktop sidebar width is ${state.nav.width}px instead of the expected rail width.`);
+        }
+        if (state.nav.height < viewport.height - 2) {
+          throw new Error(`${viewport.label} ${route.path}: desktop sidebar does not fill the viewport height.`);
+        }
+        if (state.nav.position !== 'fixed' || state.nav.transform !== 'none') {
+          throw new Error(`${viewport.label} ${route.path}: desktop sidebar inherited mobile positioning (${state.nav.position}, ${state.nav.transform}).`);
+        }
+        for (const label of expectedNavLabels) {
+          const rendered = state.nav.labels.find((item) => item.text === label);
+          if (!rendered || rendered.width < 1 || rendered.height < 1) {
+            throw new Error(`${viewport.label} ${route.path}: desktop sidebar label ${label} is clipped or hidden.`);
+          }
+        }
+      } else if (state.nav.height >= viewport.height / 2) {
+        throw new Error(`${viewport.label} ${route.path}: mobile/tablet navigation unexpectedly became a desktop sidebar.`);
+      }
     }
   }
 
@@ -184,7 +230,7 @@ try {
   await poll(cdp, "!document.querySelector('[role=dialog][aria-modal=true]')", 'task dialog close');
   await poll(cdp, "document.activeElement?.dataset.releaseQaTrigger === 'true'", 'task trigger focus restoration');
 
-  console.log(`v${packageJson.version} release QA passed: real routes, responsive headings, release identity, modal focus trap, draft protection, Escape handling, and focus restoration.`);
+  console.log(`v${packageJson.version} release QA passed: real routes, responsive headings, desktop shell, release identity, modal focus trap, draft protection, Escape handling, and focus restoration.`);
 } finally {
   cdp?.close();
   chrome?.kill('SIGTERM');
