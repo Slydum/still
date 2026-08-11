@@ -29,6 +29,7 @@ import './theme/v031-mobile-polish.css';
 import './theme/v04-home.css';
 import './theme/v04-home-refinement.css';
 import './theme/v04-home-device-pass.css';
+import './theme/desktop-home-option1';
 import './theme/v04-work';
 import './theme/v04-work-polish';
 
