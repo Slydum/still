@@ -7,7 +7,17 @@ import type {
   StillExpense,
   StillTask,
 } from '../../stores/useAppStore';
-import type { AccountSettings } from '../accountSettings';
+import {
+  defaultGranularSettings,
+  isLegacyBundledAccountSettings,
+  splitLegacyAccountSettings,
+  type AccountSettings,
+  type GeneralAccountSettings,
+  type HealthSettings,
+  type MoneySettings,
+  type PermanentSettingsRecord,
+  type WorkSettings,
+} from '../accountSettings';
 import { stillDb, withCheckInSyncMetadata } from '../localDb';
 import type { CheckInRecord } from '../records';
 import { activeRecords, addSyncMetadata, createMutationId, reconcileCollection } from './reconcile';
@@ -17,9 +27,10 @@ import {
   type PermanentDataCache,
   type PermanentDataSnapshot,
   type StillRepository,
-  type SyncedAccountSettings,
+  type SyncMetadata,
   type SyncedCheckInRecord,
   type SyncedRecord,
+  type SyncedSettingsRecord,
 } from './types';
 
 const BOOTSTRAP_META_KEY = `permanent-data-v${PERMANENT_DATA_SCHEMA_VERSION}`;
@@ -91,7 +102,9 @@ function stripCheckInMetadata(record: SyncedCheckInRecord): CheckInRecord {
   return checkIn;
 }
 
-function stripSettingsMetadata(record: SyncedAccountSettings): AccountSettings {
+function stripSettingsMetadata<T extends PermanentSettingsRecord | AccountSettings>(
+  record: T & SyncMetadata,
+): T {
   const {
     userId: _userId,
     schemaVersion: _schemaVersion,
@@ -102,13 +115,62 @@ function stripSettingsMetadata(record: SyncedAccountSettings): AccountSettings {
     dirty: _dirty,
     ...settings
   } = record;
-  return settings;
+  return settings as T;
 }
 
-function accountSettingsEqual(left: AccountSettings, right: AccountSettings) {
+function settingsRecordEqual(left: PermanentSettingsRecord, right: PermanentSettingsRecord) {
   const { updatedAt: _leftUpdatedAt, ...leftComparable } = left;
   const { updatedAt: _rightUpdatedAt, ...rightComparable } = right;
   return JSON.stringify(leftComparable) === JSON.stringify(rightComparable);
+}
+
+async function persistSettingsRecord<T extends PermanentSettingsRecord>(settings: T) {
+  const existing = await stillDb.accountSettings.get(settings.id);
+  if (existing) {
+    const existingValue = stripSettingsMetadata(existing as SyncedSettingsRecord) as PermanentSettingsRecord;
+    if (!isLegacyBundledAccountSettings(existingValue as unknown as Record<string, unknown>)
+      && settingsRecordEqual(settings, existingValue)) return;
+  }
+  await stillDb.accountSettings.put(addSyncMetadata(settings, existing));
+}
+
+async function ensureGranularSettingsRecords(cache?: Pick<
+  PermanentDataCache,
+  'accountSettings' | 'workSettings' | 'moneySettings' | 'healthSettings'
+>) {
+  const fallback = cache ?? defaultGranularSettings();
+  const rows = await stillDb.accountSettings.toArray();
+  const byId = new Map(rows.map((row) => [row.id, row] as const));
+  const existingAccount = byId.get('account');
+
+  let source = fallback;
+  if (existingAccount) {
+    const accountValue = stripSettingsMetadata(existingAccount as SyncedSettingsRecord);
+    if (isLegacyBundledAccountSettings(accountValue as unknown as Record<string, unknown>)) {
+      source = splitLegacyAccountSettings(accountValue as AccountSettings);
+
+      if (!byId.has('work')) {
+        await stillDb.accountSettings.put(addSyncMetadata(source.workSettings, undefined, existingAccount.userId));
+      }
+      if (!byId.has('money')) {
+        await stillDb.accountSettings.put(addSyncMetadata(source.moneySettings, undefined, existingAccount.userId));
+      }
+      if (!byId.has('health')) {
+        await stillDb.accountSettings.put(addSyncMetadata(source.healthSettings, undefined, existingAccount.userId));
+      }
+
+      await stillDb.accountSettings.put(addSyncMetadata({
+        ...source.accountSettings,
+        updatedAt: Date.now(),
+      }, existingAccount));
+    }
+  } else {
+    await stillDb.accountSettings.put(addSyncMetadata(source.accountSettings));
+  }
+
+  if (!byId.has('work')) await persistSettingsRecord(source.workSettings);
+  if (!byId.has('money')) await persistSettingsRecord(source.moneySettings);
+  if (!byId.has('health')) await persistSettingsRecord(source.healthSettings);
 }
 
 export class LocalStillRepository implements StillRepository {
@@ -138,16 +200,15 @@ export class LocalStillRepository implements StillRepository {
           await seedTable(stillDb.expenses, cache.expenses);
           await seedTable(stillDb.entityLinks, cache.entityLinks);
           await seedTable(stillDb.workShifts, cache.workShifts);
+          await ensureGranularSettingsRecords(cache);
 
           await stillDb.repositoryMeta.put({
             key: BOOTSTRAP_META_KEY,
             value: this.provider,
             updatedAt: Date.now(),
           });
-        }
-
-        if (await stillDb.accountSettings.count() === 0) {
-          await stillDb.accountSettings.put(addSyncMetadata(cache.accountSettings));
+        } else {
+          await ensureGranularSettingsRecords(cache);
         }
       },
     );
@@ -156,7 +217,21 @@ export class LocalStillRepository implements StillRepository {
   }
 
   async load(): Promise<PermanentDataSnapshot> {
-    const [tasks, events, journalEntries, expenses, entityLinks, workShifts, checkIns, storedSettings] = await Promise.all([
+    await ensureGranularSettingsRecords();
+
+    const [
+      tasks,
+      events,
+      journalEntries,
+      expenses,
+      entityLinks,
+      workShifts,
+      checkIns,
+      storedAccountSettings,
+      storedWorkSettings,
+      storedMoneySettings,
+      storedHealthSettings,
+    ] = await Promise.all([
       stillDb.tasks.toArray(),
       stillDb.events.toArray(),
       stillDb.journalEntries.toArray(),
@@ -165,9 +240,14 @@ export class LocalStillRepository implements StillRepository {
       stillDb.workShifts.toArray(),
       this.listCheckIns(),
       stillDb.accountSettings.get('account'),
+      stillDb.accountSettings.get('work'),
+      stillDb.accountSettings.get('money'),
+      stillDb.accountSettings.get('health'),
     ]);
 
-    if (!storedSettings) throw new Error('Still account settings were not initialized.');
+    if (!storedAccountSettings || !storedWorkSettings || !storedMoneySettings || !storedHealthSettings) {
+      throw new Error('Still settings were not initialized.');
+    }
 
     return {
       tasks: activeRecords(tasks),
@@ -176,7 +256,10 @@ export class LocalStillRepository implements StillRepository {
       expenses: activeRecords(expenses),
       entityLinks: activeRecords(entityLinks),
       workShifts: activeRecords(workShifts),
-      accountSettings: stripSettingsMetadata(storedSettings),
+      accountSettings: stripSettingsMetadata(storedAccountSettings) as GeneralAccountSettings,
+      workSettings: stripSettingsMetadata(storedWorkSettings) as WorkSettings,
+      moneySettings: stripSettingsMetadata(storedMoneySettings) as MoneySettings,
+      healthSettings: stripSettingsMetadata(storedHealthSettings) as HealthSettings,
       checkIns,
     };
   }
@@ -187,12 +270,10 @@ export class LocalStillRepository implements StillRepository {
   persistExpenses(changes: CollectionChanges<StillExpense>) { return persistTableChanges(stillDb.expenses, changes); }
   persistEntityLinks(changes: CollectionChanges<LifeEntityLink>) { return persistTableChanges(stillDb.entityLinks, changes); }
   persistWorkShifts(changes: CollectionChanges<WorkShift>) { return persistTableChanges(stillDb.workShifts, changes); }
-
-  async persistAccountSettings(settings: AccountSettings) {
-    const existing = await stillDb.accountSettings.get('account');
-    if (existing && accountSettingsEqual(settings, stripSettingsMetadata(existing))) return;
-    await stillDb.accountSettings.put(addSyncMetadata(settings, existing));
-  }
+  persistAccountSettings(settings: GeneralAccountSettings) { return persistSettingsRecord(settings); }
+  persistWorkSettings(settings: WorkSettings) { return persistSettingsRecord(settings); }
+  persistMoneySettings(settings: MoneySettings) { return persistSettingsRecord(settings); }
+  persistHealthSettings(settings: HealthSettings) { return persistSettingsRecord(settings); }
 
   async listCheckIns() {
     const records = await stillDb.checkIns.orderBy('date').reverse().toArray();
