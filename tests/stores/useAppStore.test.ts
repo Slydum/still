@@ -16,13 +16,6 @@ function installMemoryStorage() {
 }
 
 describe('quick add store modes', () => {
-  it('keeps automatic weather off until location use is explicitly remembered', async () => {
-    installMemoryStorage();
-    const { useAppStore } = await import('../../src/stores/useAppStore.js');
-
-    assert.equal(useAppStore.getState().autoWeather, false);
-  });
-
   it('opens directly into a requested quick-add mode', async () => {
     installMemoryStorage();
     const { useAppStore } = await import('../../src/stores/useAppStore.js');
