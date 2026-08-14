@@ -1,0 +1,41 @@
+/* Phase 3 shell and navigation cleanup.
+   This file owns responsive clearance for the fixed primary navigation so
+   individual pages do not need page-specific bottom-padding patches. */
+
+html {
+  scroll-padding-bottom: calc(148px + env(safe-area-inset-bottom));
+}
+
+.app {
+  padding-bottom: calc(132px + env(safe-area-inset-bottom));
+}
+
+.nav-item {
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-item:focus-visible {
+  outline: 3px solid rgba(139, 116, 222, .28);
+  outline-offset: 2px;
+}
+
+@media (max-width: 620px) {
+  .app {
+    padding-bottom: calc(140px + env(safe-area-inset-bottom));
+  }
+
+  html {
+    scroll-padding-bottom: calc(156px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 1024px) {
+  .app {
+    padding-bottom: calc(118px + env(safe-area-inset-bottom));
+  }
+
+  html {
+    scroll-padding-bottom: calc(132px + env(safe-area-inset-bottom));
+  }
+}
