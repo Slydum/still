@@ -193,12 +193,59 @@ export function overtimeHours(shift: WorkShift, profile: WorkProfile, now = Date
   return Math.max(0, workedHours(shift, now) - Math.max(0, profile.overtimeAfterHours));
 }
 
-export function shiftEarnings(shift: WorkShift, profile: WorkProfile, now = Date.now()) {
-  const hours = workedHours(shift, now);
+function earningsForWorkedHours(hours: number, profile: WorkProfile) {
   const rate = effectiveHourlyRate(profile);
-  const regularHours = Math.min(hours, Math.max(0, profile.overtimeAfterHours));
+  const regularHours = Math.min(Math.max(0, hours), Math.max(0, profile.overtimeAfterHours));
   const extraHours = Math.max(0, hours - regularHours);
   return regularHours * rate + extraHours * rate * Math.max(1, profile.overtimeMultiplier);
+}
+
+export function shiftEarnings(shift: WorkShift, profile: WorkProfile, now = Date.now()) {
+  return earningsForWorkedHours(workedHours(shift, now), profile);
+}
+
+function elapsedFractionAt(shift: WorkShift, timestamp: number, now: number) {
+  const shiftEnd = shift.endedAt ?? now;
+  const elapsedMs = Math.max(0, shiftEnd - shift.startedAt);
+  if (!elapsedMs) return 0;
+  const elapsedThroughTimestamp = Math.min(
+    elapsedMs,
+    Math.max(0, timestamp - shift.startedAt),
+  );
+  return elapsedThroughTimestamp / elapsedMs;
+}
+
+/**
+ * Splits a shift across an arbitrary time range without losing configured or
+ * recorded break time. When break timestamps are unavailable, paid time is
+ * distributed proportionally across the shift so adjacent ranges still add up
+ * to the exact total worked hours and earnings for the shift.
+ */
+export function workedHoursInRange(
+  shift: WorkShift,
+  rangeStart: number,
+  rangeEnd: number,
+  now = Date.now(),
+) {
+  if (rangeEnd <= rangeStart) return 0;
+  const paidHours = workedHours(shift, now);
+  const startFraction = elapsedFractionAt(shift, rangeStart, now);
+  const endFraction = elapsedFractionAt(shift, rangeEnd, now);
+  return Math.max(0, paidHours * (endFraction - startFraction));
+}
+
+export function shiftEarningsInRange(
+  shift: WorkShift,
+  profile: WorkProfile,
+  rangeStart: number,
+  rangeEnd: number,
+  now = Date.now(),
+) {
+  if (rangeEnd <= rangeStart) return 0;
+  const paidHours = workedHours(shift, now);
+  const startHours = paidHours * elapsedFractionAt(shift, rangeStart, now);
+  const endHours = paidHours * elapsedFractionAt(shift, rangeEnd, now);
+  return Math.max(0, earningsForWorkedHours(endHours, profile) - earningsForWorkedHours(startHours, profile));
 }
 
 export function payPeriodEstimate(profile: WorkProfile) {

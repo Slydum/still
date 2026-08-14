@@ -26,7 +26,14 @@ import {
   type ReactNode,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { effectiveHourlyRate, shiftEarnings, workedHours, type WorkNote, type WorkProfile } from '../../domain/work';
+import {
+  effectiveHourlyRate,
+  shiftEarnings,
+  shiftEarningsInRange,
+  workedHours,
+  type WorkNote,
+  type WorkProfile,
+} from '../../domain/work';
 import { focusFirst, trapTabKey } from '../../components/ui/dialogAccessibility';
 import { getEventOccurrences, getOccurrencesForDay } from '../calendar/eventUtils';
 import { useAppStore, type EventRepeat, type StillEvent } from '../../stores/useAppStore';
@@ -229,8 +236,10 @@ export function WorkHubPage() {
 
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
-  const todayShifts = shifts.filter((shift) => shift.startedAt >= todayStart.getTime());
-  const earnedToday = todayShifts.reduce((total, shift) => total + shiftEarnings(shift, profile, now), 0);
+  const earnedToday = shifts.reduce(
+    (total, shift) => total + shiftEarningsInRange(shift, profile, todayStart.getTime(), now, now),
+    0,
+  );
   const liveEarnings = activeShift ? shiftEarnings(activeShift, profile, now) : 0;
   const livePerSecond = activeShift
     ? Math.max(0, shiftEarnings(activeShift, profile, now + 1000) - liveEarnings)

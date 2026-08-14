@@ -6,10 +6,16 @@ import {
   normalizedWorkSchedule,
   payPeriodEstimate,
   shiftEarnings,
+  shiftEarningsInRange,
   workedHours,
+  workedHoursInRange,
   type WorkProfile,
   type WorkShift,
 } from '../../src/domain/work.js';
+
+function assertClose(actual: number, expected: number, tolerance = 1e-9) {
+  assert.ok(Math.abs(actual - expected) <= tolerance, `Expected ${actual} to be within ${tolerance} of ${expected}`);
+}
 
 describe('work domain calculations', () => {
   const hourlyProfile: WorkProfile = {
@@ -39,6 +45,40 @@ describe('work domain calculations', () => {
     };
 
     assert.equal(shiftEarnings(shift, hourlyProfile), 220);
+  });
+
+  it('counts the portion of an overnight shift that overlaps today', () => {
+    const shift: WorkShift = {
+      id: 'shift-overnight',
+      startedAt: Date.parse('2026-08-13T23:00:00Z'),
+      endedAt: Date.parse('2026-08-14T07:00:00Z'),
+      unpaidBreakMinutes: 60,
+    };
+    const todayStart = Date.parse('2026-08-14T00:00:00Z');
+    const todayEnd = Date.parse('2026-08-15T00:00:00Z');
+
+    assert.equal(workedHours(shift), 7);
+    assertClose(workedHoursInRange(shift, todayStart, todayEnd), 6.125);
+    assertClose(shiftEarningsInRange(shift, hourlyProfile, todayStart, todayEnd), 122.5);
+  });
+
+  it('range splits add back up to the full shift totals', () => {
+    const shift: WorkShift = {
+      id: 'shift-split',
+      startedAt: Date.parse('2026-08-13T22:00:00Z'),
+      endedAt: Date.parse('2026-08-14T10:00:00Z'),
+      unpaidBreakMinutes: 60,
+    };
+    const midnight = Date.parse('2026-08-14T00:00:00Z');
+    const end = Date.parse('2026-08-14T10:00:00Z');
+
+    const splitHours = workedHoursInRange(shift, shift.startedAt, midnight)
+      + workedHoursInRange(shift, midnight, end);
+    const splitEarnings = shiftEarningsInRange(shift, hourlyProfile, shift.startedAt, midnight)
+      + shiftEarningsInRange(shift, hourlyProfile, midnight, end);
+
+    assertClose(splitHours, workedHours(shift));
+    assertClose(splitEarnings, shiftEarnings(shift, hourlyProfile));
   });
 
   it('estimates salaried semimonthly pay periods', () => {

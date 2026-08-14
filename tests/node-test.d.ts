@@ -1,10 +1,19 @@
 declare module 'node:assert/strict' {
   const assert: {
     equal(actual: unknown, expected: unknown, message?: string): void;
+    deepEqual(actual: unknown, expected: unknown, message?: string): void;
     ok(value: unknown, message?: string): void;
   };
 
   export default assert;
+}
+
+declare module 'node:fs' {
+  const fs: {
+    readFileSync(path: string, encoding: 'utf8'): string;
+  };
+
+  export default fs;
 }
 
 declare module 'node:test' {

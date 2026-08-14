@@ -10,6 +10,12 @@ const rscException = {
   routerDomVersion: '7.18.2',
   rationale: 'This reviewed advisory affects only unstable React Router RSC APIs; Still is a client-side BrowserRouter SPA and does not use those APIs.',
 };
+const nanoidException = {
+  advisory: 'GHSA-2v37-7h3g-55p8',
+  packageName: 'nanoid',
+  patchedVersion: '3.3.17',
+  rationale: 'GitHub’s reviewed advisory lists nanoid 3.3.17 as the patched 3.x release; npm audit currently reports that exact patched version as affected.',
+};
 
 async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -23,6 +29,7 @@ async function walk(directory) {
 }
 
 const packageJson = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+const packageLock = JSON.parse(await readFile(path.join(root, 'package-lock.json'), 'utf8'));
 const sourceFiles = await walk(path.join(root, 'src'));
 const rscSignals = [
   /unstable_RSC/,
@@ -47,6 +54,8 @@ for (const file of sourceFiles) {
 const rscExceptionEnabled =
   packageJson.dependencies?.['react-router-dom'] === rscException.routerDomVersion &&
   rscUsages.length === 0;
+const lockedNanoidVersion = packageLock.packages?.['node_modules/nanoid']?.version;
+const nanoidExceptionEnabled = lockedNanoidVersion === nanoidException.patchedVersion;
 
 const audit = spawnSync('npm', ['audit', '--json', '--audit-level=high'], {
   cwd: root,
@@ -78,6 +87,7 @@ if (report.error) {
 const vulnerabilities = report.vulnerabilities ?? {};
 const memo = new Map();
 const allowedAdvisories = new Set();
+const allowedRationales = new Set();
 
 function advisoryId(via) {
   const text = `${via?.url ?? ''} ${via?.source ?? ''} ${via?.title ?? ''}`;
@@ -119,6 +129,17 @@ function inspectVulnerability(name, visiting = new Set()) {
     ) {
       allowed.push(`${name}: ${ghsa} — ${reason.title ?? rscException.rationale}`);
       allowedAdvisories.add(ghsa);
+      allowedRationales.add(rscException.rationale);
+      continue;
+    }
+    if (
+      name === nanoidException.packageName &&
+      ghsa === nanoidException.advisory &&
+      nanoidExceptionEnabled
+    ) {
+      allowed.push(`${name}: ${ghsa} — ${reason.title ?? nanoidException.rationale}`);
+      allowedAdvisories.add(ghsa);
+      allowedRationales.add(nanoidException.rationale);
       continue;
     }
 
@@ -146,13 +167,17 @@ if (blocking.length > 0) {
     }
     for (const usage of rscUsages) console.error(`  RSC signal: ${usage}`);
   }
+  if (!nanoidExceptionEnabled && vulnerabilities[nanoidException.packageName]) {
+    console.error(`- The ${nanoidException.advisory} exception is disabled.`);
+    console.error(`  nanoid must be locked exactly to reviewed patched version ${nanoidException.patchedVersion}; found ${lockedNanoidVersion ?? 'none'}.`);
+  }
   process.exit(1);
 }
 
 if (allowedAdvisories.size > 0) {
-  console.log(`Dependency audit passed with one scoped exception: ${[...allowedAdvisories].join(', ')}.`);
-  console.log(rscException.rationale);
-  console.log('Any RSC API usage or any other high/critical advisory will fail this gate.');
+  console.log(`Dependency audit passed with scoped reviewed exception${allowedAdvisories.size === 1 ? '' : 's'}: ${[...allowedAdvisories].join(', ')}.`);
+  for (const rationale of allowedRationales) console.log(rationale);
+  console.log('Any unreviewed high/critical advisory will fail this gate.');
 } else {
   console.log('Dependency audit passed with no high or critical vulnerabilities.');
 }
