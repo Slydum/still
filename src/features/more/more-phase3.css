@@ -1,0 +1,21 @@
+.more-page .settings-section-heading p,
+.more-page .settings-toggle-row small,
+.more-page .settings-action-row small {
+  color: #81798a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.more-page .settings-footnote {
+  max-width: 66ch;
+  color: #81798a;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+@media (max-width: 620px) {
+  .more-page .settings-section { margin-top: 22px; }
+  .more-page .settings-card,
+  .more-page .settings-profile-form,
+  .more-page .settings-about-card { padding: 16px; }
+}
