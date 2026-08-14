@@ -35,7 +35,9 @@ import './theme/v04-work-polish';
 import './theme/desktop-work-laptop';
 import './theme/desktop-work-scale';
 import './theme/desktop-work-full-canvas';
+import './theme/work-hub-fixes.css';
 import './theme/phase3-layout.css';
+import './theme/phase3-content.css';
 
 void import('./theme/work-hub-fixes');
 
