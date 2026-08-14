@@ -78,6 +78,15 @@ async function navigate(cdp, route) {
   await new Promise((resolve) => setTimeout(resolve, 100));
 }
 
+function expectedCurrentNavLabel(pathname, desktop) {
+  if (pathname === '/') return 'Home';
+  if (pathname === '/today') return 'Journal';
+  if (pathname === '/calendar') return 'Calendar';
+  if (pathname === '/more') return 'Settings';
+  if (desktop && pathname === '/work') return 'Work';
+  return null;
+}
+
 const routes = [
   { path: '/' },
   { path: '/tasks' },
@@ -138,6 +147,12 @@ try {
         mainVisible: (() => { const el = document.querySelector('main'); if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; })(),
         h1Count: document.querySelectorAll('main h1').length,
         versionText: document.body.innerText.includes(${JSON.stringify(`Version ${packageJson.version}`)}),
+        appPaddingBottom: (() => {
+          const app = document.querySelector('.app');
+          return app ? Number.parseFloat(getComputedStyle(app).paddingBottom) : 0;
+        })(),
+        currentNavLabels: [...document.querySelectorAll('.bottom-nav .nav-item[aria-current="page"] > span:last-child')]
+          .map((label) => label.textContent?.trim() ?? ''),
         nav: (() => {
           const el = document.querySelector('.bottom-nav');
           if (!el) return null;
@@ -167,6 +182,17 @@ try {
       if (route.path === '/more' && !state.versionText) throw new Error(`Settings does not report Version ${packageJson.version}.`);
       if (!state.nav) throw new Error(`${viewport.label} ${route.path}: primary navigation is missing.`);
 
+      const expectedCurrent = expectedCurrentNavLabel(state.path, viewport.width >= 1024);
+      if (state.currentNavLabels.length > 1) {
+        throw new Error(`${viewport.label} ${route.path}: multiple primary links claim aria-current (${state.currentNavLabels.join(', ')}).`);
+      }
+      if (expectedCurrent === null && state.currentNavLabels.length !== 0) {
+        throw new Error(`${viewport.label} ${route.path}: descendant route incorrectly claims aria-current on ${state.currentNavLabels[0]}.`);
+      }
+      if (expectedCurrent !== null && state.currentNavLabels[0] !== expectedCurrent) {
+        throw new Error(`${viewport.label} ${route.path}: expected aria-current on ${expectedCurrent}, got ${state.currentNavLabels[0] ?? 'none'}.`);
+      }
+
       if (viewport.width >= 1024) {
         if (Math.abs(state.nav.left) > 1 || Math.abs(state.nav.top) > 1) {
           throw new Error(`${viewport.label} ${route.path}: desktop sidebar is shifted off-screen (${state.nav.left}, ${state.nav.top}).`);
@@ -186,8 +212,13 @@ try {
             throw new Error(`${viewport.label} ${route.path}: desktop sidebar label ${label} is clipped or hidden.`);
           }
         }
-      } else if (state.nav.height >= viewport.height / 2) {
-        throw new Error(`${viewport.label} ${route.path}: mobile/tablet navigation unexpectedly became a desktop sidebar.`);
+      } else {
+        if (state.nav.height >= viewport.height / 2) {
+          throw new Error(`${viewport.label} ${route.path}: mobile/tablet navigation unexpectedly became a desktop sidebar.`);
+        }
+        if (state.appPaddingBottom < state.nav.height + 36) {
+          throw new Error(`${viewport.label} ${route.path}: app bottom clearance ${state.appPaddingBottom}px is too small for fixed navigation height ${state.nav.height}px.`);
+        }
       }
     }
   }
@@ -230,7 +261,7 @@ try {
   await poll(cdp, "!document.querySelector('[role=dialog][aria-modal=true]')", 'task dialog close');
   await poll(cdp, "document.activeElement?.dataset.releaseQaTrigger === 'true'", 'task trigger focus restoration');
 
-  console.log(`v${packageJson.version} release QA passed: real routes, responsive headings, desktop shell, release identity, modal focus trap, draft protection, Escape handling, and focus restoration.`);
+  console.log(`v${packageJson.version} release QA passed: real routes, exact aria-current semantics, fixed-nav clearance, responsive headings, desktop shell, release identity, modal focus trap, draft protection, Escape handling, and focus restoration.`);
 } finally {
   cdp?.close();
   chrome?.kill('SIGTERM');
