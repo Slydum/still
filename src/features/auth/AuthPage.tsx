@@ -62,6 +62,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(initialNotice);
   const [error, setError] = useState('');
@@ -81,6 +82,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
     setPassword('');
     setConfirmation('');
     setShowPassword(false);
+    setShowConfirmation(false);
     setError('');
     setMessage('');
   };
@@ -132,6 +134,8 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
           setMode('login');
           setPassword('');
           setConfirmation('');
+          setShowPassword(false);
+          setShowConfirmation(false);
           setMessage('Account created. Check your email to confirm it, then return here and log in with your password.');
         }
       } else if (mode === 'forgot') {
@@ -151,6 +155,7 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
   };
 
   const passwordType = showPassword ? 'text' : 'password';
+  const confirmationType = showConfirmation ? 'text' : 'password';
 
   return (
     <main className={`auth-page auth-page--${mode}`}>
@@ -211,7 +216,10 @@ export function AuthPage({ recoveryMode = false, initialNotice = '', onRecoveryC
                 <span>Confirm password</span>
                 <div className="auth-input-wrap">
                   <KeyRound size={20} />
-                  <input autoComplete="new-password" disabled={busy} minLength={8} onChange={(event) => setConfirmation(event.target.value)} placeholder="Type it again" required type={passwordType} value={confirmation} />
+                  <input autoComplete="new-password" disabled={busy} minLength={8} onChange={(event) => setConfirmation(event.target.value)} placeholder="Type it again" required type={confirmationType} value={confirmation} />
+                  <button aria-label={showConfirmation ? 'Hide confirmation password' : 'Show confirmation password'} className="auth-password-toggle" disabled={busy} onClick={() => setShowConfirmation((visible) => !visible)} type="button">
+                    {showConfirmation ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
                 </div>
               </label>
             )}
