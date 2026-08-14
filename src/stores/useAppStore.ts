@@ -6,6 +6,7 @@ import {
   touchWorkShift,
 } from '../domain/domainCorrectness';
 import { shiftEarnings, type WorkShift } from '../domain/work';
+import { devicePersistedState } from './devicePersistence';
 import { useAppStore as legacyStore } from './useAppStoreLegacy';
 import type { EventInput, ExpenseInput } from './useAppStoreLegacy';
 
@@ -50,6 +51,14 @@ function correctedExpenseInput(input: ExpenseInput): ExpenseInput {
 }
 
 const originalActions = legacyStore.getState();
+
+// v1 persisted nearly the whole application in localStorage as well as IndexedDB.
+// Keep legacy hydration readable for migration, but every write from this adapter
+// now retains device-only state. Repository snapshots therefore prune old durable
+// localStorage payloads after they have been imported into IndexedDB.
+legacyStore.persist.setOptions({
+  partialize: (state) => devicePersistedState(state),
+});
 
 legacyStore.setState((state) => ({
   workShifts: state.workShifts.map((shift) => ensureWorkShiftTimestamps(shift)),
