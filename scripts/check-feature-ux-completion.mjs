@@ -5,7 +5,7 @@ const failures = [];
 const expect = (condition, message) => { if (!condition) failures.push(message); };
 
 const app = read('src/app/App.tsx');
-const bottomNav = read('src/components/navigation/BottomNav.tsx');
+const navState = read('src/components/navigation/navigationState.ts');
 const tasks = read('src/features/tasks/TasksPage.tsx');
 const health = read('src/features/health/HealthPage.tsx');
 const journal = read('src/features/journal/JournalPage.tsx');
@@ -16,7 +16,7 @@ const lifeArea = read('src/features/life-area/LifeAreaPage.tsx');
 const notifications = read('src/features/notifications/NotificationsPage.tsx');
 
 expect(app.includes('path="/tasks"') && app.includes('<TasksPage />'), 'Tasks must have a dedicated routable management surface.');
-expect(bottomNav.includes("pathname === '/tasks'"), 'Tasks must remain in the Home navigation context.');
+expect(navState.includes("pathname === '/tasks'"), 'Tasks must remain in the Home navigation context.');
 expect(tasks.includes("type TaskFilter = 'open' | 'completed' | 'all'"), 'Tasks must support Open, Completed, and All filtering.');
 expect(tasks.includes('openTaskEditor(task.id)') && tasks.includes('toggleTask(task.id)') && tasks.includes('deleteTask(task.id)'), 'Tasks management must preserve edit, completion, and deletion actions.');
 expect(expenseEditor.includes('expense?: StillExpense') && expenseEditor.includes("expense ? 'Save changes'") && expenseEditor.includes('allowIncome'), 'The shared expense editor must support existing expense edits and Money income.');
