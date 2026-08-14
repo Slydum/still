@@ -2,6 +2,7 @@ import type { Table } from 'dexie';
 import type { LifeEntityLink } from '../../domain/lifeAreas';
 import type { WorkShift } from '../../domain/work';
 import type {
+  AppNotification,
   JournalEntry,
   StillEvent,
   StillExpense,
@@ -48,6 +49,14 @@ async function seedTable<T extends RepositoryEntity>(
 ) {
   if (!records.length || await table.count() > 0) return;
   await table.bulkPut(reconcileCollection([], records));
+}
+
+async function seedLocalTable<T extends { id: string }>(
+  table: Table<T, string>,
+  records: T[],
+) {
+  if (!records.length || await table.count() > 0) return;
+  await table.bulkPut(records);
 }
 
 async function persistTableChanges<T extends RepositoryEntity>(
@@ -237,6 +246,7 @@ export class LocalStillRepository implements StillRepository {
         stillDb.events,
         stillDb.journalEntries,
         stillDb.expenses,
+        stillDb.notifications,
         stillDb.entityLinks,
         stillDb.workShifts,
         stillDb.accountSettings,
@@ -250,6 +260,7 @@ export class LocalStillRepository implements StillRepository {
           await seedTable(stillDb.events, cache.events);
           await seedTable(stillDb.journalEntries, cache.journalEntries);
           await seedTable(stillDb.expenses, cache.expenses);
+          await seedLocalTable(stillDb.notifications, cache.notifications);
           await seedTable(stillDb.entityLinks, cache.entityLinks);
           await seedTable(stillDb.workShifts, cache.workShifts);
           await ensureGranularSettingsRecords(cache);
@@ -276,6 +287,7 @@ export class LocalStillRepository implements StillRepository {
       events,
       journalEntries,
       expenses,
+      notifications,
       entityLinks,
       workShifts,
       checkIns,
@@ -288,6 +300,7 @@ export class LocalStillRepository implements StillRepository {
       stillDb.events.toArray(),
       stillDb.journalEntries.toArray(),
       stillDb.expenses.toArray(),
+      stillDb.notifications.orderBy('createdAt').reverse().toArray(),
       stillDb.entityLinks.toArray(),
       stillDb.workShifts.toArray(),
       this.listCheckIns(),
@@ -306,6 +319,7 @@ export class LocalStillRepository implements StillRepository {
       events: activeRecords(events),
       journalEntries: activeRecords(journalEntries),
       expenses: activeRecords(expenses),
+      notifications,
       entityLinks: activeRecords(entityLinks),
       workShifts: activeRecords(workShifts),
       accountSettings: stripSettingsMetadata(storedAccountSettings) as GeneralAccountSettings,
@@ -320,6 +334,12 @@ export class LocalStillRepository implements StillRepository {
   persistEvents(changes: CollectionChanges<StillEvent>) { return persistTableChanges(stillDb.events, changes); }
   persistJournalEntries(changes: CollectionChanges<JournalEntry>) { return persistTableChanges(stillDb.journalEntries, changes); }
   persistExpenses(changes: CollectionChanges<StillExpense>) { return persistTableChanges(stillDb.expenses, changes); }
+  async persistNotifications(notifications: AppNotification[]) {
+    await stillDb.transaction('rw', stillDb.notifications, async () => {
+      await stillDb.notifications.clear();
+      if (notifications.length) await stillDb.notifications.bulkPut(notifications);
+    });
+  }
   persistEntityLinks(changes: CollectionChanges<LifeEntityLink>) { return persistTableChanges(stillDb.entityLinks, changes); }
   persistWorkShifts(changes: CollectionChanges<WorkShift>) { return persistTableChanges(stillDb.workShifts, changes); }
   persistAccountSettings(settings: GeneralAccountSettings) { return persistSettingsRecord(settings); }
