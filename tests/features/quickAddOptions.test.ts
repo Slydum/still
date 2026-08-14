@@ -44,8 +44,9 @@ describe('Quick Add behavior', () => {
     }), true);
   });
 
-  it('resolves dedicated and Life Area routes to the right context', () => {
+  it('resolves dedicated, nested, and Life Area routes to the right context', () => {
     assert.equal(lifeAreaIdFromPath('/work'), 'work');
+    assert.equal(lifeAreaIdFromPath('/work/details'), 'work');
     assert.equal(lifeAreaIdFromPath('/health'), 'health');
     assert.equal(lifeAreaIdFromPath('/money'), 'money');
     assert.equal(lifeAreaIdFromPath('/life/love'), 'love');
