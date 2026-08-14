@@ -18,7 +18,6 @@ import './theme/work-modal-interactions';
 import './theme/dashboard-hierarchy.css';
 import './theme/v03-ux-correctness.css';
 import './theme/v03-accessibility.css';
-import './theme/checkin-history.css';
 import './theme/journal-checkin-links';
 import './theme/checkin-reminder-navigation';
 import './theme/weekly-reflection';
@@ -30,16 +29,7 @@ import './theme/v04-home.css';
 import './theme/v04-home-refinement.css';
 import './theme/v04-home-device-pass.css';
 import './theme/desktop-home-option1';
-import './features/work/work-layout.css';
-import './features/work/work-polish.css';
-import './features/work/desktop-work-laptop.css';
-import './features/work/desktop-work-scale.css';
-import './features/work/desktop-work-full-canvas.css';
-import './theme/work-hub-fixes.css';
 import './theme/phase3-layout.css';
-import './theme/phase3-content.css';
-
-void import('./theme/work-hub-fixes');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
