@@ -1,0 +1,12 @@
+.money-page .money-empty-state {
+  min-height: 64px;
+  padding: 11px 13px;
+}
+
+.money-page .money-empty-state small { font-size: .7rem; }
+.money-page .money-section:has(.money-empty-state) { margin-top: 20px; }
+
+@media (max-width: 620px) {
+  .money-page .money-section:has(.money-empty-state) { margin-top: 17px; }
+  .money-page .money-empty-state { min-height: 60px; }
+}
