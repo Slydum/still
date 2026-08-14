@@ -1,6 +1,7 @@
 import type { LifeEntityLink } from '../../domain/lifeAreas';
 import type { WorkShift } from '../../domain/work';
 import type {
+  AppNotification,
   JournalEntry,
   StillEvent,
   StillExpense,
@@ -43,6 +44,7 @@ export type PermanentDataCache = {
   events: StillEvent[];
   journalEntries: JournalEntry[];
   expenses: StillExpense[];
+  notifications: AppNotification[];
   entityLinks: LifeEntityLink[];
   workShifts: WorkShift[];
   accountSettings: GeneralAccountSettings;
@@ -66,6 +68,7 @@ export interface StillRepository {
   persistEvents(changes: CollectionChanges<StillEvent>): Promise<void>;
   persistJournalEntries(changes: CollectionChanges<JournalEntry>): Promise<void>;
   persistExpenses(changes: CollectionChanges<StillExpense>): Promise<void>;
+  persistNotifications(notifications: AppNotification[]): Promise<void>;
   persistEntityLinks(changes: CollectionChanges<LifeEntityLink>): Promise<void>;
   persistWorkShifts(changes: CollectionChanges<WorkShift>): Promise<void>;
   persistAccountSettings(settings: GeneralAccountSettings): Promise<void>;
