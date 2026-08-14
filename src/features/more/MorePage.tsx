@@ -148,11 +148,11 @@ export function MorePage() {
       </section>
 
       <section className="settings-section" aria-labelledby="weather-settings-title">
-        <div className="settings-section-heading"><span><MapPin size={19} /></span><div><h2 id="weather-settings-title">Weather & location</h2><p>Automatic weather uses browser location only for a direct Open-Meteo weather request.</p></div></div>
+        <div className="settings-section-heading"><span><MapPin size={19} /></span><div><h2 id="weather-settings-title">Weather & location</h2><p>Use this device’s location for automatic local weather.</p></div></div>
         <div className="card settings-card">
           <SettingToggle checked={autoWeather} label="Automatic local weather" description="Request current local weather when the dashboard opens on this device." onChange={updateWeatherPreference} />
           <div className="settings-status-row"><span><small>Current condition</small><strong>{weather ? weather.replace('-', ' ') : 'Not connected'}</strong></span>{weather && <button onClick={() => { window.localStorage.removeItem(LOCATION_WEATHER_KEY); setWeather(undefined); }} type="button"><RotateCcw size={15} /> Reset</button>}</div>
-          <p className="settings-footnote">When automatic weather runs, your browser sends latitude and longitude directly to Open-Meteo to request current conditions. Still does not add those coordinates to your Supabase account. Turning this off stops automatic weather requests; browser location permission is managed by your browser or device.</p>
+          <p className="settings-footnote">Location goes directly from this browser to Open-Meteo for the weather request. Still does not save your coordinates to your account. Browser location permission stays under your device or browser controls.</p>
         </div>
       </section>
 
@@ -173,24 +173,23 @@ export function MorePage() {
             <button className="settings-test-notification" onClick={() => void sendTestNotification()} type="button">Send a test reminder</button>
           </>}
           {notificationMessage && <p className="settings-message" role="status">{notificationMessage}</p>}
-          <p className="settings-footnote">Still has no server-side push service. Reminder checks are driven by the running page/PWA process, so browsers may throttle or suspend them in the background and a fully closed browser cannot receive these local-only reminders. Pausing reminders in Still does not revoke browser notification permission.</p>
+          <p className="settings-footnote">Reminders are local to this browser or PWA. They may pause when the app is suspended or fully closed. Pausing them here does not revoke browser permission.</p>
         </div>
       </section>
 
       <CloudSyncSettings />
 
       <section className="settings-section" aria-labelledby="data-settings-title">
-        <div className="settings-section-heading"><span><ShieldCheck size={19} /></span><div><h2 id="data-settings-title">Data & privacy</h2><p>Local-first storage, account-scoped cloud sync, and clear recovery limits.</p></div></div>
+        <div className="settings-section-heading"><span><ShieldCheck size={19} /></span><div><h2 id="data-settings-title">Data & privacy</h2><p>What syncs, what stays on this device, and what clearing data means.</p></div></div>
         <div className="card settings-card">
-          <p className="settings-footnote">Still saves supported records in IndexedDB first. Cloud sync is attempted when the signed-in app starts, when you tap “Sync now,” and during logout flows; edits made between successful syncs can exist only on this browser.</p>
-          <p className="settings-footnote">Cloud sync includes tasks, events, journal entries, expenses, links, work shifts, check-ins, and account preferences. Browser notification permission and local notification history, location/weather state, reminder delivery bookkeeping, and daily quote history stay device-specific.</p>
-          <p className="settings-footnote">Supabase rows are scoped to your authenticated account with row-level security. Still cloud sync is not an end-to-end encrypted vault with user-only keys.</p>
+          <p className="settings-footnote">Still saves supported records in IndexedDB first. Signed-in cloud sync runs at app start, when you tap “Sync now,” and during logout. Unsynced edits can exist only on this device.</p>
+          <p className="settings-footnote">Tasks, events, journal entries, expenses, links, work shifts, check-ins, and account preferences can sync to your Supabase account. Browser permissions, notification history and delivery state, location/weather state, and daily quote history stay on this device. Cloud rows are account-scoped with row-level security; Still is not an end-to-end encrypted vault.</p>
         </div>
       </section>
 
       <section className="settings-section" aria-labelledby="about-settings-title">
         <div className="settings-section-heading"><span><Info size={19} /></span><div><h2 id="about-settings-title">About</h2><p>A calm daily space built around your own rhythm.</p></div></div>
-        <div className="card settings-about-card"><div><strong>Still</strong><span>Version {STILL_VERSION}</span></div><p>Offline use depends on this browser’s local copy. Clearing site data or using “Log out — clear local data” removes that copy. Another device can recover only records that previously completed a successful Supabase sync.</p></div>
+        <div className="card settings-about-card"><div><strong>Still</strong><span>Version {STILL_VERSION}</span></div><p>Clearing site data or choosing “Log out — clear local data” removes this device’s local copy. Another device can restore only data that previously synced successfully.</p></div>
       </section>
     </main>
   );
