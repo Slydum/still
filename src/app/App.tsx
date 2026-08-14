@@ -11,22 +11,22 @@ import { AuthPage } from '../features/auth/AuthPage';
 import { CalendarPage } from '../features/calendar/CalendarPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { JournalPage } from '../features/journal/JournalPage';
-import { CheckInHistoryPage } from '../features/check-ins/CheckInHistoryPage';
-import { MorePage } from '../features/more/MorePage';
 import { WeeklyReflectionPage } from '../features/reflection/WeeklyReflectionPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
 import { TasksPage } from '../features/tasks/TasksPage';
-import { WorkPage } from '../features/work/WorkPage';
-import { WorkQueuePage } from '../features/work/WorkQueuePage';
 import { useAppStore } from '../stores/useAppStore';
 import { applyPermanentDataSnapshot, initializePermanentDataRepository, usePermanentDataRepository } from '../hooks/usePermanentDataRepository';
 import { useReminderEngine } from '../hooks/useReminderEngine';
 import { getAppRoutePathname, toAppPath } from './appLocation';
 import { beginDemoSession, isDemoMode } from './demoMode';
 
-const HealthPage = lazy(() => import('../features/health/HealthPage').then((module) => ({ default: module.HealthPage })));
+const CheckInHistoryPage = lazy(() => import('../features/check-ins/CheckInHistoryRoute').then((module) => ({ default: module.CheckInHistoryPage })));
+const MorePage = lazy(() => import('../features/more/MoreSettingsPage').then((module) => ({ default: module.MoreSettingsPage })));
+const WorkQueuePage = lazy(() => import('../features/work/WorkQueuePage').then((module) => ({ default: module.WorkQueuePage })));
+const WorkDetailsPage = lazy(() => import('../features/work/WorkDetailsPage').then((module) => ({ default: module.WorkDetailsPage })));
+const HealthPage = lazy(() => import('../features/health/HealthRoutePage').then((module) => ({ default: module.HealthRoutePage })));
 const LovePage = lazy(() => import('../features/love/LovePage').then((module) => ({ default: module.LovePage })));
-const MoneyPage = lazy(() => import('../features/money/MoneyPage').then((module) => ({ default: module.MoneyPage })));
+const MoneyPage = lazy(() => import('../features/money/MoneyRoutePage').then((module) => ({ default: module.MoneyRoutePage })));
 const LifeAreaPage = lazy(() => import('../features/life-area/LifeAreaPage').then((module) => ({ default: module.LifeAreaPage })));
 
 function replaceBrowserRoute(path: string) {
@@ -69,12 +69,12 @@ function AppRoutes() {
     <Route path="/tasks" element={<TasksPage />} />
     <Route path="/today" element={<JournalPage />} />
     <Route path="/calendar" element={<CalendarPage />} />
-    <Route path="/check-ins" element={<CheckInHistoryPage />} />
-    <Route path="/more" element={<MorePage />} />
+    <Route path="/check-ins" element={<Suspense fallback={<AppLoading message="Opening check-ins…" />}><CheckInHistoryPage /></Suspense>} />
+    <Route path="/more" element={<Suspense fallback={<AppLoading message="Opening Settings…" />}><MorePage /></Suspense>} />
     <Route path="/reflection" element={<WeeklyReflectionPage />} />
     <Route path="/notifications" element={<NotificationsPage />} />
-    <Route path="/work" element={<WorkQueuePage />} />
-    <Route path="/work/details" element={<WorkPage />} />
+    <Route path="/work" element={<Suspense fallback={<AppLoading message="Opening Work…" />}><WorkQueuePage /></Suspense>} />
+    <Route path="/work/details" element={<Suspense fallback={<AppLoading message="Opening Work details…" />}><WorkDetailsPage /></Suspense>} />
     <Route path="/life/work" element={<Navigate to="/work" replace />} />
     <Route path="/money" element={<Suspense fallback={<AppLoading message="Opening Money…" />}><MoneyPage /></Suspense>} />
     <Route path="/health" element={<Suspense fallback={<AppLoading message="Opening Health…" />}><HealthPage /></Suspense>} />
