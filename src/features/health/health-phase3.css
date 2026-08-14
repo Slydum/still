@@ -1,0 +1,6 @@
+@media (max-width: 620px) {
+  .health-page .health-summary-tile { min-height: 78px; }
+  .health-page .health-section { margin-top: 20px; }
+  .health-page .health-week-day { min-height: 64px; }
+  .health-page .health-details > summary { min-height: 62px; }
+}

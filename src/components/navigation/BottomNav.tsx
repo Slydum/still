@@ -1,7 +1,8 @@
 import { BookOpen, BriefcaseBusiness, CalendarDays, CircleEllipsis, Home, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/useAppStore';
+import { isNavCurrentPage, isNavSectionActive } from './navigationState';
 
 const mobileItems = [
   { label: 'Home', path: '/', icon: Home },
@@ -20,26 +21,6 @@ const desktopItems = [
   { label: 'Settings', path: '/more', icon: CircleEllipsis },
 ];
 
-function isWorkPath(pathname: string) {
-  return pathname === '/work' || pathname.startsWith('/work/');
-}
-
-function isActivePath(itemPath: string, pathname: string, desktop: boolean) {
-  if (itemPath === '/work') return isWorkPath(pathname);
-  if (itemPath === '/') {
-    return pathname === '/'
-      || pathname === '/tasks'
-      || pathname.startsWith('/life/')
-      || (!desktop && isWorkPath(pathname))
-      || pathname === '/money'
-      || pathname === '/health'
-      || pathname === '/reflection'
-      || pathname === '/check-ins'
-      || pathname === '/notifications';
-  }
-  return pathname === itemPath;
-}
-
 function useDesktopNavigation() {
   const [desktop, setDesktop] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches);
 
@@ -56,7 +37,6 @@ function useDesktopNavigation() {
 
 export function BottomNav() {
   const location = useLocation();
-  const navigate = useNavigate();
   const openQuickAdd = useAppStore((s) => s.openQuickAdd);
   const desktop = useDesktopNavigation();
   const items = desktop ? desktopItems : mobileItems;
@@ -65,13 +45,12 @@ export function BottomNav() {
     {items.map(({ label, path, icon: Icon }) => label === 'Add' ? (
       <button key={label} className="nav-item" onClick={() => openQuickAdd()} aria-label="Quick add" type="button"><span className="add-button"><Plus size={26} /></span><span>{label}</span></button>
     ) : (
-      <button
+      <Link
         key={label}
-        className={`nav-item ${isActivePath(path, location.pathname, desktop) ? 'active' : ''}`}
-        onClick={() => navigate(path)}
-        aria-current={isActivePath(path, location.pathname, desktop) ? 'page' : undefined}
-        type="button"
-      ><Icon size={21} /><span>{label}</span></button>
+        className={`nav-item ${isNavSectionActive(path, location.pathname, desktop) ? 'active' : ''}`}
+        to={path}
+        aria-current={isNavCurrentPage(path, location.pathname) ? 'page' : undefined}
+      ><Icon size={21} /><span>{label}</span></Link>
     ))}
   </nav>;
 }

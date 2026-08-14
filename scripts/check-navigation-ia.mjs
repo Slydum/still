@@ -5,6 +5,7 @@ const failures = [];
 const expect = (condition, message) => { if (!condition) failures.push(message); };
 
 const nav = read('src/components/navigation/BottomNav.tsx');
+const navState = read('src/components/navigation/navigationState.ts');
 const app = read('src/app/App.tsx');
 const back = read('src/components/navigation/useBackNavigation.ts');
 const life = read('src/features/life-area/LifeAreaPage.tsx');
@@ -15,9 +16,11 @@ const overview = read('src/features/reflection/WeeklyReflectionPage.tsx');
 
 expect(nav.includes("{ label: 'Home', path: '/', icon: Home }"), 'Primary root navigation must be named Home.');
 expect(nav.includes("{ label: 'Settings', path: '/more'"), 'The settings destination must be labeled Settings in primary navigation.');
-expect(nav.includes("pathname.startsWith('/life/')"), 'Life Area routes must retain Home parent-tab context.');
-expect(nav.includes("pathname === '/work'") && nav.includes("pathname === '/money'") && nav.includes("pathname === '/health'"), 'Work, Money, and Health trackers must retain Home parent-tab context.');
-expect(nav.includes('aria-current='), 'Active primary navigation must expose aria-current.');
+expect(navState.includes("pathname.startsWith('/life/')"), 'Life Area routes must retain Home parent-tab context.');
+expect(navState.includes('!desktop && isWorkPath(pathname)') && navState.includes("pathname === '/money'") && navState.includes("pathname === '/health'"), 'Work, Money, and Health trackers must retain Home parent-tab context.');
+expect(nav.includes('<Link') && nav.includes('to={path}'), 'Primary route navigation must use semantic links.');
+expect(nav.includes('aria-current={isNavCurrentPage('), 'Active primary navigation must expose exact-page aria-current semantics.');
+expect(navState.includes('return pathname === itemPath;'), 'aria-current must remain exact rather than inheriting section-active state.');
 expect(app.includes('useNavigationType') && app.includes("navigationType === 'POP'"), 'Route scrolling must preserve browser history restoration on POP navigation.');
 expect(app.includes("window.history.scrollRestoration = 'auto'"), 'Browser scroll restoration must remain enabled.');
 expect(app.includes('path="/health"') && app.includes('path="/life/health"') && app.includes('<Navigate to="/health" replace />'), 'Health must promote from its Life Area route into the dedicated overview.');

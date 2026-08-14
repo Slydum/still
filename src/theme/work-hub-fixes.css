@@ -1,0 +1,102 @@
+@media (max-width: 620px) {
+  .work-hub-page input,
+  .work-hub-page select,
+  .work-hub-page textarea {
+    font-size: 16px !important;
+  }
+}
+
+.work-change-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2500;
+  padding: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(46, 39, 57, .24);
+  backdrop-filter: blur(12px);
+}
+
+.work-change-sheet {
+  width: min(100%, 620px);
+  max-height: min(82vh, 760px);
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid rgba(93, 78, 119, .12);
+  border-radius: 28px;
+  color: var(--text-strong);
+  background: rgba(255, 252, 250, .98);
+  box-shadow: 0 24px 70px rgba(61, 47, 82, .2);
+}
+
+.work-change-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.work-change-sheet-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+}
+
+.work-change-sheet-close {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 12px;
+  color: #725eaa;
+  background: rgba(113, 94, 168, .08);
+  font-size: 22px;
+}
+
+.work-change-sheet form {
+  display: grid;
+  gap: 10px;
+}
+
+.work-change-sheet input,
+.work-change-sheet select,
+.work-change-sheet textarea {
+  width: 100%;
+  min-height: 46px;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid rgba(93, 78, 119, .13);
+  border-radius: 13px;
+  color: inherit;
+  background: rgba(255, 255, 255, .82);
+  font: inherit;
+  font-size: 16px;
+}
+
+.work-change-sheet textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.work-change-sheet-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.work-change-sheet-save {
+  min-height: 48px;
+  border: 0;
+  border-radius: 14px;
+  color: #665196;
+  background: rgba(113, 94, 168, .16);
+  font-size: 16px;
+  font-weight: 850;
+}
+
+@media (max-width: 520px) {
+  .work-change-sheet-grid {
+    grid-template-columns: 1fr;
+  }
+}

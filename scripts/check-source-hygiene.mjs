@@ -35,6 +35,12 @@ for (const file of sourceFiles) {
   const content = await readFile(file, 'utf8');
   if (/\bdebugger\s*;?/.test(content)) failures.push(`${relative}: debugger statement is not allowed`);
   if (/\bconsole\.log\s*\(/.test(content)) failures.push(`${relative}: console.log is not allowed in production source`);
+
+  const workRelated = relative.startsWith(`src${path.sep}features${path.sep}work${path.sep}`)
+    || (relative.startsWith(`src${path.sep}theme${path.sep}`) && /work/i.test(path.basename(relative)));
+  if (workRelated && /document\.createElement\(['"]style['"]\)/.test(content)) {
+    failures.push(`${relative}: Work styles must ship as CSS, not runtime <style> injection`);
+  }
 }
 
 if (failures.length) {
