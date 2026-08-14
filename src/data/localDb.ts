@@ -12,15 +12,14 @@ import {
   CHECK_IN_SCALE_VERSION,
   createCheckInSnapshot,
 } from '../features/check-ins/checkInScale';
-import type { AccountSettings } from './accountSettings';
 import type { CheckInRecord, DailyQuoteRecord } from './records';
 import {
   LOCAL_DEVICE_USER_ID,
   PERMANENT_DATA_SCHEMA_VERSION,
   type SyncMetadata,
-  type SyncedAccountSettings,
   type SyncedCheckInRecord,
   type SyncedRecord,
+  type SyncedSettingsRecord,
 } from './repositories/types';
 
 export type RepositoryMetaRecord = {
@@ -69,7 +68,7 @@ export class StillLocalDatabase extends Dexie {
   expenses!: Table<SyncedRecord<StillExpense>, string>;
   entityLinks!: Table<SyncedRecord<LifeEntityLink>, string>;
   workShifts!: Table<SyncedRecord<WorkShift & { id: string }>, string>;
-  accountSettings!: Table<SyncedAccountSettings, string>;
+  accountSettings!: Table<SyncedSettingsRecord, string>;
   repositoryMeta!: Table<RepositoryMetaRecord, string>;
 
   constructor(databaseName = appDatabaseName()) {
