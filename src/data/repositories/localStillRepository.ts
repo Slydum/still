@@ -23,6 +23,7 @@ import type { CheckInRecord } from '../records';
 import { activeRecords, addSyncMetadata, createMutationId, reconcileCollection } from './reconcile';
 import type { CollectionChanges } from './recordChanges';
 import {
+  LOCAL_DEVICE_USER_ID,
   PERMANENT_DATA_SCHEMA_VERSION,
   type PermanentDataCache,
   type PermanentDataSnapshot,
@@ -124,6 +125,52 @@ function settingsRecordEqual(left: PermanentSettingsRecord, right: PermanentSett
   return JSON.stringify(leftComparable) === JSON.stringify(rightComparable);
 }
 
+function defaultSettingsRecord(id: PermanentSettingsRecord['id']) {
+  const defaults = defaultGranularSettings(0);
+  if (id === 'account') return defaults.accountSettings;
+  if (id === 'work') return defaults.workSettings;
+  if (id === 'money') return defaults.moneySettings;
+  return defaults.healthSettings;
+}
+
+function isDefaultSettingsRecord(settings: PermanentSettingsRecord) {
+  return settingsRecordEqual(settings, defaultSettingsRecord(settings.id));
+}
+
+function isLocalPlaceholder(record: SyncedSettingsRecord) {
+  return record.syncCounter === 0
+    && record.dirty === false
+    && record.serverRevision === undefined;
+}
+
+function createSettingsPlaceholder(
+  settings: PermanentSettingsRecord,
+  userId = LOCAL_DEVICE_USER_ID,
+): SyncedSettingsRecord {
+  return {
+    ...settings,
+    userId,
+    schemaVersion: PERMANENT_DATA_SCHEMA_VERSION,
+    deletedAt: undefined,
+    syncCounter: 0,
+    mutationId: `placeholder:${settings.id}`,
+    serverRevision: undefined,
+    dirty: false,
+  } as SyncedSettingsRecord;
+}
+
+async function seedSettingsRecord(
+  settings: PermanentSettingsRecord,
+  userId = LOCAL_DEVICE_USER_ID,
+) {
+  const existing = await stillDb.accountSettings.get(settings.id);
+  if (existing) return;
+  const seeded = isDefaultSettingsRecord(settings)
+    ? createSettingsPlaceholder(settings, userId)
+    : addSyncMetadata(settings, undefined, userId) as unknown as SyncedSettingsRecord;
+  await stillDb.accountSettings.put(seeded);
+}
+
 async function persistSettingsRecord<T extends PermanentSettingsRecord>(settings: T) {
   const existing = await stillDb.accountSettings.get(settings.id);
   if (existing) {
@@ -135,6 +182,16 @@ async function persistSettingsRecord<T extends PermanentSettingsRecord>(settings
   await stillDb.accountSettings.put(next);
 }
 
+async function migrateLegacyDomainSetting(
+  existing: SyncedSettingsRecord | undefined,
+  settings: WorkSettings | MoneySettings | HealthSettings,
+  userId: string,
+) {
+  if (existing && !isLocalPlaceholder(existing)) return;
+  const migrated = addSyncMetadata(settings, existing, userId) as unknown as SyncedSettingsRecord;
+  await stillDb.accountSettings.put(migrated);
+}
+
 async function ensureGranularSettingsRecords(cache?: Pick<
   PermanentDataCache,
   'accountSettings' | 'workSettings' | 'moneySettings' | 'healthSettings'
@@ -144,34 +201,28 @@ async function ensureGranularSettingsRecords(cache?: Pick<
   const byId = new Map(rows.map((row) => [row.id, row] as const));
   const existingAccount = byId.get('account');
 
-  let source = fallback;
   if (existingAccount) {
     const accountValue = stripSettingsMetadata(existingAccount as SyncedSettingsRecord);
     if (isLegacyBundledAccountSettings(accountValue as unknown as Record<string, unknown>)) {
-      source = splitLegacyAccountSettings(accountValue as AccountSettings);
+      const source = splitLegacyAccountSettings(accountValue as AccountSettings);
+      await migrateLegacyDomainSetting(byId.get('work'), source.workSettings, existingAccount.userId);
+      await migrateLegacyDomainSetting(byId.get('money'), source.moneySettings, existingAccount.userId);
+      await migrateLegacyDomainSetting(byId.get('health'), source.healthSettings, existingAccount.userId);
 
-      if (!byId.has('work')) {
-        await stillDb.accountSettings.put(addSyncMetadata(source.workSettings, undefined, existingAccount.userId));
-      }
-      if (!byId.has('money')) {
-        await stillDb.accountSettings.put(addSyncMetadata(source.moneySettings, undefined, existingAccount.userId));
-      }
-      if (!byId.has('health')) {
-        await stillDb.accountSettings.put(addSyncMetadata(source.healthSettings, undefined, existingAccount.userId));
-      }
-
-      await stillDb.accountSettings.put(addSyncMetadata({
+      const sanitizedAccount = addSyncMetadata({
         ...source.accountSettings,
         updatedAt: Date.now(),
-      }, existingAccount));
+      }, existingAccount) as unknown as SyncedSettingsRecord;
+      await stillDb.accountSettings.put(sanitizedAccount);
+      return;
     }
   } else {
-    await stillDb.accountSettings.put(addSyncMetadata(source.accountSettings));
+    await seedSettingsRecord(fallback.accountSettings);
   }
 
-  if (!byId.has('work')) await persistSettingsRecord(source.workSettings);
-  if (!byId.has('money')) await persistSettingsRecord(source.moneySettings);
-  if (!byId.has('health')) await persistSettingsRecord(source.healthSettings);
+  if (!byId.has('work')) await seedSettingsRecord(fallback.workSettings);
+  if (!byId.has('money')) await seedSettingsRecord(fallback.moneySettings);
+  if (!byId.has('health')) await seedSettingsRecord(fallback.healthSettings);
 }
 
 export class LocalStillRepository implements StillRepository {
