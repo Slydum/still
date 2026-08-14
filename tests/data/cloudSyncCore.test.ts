@@ -50,6 +50,28 @@ describe('cloud sync core', () => {
     assert.equal(latest[0].title, 'remote');
   });
 
+  it('lets real cloud settings beat a pristine local placeholder', () => {
+    const placeholder: MergeFixture[] = [{
+      id: 'work',
+      syncCounter: 0,
+      mutationId: 'placeholder:work',
+      title: 'default',
+      dirty: false,
+    }];
+    const cloud: MergeFixture[] = [{
+      id: 'work',
+      syncCounter: 1,
+      mutationId: 'remote-work',
+      title: 'user value',
+      dirty: false,
+      serverRevision: 17,
+    }];
+
+    const merged = mergeByKey(placeholder, cloud, (record) => record.id);
+    assert.equal(merged[0].title, 'user value');
+    assert.equal(merged[0].serverRevision, 17);
+  });
+
   it('resolves concurrent equal-counter writes deterministically by mutation id', () => {
     const left: MergeFixture[] = [{ id: 'one', syncCounter: 5, mutationId: 'device-a', title: 'left' }];
     const right: MergeFixture[] = [{ id: 'one', syncCounter: 5, mutationId: 'device-z', title: 'right' }];
