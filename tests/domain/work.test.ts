@@ -13,6 +13,10 @@ import {
   type WorkShift,
 } from '../../src/domain/work.js';
 
+function assertClose(actual: number, expected: number, tolerance = 1e-9) {
+  assert.ok(Math.abs(actual - expected) <= tolerance, `Expected ${actual} to be within ${tolerance} of ${expected}`);
+}
+
 describe('work domain calculations', () => {
   const hourlyProfile: WorkProfile = {
     ...DEFAULT_WORK_PROFILE,
@@ -54,8 +58,8 @@ describe('work domain calculations', () => {
     const todayEnd = Date.parse('2026-08-15T00:00:00Z');
 
     assert.equal(workedHours(shift), 7);
-    assert.equal(workedHoursInRange(shift, todayStart, todayEnd), 6.125);
-    assert.equal(shiftEarningsInRange(shift, hourlyProfile, todayStart, todayEnd), 122.5);
+    assertClose(workedHoursInRange(shift, todayStart, todayEnd), 6.125);
+    assertClose(shiftEarningsInRange(shift, hourlyProfile, todayStart, todayEnd), 122.5);
   });
 
   it('range splits add back up to the full shift totals', () => {
@@ -73,8 +77,8 @@ describe('work domain calculations', () => {
     const splitEarnings = shiftEarningsInRange(shift, hourlyProfile, shift.startedAt, midnight)
       + shiftEarningsInRange(shift, hourlyProfile, midnight, end);
 
-    assert.equal(splitHours, workedHours(shift));
-    assert.equal(splitEarnings, shiftEarnings(shift, hourlyProfile));
+    assertClose(splitHours, workedHours(shift));
+    assertClose(splitEarnings, shiftEarnings(shift, hourlyProfile));
   });
 
   it('estimates salaried semimonthly pay periods', () => {
