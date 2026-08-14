@@ -56,15 +56,17 @@ export function shouldOpenEventMoreOptions(event?: EventDisclosureState) {
   ));
 }
 
-const dedicatedLifeAreaRoutes: Partial<Record<string, LifeAreaId>> = {
-  '/work': 'work',
-  '/health': 'health',
-  '/money': 'money',
-};
+const dedicatedLifeAreaRoutes: Array<{ root: string; areaId: LifeAreaId }> = [
+  { root: '/work', areaId: 'work' },
+  { root: '/health', areaId: 'health' },
+  { root: '/money', areaId: 'money' },
+];
 
 export function lifeAreaIdFromPath(pathname: string): LifeAreaId | undefined {
-  const dedicated = dedicatedLifeAreaRoutes[pathname];
-  if (dedicated) return dedicated;
+  const dedicated = dedicatedLifeAreaRoutes.find(({ root }) => (
+    pathname === root || pathname.startsWith(`${root}/`)
+  ));
+  if (dedicated) return dedicated.areaId;
 
   if (!pathname.startsWith('/life/')) return undefined;
   const routeAreaId = pathname.split('/')[2];
