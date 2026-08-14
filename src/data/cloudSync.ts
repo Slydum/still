@@ -32,7 +32,10 @@ type StillRecordType =
   | 'entity_link'
   | 'work_shift'
   | 'check_in'
-  | 'settings';
+  | 'settings'
+  | 'work_settings'
+  | 'money_settings'
+  | 'health_settings';
 
 type RpcRecord = {
   record_type: StillRecordType;
@@ -107,8 +110,23 @@ function toRpcRecords(
   });
 }
 
+function settingsRecordType(id: string): StillRecordType | undefined {
+  if (id === 'account') return 'settings';
+  if (id === 'work') return 'work_settings';
+  if (id === 'money') return 'money_settings';
+  if (id === 'health') return 'health_settings';
+  return undefined;
+}
+
+function toSettingsRpcRecords(records: Array<Record<string, unknown>>) {
+  return records.flatMap((record) => {
+    const recordType = settingsRecordType(String(record.id ?? ''));
+    return recordType ? toRpcRecords(recordType, [record], 'id') : [];
+  });
+}
+
 async function readDirtyRows(): Promise<RpcRecord[]> {
-  const [tasks, events, journalEntries, expenses, entityLinks, workShifts, checkIns, accountSettings] = await Promise.all([
+  const [tasks, events, journalEntries, expenses, entityLinks, workShifts, checkIns, settings] = await Promise.all([
     stillDb.tasks.toArray(),
     stillDb.events.toArray(),
     stillDb.journalEntries.toArray(),
@@ -127,7 +145,7 @@ async function readDirtyRows(): Promise<RpcRecord[]> {
     ...toRpcRecords('entity_link', entityLinks as unknown as Array<Record<string, unknown>>, 'id'),
     ...toRpcRecords('work_shift', workShifts as unknown as Array<Record<string, unknown>>, 'id'),
     ...toRpcRecords('check_in', checkIns as unknown as Array<Record<string, unknown>>, 'date'),
-    ...toRpcRecords('settings', accountSettings as unknown as Array<Record<string, unknown>>, 'id'),
+    ...toSettingsRpcRecords(settings as unknown as Array<Record<string, unknown>>),
   ];
 }
 
@@ -236,8 +254,19 @@ async function applyRemoteRows(rows: RemoteRecord[], userId: string) {
       await mergeEntityTable(stillDb.workShifts, rows, 'work_shift', userId);
       await mergeCheckIns(stillDb.checkIns, rows, userId);
       await mergeEntityTable(stillDb.accountSettings, rows, 'settings', userId);
+      await mergeEntityTable(stillDb.accountSettings, rows, 'work_settings', userId);
+      await mergeEntityTable(stillDb.accountSettings, rows, 'money_settings', userId);
+      await mergeEntityTable(stillDb.accountSettings, rows, 'health_settings', userId);
     },
   );
+}
+
+async function pushDirtyRows(userId: string, cursor: number) {
+  const dirtyRows = await readDirtyRows();
+  if (!dirtyRows.length) return cursor;
+  const acknowledgements = await pushRows(dirtyRows);
+  await applyRemoteRows(acknowledgements, userId);
+  return maxServerRevision(acknowledgements, cursor);
 }
 
 async function savePullCursor(cursor: number) {
@@ -279,18 +308,24 @@ async function runCloudSync(): Promise<PermanentDataSnapshot> {
 
   await flushRepositoryWrites();
   await assertCloudUserBinding(session.user.id);
-  const cursor = await readPullCursor();
 
-  const dirtyRows = await readDirtyRows();
-  if (dirtyRows.length) {
-    const acknowledgements = await pushRows(dirtyRows);
-    await applyRemoteRows(acknowledgements, session.user.id);
-  }
+  // Ensure any v1 bundled local settings are split before the first push.
+  await localStillRepository.load();
+
+  const cursor = await readPullCursor();
+  let nextCursor = await pushDirtyRows(session.user.id, cursor);
 
   const remoteRows = await pullRows(cursor);
   await applyRemoteRows(remoteRows, session.user.id);
+  nextCursor = maxServerRevision(remoteRows, nextCursor);
 
-  const nextCursor = maxServerRevision(remoteRows, cursor);
+  // A pulled legacy settings/account row can come from an older client. Loading
+  // sanitizes that row and creates any missing granular rows without overwriting
+  // already-present Work/Money/Health records, then this second push publishes
+  // the migration in the same sync cycle.
+  await localStillRepository.load();
+  nextCursor = await pushDirtyRows(session.user.id, nextCursor);
+
   if (nextCursor !== cursor) await savePullCursor(nextCursor);
   await compactAcknowledgedLocalTombstones(nextCursor);
 

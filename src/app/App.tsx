@@ -58,7 +58,7 @@ async function seedDisplayNameForNewAccount(session: CloudSession) {
   const displayName = displayNameFromUserMetadata(session.user.user_metadata);
   if (!displayName) return;
   const existing = await stillDb.accountSettings.get('account');
-  if (!existing || !shouldSeedSignupDisplayName(existing.name, existing.serverRevision)) return;
+  if (!existing || existing.id !== 'account' || !shouldSeedSignupDisplayName(existing.name, existing.serverRevision)) return;
   useAppStore.setState({ name: displayName });
   await stillDb.accountSettings.put({ ...existing, name: displayName, updatedAt: Date.now(), syncCounter: existing.syncCounter + 1, mutationId: createSeedMutationId(), dirty: true });
 }

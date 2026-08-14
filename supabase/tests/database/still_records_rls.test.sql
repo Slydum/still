@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(11);
 
 insert into auth.users (id) values
   ('11111111-1111-1111-1111-111111111111'),
@@ -31,6 +31,12 @@ select lives_ok(
   $$insert into public.still_records (user_id, record_type, record_id, payload, updated_at, mutation_id)
     values ('11111111-1111-1111-1111-111111111111', 'task', 'new-owned', '{}', 2, 'own-insert')$$,
   'users can insert their own records'
+);
+
+select lives_ok(
+  $$insert into public.still_records (user_id, record_type, record_id, payload, updated_at, mutation_id)
+    values ('11111111-1111-1111-1111-111111111111', 'work_settings', 'work', '{}', 2, 'work-settings-insert')$$,
+  'granular settings record types are accepted'
 );
 
 select throws_ok(

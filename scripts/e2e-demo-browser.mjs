@@ -135,7 +135,7 @@ try {
 
   const databases = await evaluate(cdp, 'indexedDB.databases()');
   const demoDb = databases.find((database) => database.name === 'still-demo-local');
-  if (!demoDb || demoDb.version !== 50) throw new Error(`Expected demo IndexedDB at Dexie schema v5/native v50, got ${JSON.stringify(databases)}`);
+  if (!demoDb || demoDb.version !== 60) throw new Error(`Expected demo IndexedDB at Dexie schema v6/native v60, got ${JSON.stringify(databases)}`);
 
   const migrated = await evaluate(cdp, `new Promise((resolve, reject) => {
     const request = indexedDB.open('still-demo-local');
@@ -150,6 +150,112 @@ try {
     };
   })`);
   if (!migrated?.hasSettings || !migrated?.kept) throw new Error(`IndexedDB migration did not preserve data: ${JSON.stringify(migrated)}`);
+
+  const legacySettingsPrepared = await evaluate(cdp, `new Promise((resolve, reject) => {
+    const request = indexedDB.open('still-demo-local');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction(['accountSettings', 'repositoryMeta'], 'readwrite');
+      const settings = tx.objectStore('accountSettings');
+      settings.clear();
+      tx.objectStore('repositoryMeta').delete('permanent-data-v2');
+      settings.put({
+        id: 'account',
+        name: 'Legacy Migrator', appearanceTone: 'sage', reduceMotion: true,
+        taskReminders: false, eventReminders: true, dailyCheckInReminder: true,
+        reminderTime: '08:30', eventReminderMinutes: 60,
+        workProfile: {
+          payType: 'hourly', currency: 'PHP', hourlyRate: 275, annualSalary: 0,
+          payFrequency: 'biweekly', weeklyHours: 40, regularDays: [1,2,3,4,5],
+          shiftStart: '09:00', shiftEnd: '17:00', weeklySchedule: [
+            { day: 1, enabled: true, start: '09:00', end: '17:00' },
+            { day: 2, enabled: true, start: '09:00', end: '17:00' },
+            { day: 3, enabled: true, start: '09:00', end: '17:00' },
+            { day: 4, enabled: true, start: '09:00', end: '17:00' },
+            { day: 5, enabled: true, start: '09:00', end: '17:00' },
+            { day: 6, enabled: false, start: '09:00', end: '17:00' },
+            { day: 0, enabled: false, start: '09:00', end: '17:00' }
+          ], scheduleOverrides: [], unpaidBreakMinutes: 60, overtimeAfterHours: 8,
+          overtimeMultiplier: 1.5, responsibilities: [], changes: [], notes: [],
+          projects: [], timeOff: [], contacts: [], ptoAllowanceHours: 0
+        },
+        workPrivacyBlur: false,
+        moneyAccounts: [{ id: 'legacy-money', name: 'Legacy Wallet', kind: 'cash', balance: 4321, currency: 'PHP', createdAt: 10, updatedAt: 11 }],
+        moneyBills: [], moneySavingsGoals: [], moneyPrivacyHidden: false,
+        healthRoutines: [{ id: 'legacy-health', title: 'Legacy routine', cadence: 'daily', createdAt: 12, updatedAt: 13 }],
+        healthSignalPreferences: { sleep: true, hydration: false, movement: true },
+        updatedAt: 1000, userId: 'local-device', schemaVersion: 1,
+        syncCounter: 4, mutationId: 'legacy-settings', dirty: true
+      });
+      tx.oncomplete = () => { db.close(); resolve(true); };
+      tx.onerror = () => reject(tx.error);
+    };
+  })`);
+  if (!legacySettingsPrepared) throw new Error('Could not prepare legacy bundled settings.');
+
+  await cdp.send('Page.reload');
+  await poll(cdp, "Boolean(document.querySelector('.app'))", 'demo application after settings migration');
+
+  const settingsMigration = await evaluate(cdp, `new Promise((resolve, reject) => {
+    const request = indexedDB.open('still-demo-local');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction('accountSettings', 'readonly');
+      const all = tx.objectStore('accountSettings').getAll();
+      all.onerror = () => reject(all.error);
+      all.onsuccess = () => {
+        const rows = Object.fromEntries(all.result.map((row) => [row.id, row]));
+        db.close();
+        resolve({
+          ids: Object.keys(rows).sort(),
+          account: rows.account && {
+            name: rows.account.name,
+            appearanceTone: rows.account.appearanceTone,
+            hasWorkProfile: Object.prototype.hasOwnProperty.call(rows.account, 'workProfile'),
+            hasMoneyAccounts: Object.prototype.hasOwnProperty.call(rows.account, 'moneyAccounts'),
+            hasHealthRoutines: Object.prototype.hasOwnProperty.call(rows.account, 'healthRoutines'),
+          },
+          work: rows.work && { hourlyRate: rows.work.workProfile?.hourlyRate, privacy: rows.work.workPrivacyBlur },
+          money: rows.money && { name: rows.money.moneyAccounts?.[0]?.name, balance: rows.money.moneyAccounts?.[0]?.balance, privacy: rows.money.moneyPrivacyHidden },
+          health: rows.health && { title: rows.health.healthRoutines?.[0]?.title, hydration: rows.health.healthSignalPreferences?.hydration },
+        });
+      };
+    };
+  })`);
+
+  if (JSON.stringify(settingsMigration.ids) !== JSON.stringify(['account', 'health', 'money', 'work'])) {
+    throw new Error(`Expected four granular settings rows, got ${JSON.stringify(settingsMigration)}`);
+  }
+  if (settingsMigration.account?.name !== 'Legacy Migrator'
+    || settingsMigration.account?.appearanceTone !== 'sage'
+    || settingsMigration.account?.hasWorkProfile
+    || settingsMigration.account?.hasMoneyAccounts
+    || settingsMigration.account?.hasHealthRoutines) {
+    throw new Error(`Legacy account row was not sanitized correctly: ${JSON.stringify(settingsMigration)}`);
+  }
+  if (settingsMigration.work?.hourlyRate !== 275 || settingsMigration.work?.privacy !== false) {
+    throw new Error(`Legacy Work settings were not preserved: ${JSON.stringify(settingsMigration)}`);
+  }
+  if (settingsMigration.money?.name !== 'Legacy Wallet' || settingsMigration.money?.balance !== 4321 || settingsMigration.money?.privacy !== false) {
+    throw new Error(`Legacy Money settings were not preserved: ${JSON.stringify(settingsMigration)}`);
+  }
+  if (settingsMigration.health?.title !== 'Legacy routine' || settingsMigration.health?.hydration !== false) {
+    throw new Error(`Legacy Health settings were not preserved: ${JSON.stringify(settingsMigration)}`);
+  }
+
+  const persistedState = await evaluate(cdp, `(() => {
+    const raw = localStorage.getItem('still-app-state-v1');
+    if (!raw) return { keys: [] };
+    const state = JSON.parse(raw)?.state ?? {};
+    return { keys: Object.keys(state).sort() };
+  })()`);
+  const allowedPersistedKeys = new Set(['autoWeather', 'notificationsEnabled', 'occasion', 'weather']);
+  const unexpectedPersistedKeys = persistedState.keys.filter((key) => !allowedPersistedKeys.has(key));
+  if (unexpectedPersistedKeys.length) {
+    throw new Error(`Durable app data remained in localStorage after migration: ${JSON.stringify(persistedState)}`);
+  }
 
   const primaryCounts = await evaluate(cdp, `new Promise((resolve, reject) => {
     const request = indexedDB.open('still-local');
@@ -181,7 +287,7 @@ try {
     'weekly overview route',
   );
 
-  console.log('Browser demo isolation, IndexedDB migration, and weekly overview route checks passed.');
+  console.log('Browser demo isolation, IndexedDB migration, granular settings migration, and weekly overview route checks passed.');
 } finally {
   cdp?.close();
   chrome?.kill('SIGTERM');

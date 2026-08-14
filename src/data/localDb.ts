@@ -3,6 +3,7 @@ import { appDatabaseName } from '../app/demoMode';
 import type { LifeEntityLink } from '../domain/lifeAreas';
 import type { WorkShift } from '../domain/work';
 import type {
+  AppNotification,
   JournalEntry,
   StillEvent,
   StillExpense,
@@ -12,15 +13,14 @@ import {
   CHECK_IN_SCALE_VERSION,
   createCheckInSnapshot,
 } from '../features/check-ins/checkInScale';
-import type { AccountSettings } from './accountSettings';
 import type { CheckInRecord, DailyQuoteRecord } from './records';
 import {
   LOCAL_DEVICE_USER_ID,
   PERMANENT_DATA_SCHEMA_VERSION,
   type SyncMetadata,
-  type SyncedAccountSettings,
   type SyncedCheckInRecord,
   type SyncedRecord,
+  type SyncedSettingsRecord,
 } from './repositories/types';
 
 export type RepositoryMetaRecord = {
@@ -67,9 +67,10 @@ export class StillLocalDatabase extends Dexie {
   events!: Table<SyncedRecord<StillEvent>, string>;
   journalEntries!: Table<SyncedRecord<JournalEntry>, string>;
   expenses!: Table<SyncedRecord<StillExpense>, string>;
+  notifications!: Table<AppNotification, string>;
   entityLinks!: Table<SyncedRecord<LifeEntityLink>, string>;
   workShifts!: Table<SyncedRecord<WorkShift & { id: string }>, string>;
-  accountSettings!: Table<SyncedAccountSettings, string>;
+  accountSettings!: Table<SyncedSettingsRecord, string>;
   repositoryMeta!: Table<RepositoryMetaRecord, string>;
 
   constructor(databaseName = appDatabaseName()) {
@@ -140,6 +141,19 @@ export class StillLocalDatabase extends Dexie {
       events: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
       journalEntries: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
       expenses: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      entityLinks: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      workShifts: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      accountSettings: 'id, updatedAt, userId, syncCounter, serverRevision',
+      repositoryMeta: 'key, updatedAt',
+    });
+    this.version(6).stores({
+      dailyQuotes: 'date, quoteId, createdAt',
+      checkIns: 'date, updatedAt, scaleVersion, userId, deletedAt, syncCounter, serverRevision',
+      tasks: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      events: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      journalEntries: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      expenses: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      notifications: 'id, createdAt, read, kind',
       entityLinks: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
       workShifts: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
       accountSettings: 'id, updatedAt, userId, syncCounter, serverRevision',

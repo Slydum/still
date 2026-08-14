@@ -1,5 +1,12 @@
 import { useEffect } from 'react';
-import { accountSettingsFromState, accountSettingsStatePatch } from '../data/accountSettings';
+import {
+  accountSettingsStatePatch,
+  generalAccountSettingsFromState,
+  healthSettingsFromState,
+  moneySettingsFromState,
+  workSettingsFromState,
+  type AccountSettingsSource,
+} from '../data/accountSettings';
 import { refreshCloudSyncStatus } from '../data/cloudSyncStatus';
 import { stillRepository, type PermanentDataCache } from '../data/repositories';
 import {
@@ -22,6 +29,7 @@ import {
 } from '../domain/money';
 import { useAppStore } from '../stores/useAppStore';
 import { usePersistenceStatus } from '../stores/usePersistenceStatus';
+import { getLocalDateKey } from '../theme/stillContext';
 
 let bootstrapPromise: ReturnType<typeof stillRepository.bootstrap> | undefined;
 // Hydration and cloud acknowledgements update the view model, not user intent.
@@ -32,9 +40,9 @@ type StoreWithLifeSettings = ReturnType<typeof useAppStore.getState>
   & Partial<MoneySettingsState>
   & Partial<HealthSettingsState>;
 
-function accountSettingsFromStore() {
+function settingsSourceFromStore(): AccountSettingsSource {
   const state = useAppStore.getState() as StoreWithLifeSettings;
-  return accountSettingsFromState({
+  return {
     name: state.name,
     appearanceTone: state.appearanceTone,
     reduceMotion: state.reduceMotion,
@@ -51,33 +59,54 @@ function accountSettingsFromStore() {
     moneyPrivacyHidden: state.moneyPrivacyHidden ?? true,
     healthRoutines: state.healthRoutines ?? EMPTY_HEALTH_ROUTINES,
     healthSignalPreferences: state.healthSignalPreferences ?? DEFAULT_HEALTH_SIGNAL_PREFERENCES,
-  });
+  };
 }
 
 function cacheFromStore(): PermanentDataCache {
   const state = useAppStore.getState();
+  const source = settingsSourceFromStore();
+  const now = Date.now();
   return {
     tasks: state.tasks,
     events: state.events,
     journalEntries: state.journalEntries,
     expenses: state.expenses,
+    notifications: state.notifications,
     entityLinks: state.entityLinks,
     workShifts: state.workShifts,
-    accountSettings: accountSettingsFromStore(),
+    accountSettings: generalAccountSettingsFromState(source, now),
+    workSettings: workSettingsFromState(source, now),
+    moneySettings: moneySettingsFromState(source, now),
+    healthSettings: healthSettingsFromState(source, now),
   };
 }
 
-export function applyPermanentDataSnapshot(snapshot: PermanentDataCache) {
+export function applyPermanentDataSnapshot(snapshot: PermanentDataCache & { checkIns?: Array<{
+  date: string;
+  mood?: number;
+  energy?: number;
+}> }) {
   applyingRepositorySnapshot = true;
   try {
+    const today = getLocalDateKey();
+    const todayCheckIn = snapshot.checkIns?.find((record) => record.date === today);
     useAppStore.setState({
       tasks: snapshot.tasks,
       events: snapshot.events,
       journalEntries: snapshot.journalEntries,
       expenses: snapshot.expenses,
+      notifications: snapshot.notifications,
       entityLinks: snapshot.entityLinks,
       workShifts: snapshot.workShifts,
-      ...accountSettingsStatePatch(snapshot.accountSettings),
+      mood: todayCheckIn?.mood,
+      energy: todayCheckIn?.energy,
+      checkInDate: today,
+      ...accountSettingsStatePatch(
+        snapshot.accountSettings,
+        snapshot.workSettings,
+        snapshot.moneySettings,
+        snapshot.healthSettings,
+      ),
     });
   } finally {
     applyingRepositorySnapshot = false;
@@ -165,6 +194,9 @@ export function usePermanentDataRepository() {
         if (state.expenses !== previousState.expenses) {
           persistCollection(previousState.expenses, state.expenses, (changes) => stillRepository.persistExpenses(changes));
         }
+        if (state.notifications !== previousState.notifications) {
+          enqueue(() => stillRepository.persistNotifications(state.notifications));
+        }
         if (state.entityLinks !== previousState.entityLinks) {
           persistCollection(
             previousState.entityLinks,
@@ -182,6 +214,8 @@ export function usePermanentDataRepository() {
 
         const lifeSettings = state as StoreWithLifeSettings;
         const previousLifeSettings = previousState as StoreWithLifeSettings;
+        const source = () => settingsSourceFromStore();
+
         const accountSettingsChanged =
           state.name !== previousState.name
           || state.appearanceTone !== previousState.appearanceTone
@@ -190,18 +224,32 @@ export function usePermanentDataRepository() {
           || state.eventReminders !== previousState.eventReminders
           || state.dailyCheckInReminder !== previousState.dailyCheckInReminder
           || state.reminderTime !== previousState.reminderTime
-          || state.eventReminderMinutes !== previousState.eventReminderMinutes
-          || state.workProfile !== previousState.workProfile
-          || state.workPrivacyBlur !== previousState.workPrivacyBlur
-          || lifeSettings.moneyAccounts !== previousLifeSettings.moneyAccounts
+          || state.eventReminderMinutes !== previousState.eventReminderMinutes;
+        if (accountSettingsChanged) {
+          enqueue(() => stillRepository.persistAccountSettings(generalAccountSettingsFromState(source())));
+        }
+
+        const workSettingsChanged =
+          state.workProfile !== previousState.workProfile
+          || state.workPrivacyBlur !== previousState.workPrivacyBlur;
+        if (workSettingsChanged) {
+          enqueue(() => stillRepository.persistWorkSettings(workSettingsFromState(source())));
+        }
+
+        const moneySettingsChanged =
+          lifeSettings.moneyAccounts !== previousLifeSettings.moneyAccounts
           || lifeSettings.moneyBills !== previousLifeSettings.moneyBills
           || lifeSettings.moneySavingsGoals !== previousLifeSettings.moneySavingsGoals
-          || lifeSettings.moneyPrivacyHidden !== previousLifeSettings.moneyPrivacyHidden
-          || lifeSettings.healthRoutines !== previousLifeSettings.healthRoutines
-          || lifeSettings.healthSignalPreferences !== previousLifeSettings.healthSignalPreferences;
+          || lifeSettings.moneyPrivacyHidden !== previousLifeSettings.moneyPrivacyHidden;
+        if (moneySettingsChanged) {
+          enqueue(() => stillRepository.persistMoneySettings(moneySettingsFromState(source())));
+        }
 
-        if (accountSettingsChanged) {
-          enqueue(() => stillRepository.persistAccountSettings(accountSettingsFromStore()));
+        const healthSettingsChanged =
+          lifeSettings.healthRoutines !== previousLifeSettings.healthRoutines
+          || lifeSettings.healthSignalPreferences !== previousLifeSettings.healthSignalPreferences;
+        if (healthSettingsChanged) {
+          enqueue(() => stillRepository.persistHealthSettings(healthSettingsFromState(source())));
         }
       });
     };
