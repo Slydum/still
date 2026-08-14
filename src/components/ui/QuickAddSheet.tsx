@@ -40,13 +40,18 @@ import {
   takePendingJournalDraftContext,
   type JournalDraftContext,
 } from '../../features/journal/journalDraftContext';
-import { isLifeAreaId, type LifeAreaId } from '../../domain/lifeAreas';
+import type { LifeAreaId } from '../../domain/lifeAreas';
 import { getLocalDateKey } from '../../theme/stillContext';
 import { focusFirst, trapTabKey } from './dialogAccessibility';
 import { LifeAreaPicker } from './LifeAreaPicker';
 import { CheckInEditor } from './quick-add/CheckInEditor';
 import { ExpenseEditor } from './quick-add/ExpenseEditor';
-import { journalMoods } from './quick-add/quickAddOptions';
+import {
+  journalMoods,
+  lifeAreaIdFromPath,
+  shouldOpenEventMoreOptions,
+  shouldOpenTaskMoreOptions,
+} from './quick-add/quickAddOptions';
 
 type QuickActionLabel = 'Task' | 'Event' | 'Expense' | 'Work' | 'Check-in' | 'Journal';
 type DiscardIntent = 'close' | 'menu';
@@ -102,7 +107,7 @@ function TaskEditor({ task, initialAreaId, onCancel, onSave }: {
       </label>
       <LifeAreaPicker value={areaId} onChange={setAreaId} />
 
-      <MoreOptions open={Boolean(task?.note || task?.dueDate || task?.repeat !== 'none' || task?.priority !== 'medium')}>
+      <MoreOptions open={shouldOpenTaskMoreOptions(task)}>
         <div className="task-form-row">
           <label className="task-field">
             <span>Due date</span>
@@ -199,7 +204,7 @@ function EventEditor({ event, initialDate, initialAreaId, onCancel, onSave }: {
         <span>All-day event</span>
       </label>
 
-      <MoreOptions open={Boolean(event?.note || event?.repeat !== 'none' || event?.category !== 'personal' || event?.endDate !== event?.startDate)}>
+      <MoreOptions open={shouldOpenEventMoreOptions(event)}>
         <div className="task-form-row">
           <label className="task-field">
             <span>End date</span>
@@ -358,8 +363,7 @@ function JournalEditor({ entry, initialDate, initialAreaId, draftContext, onCanc
 export function QuickAddSheet() {
   const navigate = useNavigate();
   const location = useLocation();
-  const routeAreaId = location.pathname.startsWith('/life/') ? location.pathname.split('/')[2] : undefined;
-  const currentLifeAreaId = isLifeAreaId(routeAreaId) ? routeAreaId : undefined;
+  const currentLifeAreaId = lifeAreaIdFromPath(location.pathname);
   const open = useAppStore((state) => state.quickAddOpen);
   const mode = useAppStore((state) => state.quickAddMode);
   const editingTaskId = useAppStore((state) => state.editingTaskId);
@@ -488,7 +492,7 @@ export function QuickAddSheet() {
   const markInteractiveDirty = (event: ReactMouseEvent<HTMLElement>) => {
     if (mode === 'menu' || discardIntent) return;
     const target = event.target as HTMLElement;
-    if (target.closest('[aria-pressed], summary')) setDirty(true);
+    if (target.closest('[aria-pressed]')) setDirty(true);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
