@@ -50,9 +50,12 @@ function correctedExpenseInput(input: ExpenseInput): ExpenseInput {
 }
 
 const originalActions = legacyStore.getState();
+const locationWeatherEnabled = typeof window !== 'undefined'
+  && window.localStorage.getItem('still-location-weather-enabled-v2') === 'true';
 
 legacyStore.setState((state) => ({
   workShifts: state.workShifts.map((shift) => ensureWorkShiftTimestamps(shift)),
+  autoWeather: locationWeatherEnabled ? state.autoWeather : false,
 
   toggleTask: (id) => legacyStore.setState((current) => {
     const selected = current.tasks.find((task) => task.id === id);
