@@ -135,7 +135,7 @@ try {
 
   const databases = await evaluate(cdp, 'indexedDB.databases()');
   const demoDb = databases.find((database) => database.name === 'still-demo-local');
-  if (!demoDb || demoDb.version !== 50) throw new Error(`Expected demo IndexedDB at Dexie schema v5/native v50, got ${JSON.stringify(databases)}`);
+  if (!demoDb || demoDb.version !== 60) throw new Error(`Expected demo IndexedDB at Dexie schema v6/native v60, got ${JSON.stringify(databases)}`);
 
   const migrated = await evaluate(cdp, `new Promise((resolve, reject) => {
     const request = indexedDB.open('still-demo-local');
