@@ -19,7 +19,7 @@ const correctnessCss = await readFile(path.join(root, 'src/theme/v03-ux-correctn
 const authSelectedCss = await readFile(path.join(root, 'src/theme/auth-selected-fidelity.css'), 'utf8');
 const authSource = await readFile(path.join(root, 'src/features/auth/AuthPage.tsx'), 'utf8');
 const desktopHomeSource = await readFile(path.join(root, 'src/theme/desktop-home-option1.ts'), 'utf8');
-const desktopWorkSource = await readFile(path.join(root, 'src/theme/desktop-work-laptop.ts'), 'utf8');
+const desktopWorkSource = await readFile(path.join(root, 'src/features/work/desktop-work-laptop.css'), 'utf8');
 const mainSource = await readFile(path.join(root, 'src/main.tsx'), 'utf8');
 const workHubSource = await readFile(path.join(root, 'src/features/work/WorkHubPageOption1.tsx'), 'utf8');
 const moneySource = await readFile(path.join(root, 'src/features/money/MoneyPage.tsx'), 'utf8');
@@ -50,7 +50,7 @@ if (!desktopHomeSource.includes('.app .bottom-nav') || !desktopHomeSource.includ
 if (!desktopHomeSource.includes('grid-template-areas:') || !desktopHomeSource.includes("'upcoming checkin'")) {
   failures.push('Desktop Home must keep the selected wide focus / two-column content composition.');
 }
-if (!mainSource.includes("import './theme/desktop-work-laptop';")) {
+if (!mainSource.includes("import './features/work/desktop-work-laptop.css';")) {
   failures.push('The work-laptop layout must load after the existing Work polish styles.');
 }
 const allowedDesktopWorkMobileVisibility = /@media \(max-width: 1023px\) \{\s*\.work-header-details,\s*\.work-quick-access \{\s*display: none !important;\s*\}\s*\}/;
