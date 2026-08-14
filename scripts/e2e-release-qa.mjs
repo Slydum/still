@@ -72,7 +72,7 @@ async function navigate(cdp, route) {
   await cdp.send('Page.navigate', { url: `${origin}${route.path}` });
   await poll(
     cdp,
-    `document.readyState === 'complete' && location.pathname === ${JSON.stringify(route.expected ?? route.path)} && Boolean(document.querySelector('main'))`,
+    `document.readyState === 'complete' && location.pathname === ${JSON.stringify(route.expected ?? route.path)} && Boolean(document.querySelector('main')) && !document.querySelector('main.auth-loading')`,
     route.path,
   );
   await new Promise((resolve) => setTimeout(resolve, 100));
