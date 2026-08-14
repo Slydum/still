@@ -1,26 +1,6 @@
 import { useAppStore } from '../stores/useAppStore';
 import type { WorkChange, WorkChangeStatus, WorkProfile } from '../domain/work';
 
-const styleId = 'still-work-hub-fixes';
-
-if (!document.getElementById(styleId)) {
-  const style = document.createElement('style');
-  style.id = styleId;
-  style.textContent = `
-@media (max-width: 620px) {
-  .work-hub-page input,
-  .work-hub-page select,
-  .work-hub-page textarea { font-size: 16px !important; }
-}
-.work-change-sheet-backdrop{position:fixed;inset:0;z-index:2500;background:rgba(46,39,57,.24);backdrop-filter:blur(12px);display:flex;align-items:flex-end;justify-content:center;padding:16px}
-.work-change-sheet{width:min(100%,620px);max-height:min(82vh,760px);overflow:auto;padding:18px;border:1px solid rgba(93,78,119,.12);border-radius:28px;background:rgba(255,252,250,.98);box-shadow:0 24px 70px rgba(61,47,82,.2);color:var(--text-strong)}
-.work-change-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.work-change-sheet-head h2{margin:0;font-family:var(--font-display);font-size:1.55rem}.work-change-sheet-close{width:38px;height:38px;border:0;border-radius:12px;background:rgba(113,94,168,.08);font-size:22px;color:#725eaa}
-.work-change-sheet form{display:grid;gap:10px}.work-change-sheet input,.work-change-sheet select,.work-change-sheet textarea{width:100%;box-sizing:border-box;min-height:46px;padding:11px 12px;border:1px solid rgba(93,78,119,.13);border-radius:13px;background:rgba(255,255,255,.82);font:inherit;font-size:16px;color:inherit}.work-change-sheet textarea{min-height:92px;resize:vertical}.work-change-sheet-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.work-change-sheet-save{min-height:48px;border:0;border-radius:14px;background:rgba(113,94,168,.16);color:#665196;font-weight:850;font-size:16px}
-@media(max-width:520px){.work-change-sheet-grid{grid-template-columns:1fr}}
-`;
-  document.head.appendChild(style);
-}
-
 function workRouteFromDetails() {
   const path = window.location.pathname;
   return path.replace(/\/work\/details\/?$/, '/work');
