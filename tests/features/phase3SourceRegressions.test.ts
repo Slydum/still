@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
-import readFileSync from 'node:fs';
+import fs from 'node:fs';
 import { describe, it } from 'node:test';
 
-const bottomNavSource = readFileSync('src/components/navigation/BottomNav.tsx', 'utf8');
-const workHubFixesSource = readFileSync('src/theme/work-hub-fixes.ts', 'utf8');
-const workHubSource = readFileSync('src/features/work/WorkHubPageOption1.tsx', 'utf8');
-const workLiveTrackerSource = readFileSync('src/features/work/WorkLiveTracker.tsx', 'utf8');
+const bottomNavSource = fs.readFileSync('src/components/navigation/BottomNav.tsx', 'utf8');
+const workHubFixesSource = fs.readFileSync('src/theme/work-hub-fixes.ts', 'utf8');
+const workHubSource = fs.readFileSync('src/features/work/WorkHubPageOption1.tsx', 'utf8');
+const workLiveTrackerSource = fs.readFileSync('src/features/work/WorkLiveTracker.tsx', 'utf8');
 
 describe('Phase 3 source regressions', () => {
   it('uses real links for route navigation while keeping Quick Add a button', () => {
