@@ -71,6 +71,7 @@ function cacheFromStore(): PermanentDataCache {
     events: state.events,
     journalEntries: state.journalEntries,
     expenses: state.expenses,
+    notifications: state.notifications,
     entityLinks: state.entityLinks,
     workShifts: state.workShifts,
     accountSettings: generalAccountSettingsFromState(source, now),
@@ -94,6 +95,7 @@ export function applyPermanentDataSnapshot(snapshot: PermanentDataCache & { chec
       events: snapshot.events,
       journalEntries: snapshot.journalEntries,
       expenses: snapshot.expenses,
+      notifications: snapshot.notifications,
       entityLinks: snapshot.entityLinks,
       workShifts: snapshot.workShifts,
       mood: todayCheckIn?.mood,
@@ -191,6 +193,9 @@ export function usePermanentDataRepository() {
         }
         if (state.expenses !== previousState.expenses) {
           persistCollection(previousState.expenses, state.expenses, (changes) => stillRepository.persistExpenses(changes));
+        }
+        if (state.notifications !== previousState.notifications) {
+          enqueue(() => stillRepository.persistNotifications(state.notifications));
         }
         if (state.entityLinks !== previousState.entityLinks) {
           persistCollection(
