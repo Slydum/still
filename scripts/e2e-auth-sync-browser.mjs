@@ -252,6 +252,81 @@ async function readTaskSyncState(browser) {
   })()`);
 }
 
+async function seedGranularSettings(browser) {
+  return evaluate(browser, `new Promise((resolve, reject) => {
+    const request = indexedDB.open('still-local');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction('accountSettings', 'readwrite');
+      const store = tx.objectStore('accountSettings');
+      const all = store.getAll();
+      all.onerror = () => reject(all.error);
+      all.onsuccess = () => {
+        const rows = Object.fromEntries(all.result.map((row) => [row.id, row]));
+        if (!rows.work || !rows.money || !rows.health) {
+          db.close();
+          reject(new Error('Granular settings placeholders were not initialized.'));
+          return;
+        }
+        const now = Date.now();
+        store.put({
+          ...rows.work,
+          workProfile: { ...rows.work.workProfile, hourlyRate: 321 },
+          workPrivacyBlur: false,
+          updatedAt: now,
+          syncCounter: (rows.work.syncCounter ?? 0) + 1,
+          mutationId: 'phase2-work-' + now,
+          dirty: true,
+        });
+        store.put({
+          ...rows.money,
+          moneyAccounts: [{ id: 'phase2-money', name: 'Cross-device wallet', kind: 'cash', balance: 6543, currency: 'PHP', createdAt: now, updatedAt: now }],
+          moneyPrivacyHidden: false,
+          updatedAt: now,
+          syncCounter: (rows.money.syncCounter ?? 0) + 1,
+          mutationId: 'phase2-money-' + now,
+          dirty: true,
+        });
+        store.put({
+          ...rows.health,
+          healthRoutines: [{ id: 'phase2-health', title: 'Cross-device routine', cadence: 'daily', createdAt: now, updatedAt: now }],
+          healthSignalPreferences: { sleep: true, hydration: false, movement: true },
+          updatedAt: now,
+          syncCounter: (rows.health.syncCounter ?? 0) + 1,
+          mutationId: 'phase2-health-' + now,
+          dirty: true,
+        });
+      };
+      tx.oncomplete = () => { db.close(); resolve(true); };
+      tx.onerror = () => reject(tx.error);
+    };
+  })`);
+}
+
+async function readGranularSettings(browser) {
+  return evaluate(browser, `new Promise((resolve, reject) => {
+    const request = indexedDB.open('still-local');
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction('accountSettings', 'readonly');
+      const all = tx.objectStore('accountSettings').getAll();
+      all.onerror = () => reject(all.error);
+      all.onsuccess = () => {
+        const rows = Object.fromEntries(all.result.map((row) => [row.id, row]));
+        db.close();
+        resolve({
+          account: rows.account && { name: rows.account.name, serverRevision: rows.account.serverRevision },
+          work: rows.work && { hourlyRate: rows.work.workProfile?.hourlyRate, privacy: rows.work.workPrivacyBlur, dirty: rows.work.dirty, serverRevision: rows.work.serverRevision },
+          money: rows.money && { name: rows.money.moneyAccounts?.[0]?.name, balance: rows.money.moneyAccounts?.[0]?.balance, privacy: rows.money.moneyPrivacyHidden, dirty: rows.money.dirty, serverRevision: rows.money.serverRevision },
+          health: rows.health && { title: rows.health.healthRoutines?.[0]?.title, hydration: rows.health.healthSignalPreferences?.hydration, dirty: rows.health.dirty, serverRevision: rows.health.serverRevision },
+        });
+      };
+    };
+  })`);
+}
+
 async function clearedLocalDataState(browser) {
   return evaluate(browser, `(async () => {
     const localKeys = ['still-app-state-v1', 'still-location-weather-enabled-v2', 'still-sent-reminders-v1', 'still-checkin-snooze-v1'];
@@ -298,6 +373,17 @@ function isNeutralPersistedState(rawState) {
   if (rawState === null) return true;
   try {
     const state = JSON.parse(rawState)?.state ?? {};
+    const keys = Object.keys(state);
+    const deviceOnlyKeys = new Set(['notificationsEnabled', 'autoWeather', 'weather', 'occasion']);
+    const isDeviceOnly = keys.every((key) => deviceOnlyKeys.has(key))
+      && state.notificationsEnabled === false
+      && state.autoWeather === true
+      && state.weather === undefined
+      && state.occasion === undefined;
+    if (isDeviceOnly) return true;
+
+    // Keep accepting the v1 neutral shape while the migration bridge can still
+    // encounter it. Any populated durable value continues to fail this check.
     const emptyCollections = ['tasks', 'events', 'journalEntries', 'expenses', 'notifications', 'entityLinks', 'workShifts']
       .every((key) => Array.isArray(state[key]) && state[key].length === 0);
     const workProfile = state.workProfile ?? {};
@@ -363,14 +449,28 @@ try {
 
   await signUp(deviceA, primaryEmail, primaryPassword);
   await createTask(deviceA);
+  await seedGranularSettings(deviceA);
   await syncNow(deviceA);
   const pushedTask = await readTaskSyncState(deviceA);
   if (!pushedTask || pushedTask.dirty !== false || !(pushedTask.serverRevision > 0)) {
     throw new Error(`Task did not receive a cloud acknowledgement: ${JSON.stringify(pushedTask)}`);
   }
+  const pushedSettings = await readGranularSettings(deviceA);
+  if (pushedSettings.work?.dirty !== false || !(pushedSettings.work?.serverRevision > 0)
+    || pushedSettings.money?.dirty !== false || !(pushedSettings.money?.serverRevision > 0)
+    || pushedSettings.health?.dirty !== false || !(pushedSettings.health?.serverRevision > 0)) {
+    throw new Error(`Granular settings did not receive cloud acknowledgements: ${JSON.stringify(pushedSettings)}`);
+  }
 
   await signIn(deviceB, primaryEmail, primaryPassword);
   await poll(deviceB, `Boolean(document.querySelector('.app')) && document.body.innerText.includes(${JSON.stringify(taskTitle)})`, 'task pulled onto second browser');
+  const pulledSettings = await readGranularSettings(deviceB);
+  if (pulledSettings.account?.name !== 'Release Tester'
+    || pulledSettings.work?.hourlyRate !== 321 || pulledSettings.work?.privacy !== false
+    || pulledSettings.money?.name !== 'Cross-device wallet' || pulledSettings.money?.balance !== 6543 || pulledSettings.money?.privacy !== false
+    || pulledSettings.health?.title !== 'Cross-device routine' || pulledSettings.health?.hydration !== false) {
+    throw new Error(`Granular settings did not survive cross-device sync: ${JSON.stringify(pulledSettings)}`);
+  }
 
   await evaluate(deviceB, 'window.confirm = () => true; true');
   await clickAria(deviceB, `Delete ${taskTitle}`);
@@ -430,7 +530,7 @@ try {
   await signIn(recoveryBrowser, primaryEmail, recoveredPassword);
   await poll(recoveryBrowser, "Boolean(document.querySelector('.app'))", 'login with recovered password');
 
-  console.log('Disposable auth, recovery, account lifecycle, and cross-browser sync checks passed.');
+  console.log('Disposable auth, recovery, account lifecycle, granular settings, and cross-browser sync checks passed.');
 } finally {
   for (const browser of browsers) {
     browser.cdp.close();
