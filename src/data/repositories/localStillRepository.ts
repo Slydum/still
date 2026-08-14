@@ -131,7 +131,8 @@ async function persistSettingsRecord<T extends PermanentSettingsRecord>(settings
     if (!isLegacyBundledAccountSettings(existingValue as unknown as Record<string, unknown>)
       && settingsRecordEqual(settings, existingValue)) return;
   }
-  await stillDb.accountSettings.put(addSyncMetadata(settings, existing));
+  const next = addSyncMetadata(settings, existing) as SyncedSettingsRecord;
+  await stillDb.accountSettings.put(next);
 }
 
 async function ensureGranularSettingsRecords(cache?: Pick<
