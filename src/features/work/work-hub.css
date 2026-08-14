@@ -1,1 +1,3 @@
-/* Work hub styles are injected by v04-work-polish.ts to preserve the global CSS budget. */
+/* Work hub component stylesheet entry point.
+   Shared Work layout and responsive layers now ship as feature-owned CSS files
+   from the application style pipeline instead of runtime TypeScript injection. */
