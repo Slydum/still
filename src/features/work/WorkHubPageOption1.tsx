@@ -6,10 +6,6 @@ import {
   ChevronRight,
   CircleAlert,
   Clock3,
-  Eye,
-  EyeOff,
-  LogIn,
-  LogOut,
   Plus,
   Repeat2,
   StickyNote,
@@ -27,16 +23,13 @@ import {
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  effectiveHourlyRate,
-  shiftEarnings,
-  shiftEarningsInRange,
-  workedHours,
   type WorkNote,
   type WorkProfile,
 } from '../../domain/work';
 import { focusFirst, trapTabKey } from '../../components/ui/dialogAccessibility';
 import { getEventOccurrences, getOccurrencesForDay } from '../calendar/eventUtils';
 import { useAppStore, type EventRepeat, type StillEvent } from '../../stores/useAppStore';
+import { WorkLiveTracker } from './WorkLiveTracker';
 import './work-hub.css';
 
 type QueueStatus = 'todo' | 'progress' | 'done';
@@ -92,23 +85,6 @@ function shortDate(value?: string) {
 function timeLabel(value?: string) {
   if (!value) return '';
   return new Date(`2000-01-01T${value}:00`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-}
-
-function durationLabel(hours: number) {
-  const totalSeconds = Math.max(0, Math.floor(hours * 3600));
-  const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-  const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-  const s = String(totalSeconds % 60).padStart(2, '0');
-  return `${h}:${m}:${s}`;
-}
-
-function money(value: number, currency: string, digits = 2) {
-  return new Intl.NumberFormat(undefined, {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  }).format(Number.isFinite(value) ? value : 0);
 }
 
 function useDesktopWorkLayout() {
@@ -174,14 +150,9 @@ export function WorkHubPage() {
   const navigate = useNavigate();
   const desktop = useDesktopWorkLayout();
   const profile = useAppStore((state) => state.workProfile) as ExtendedWorkProfile;
-  const shifts = useAppStore((state) => state.workShifts);
-  const privacyBlur = useAppStore((state) => state.workPrivacyBlur);
   const tasks = useAppStore((state) => state.tasks);
   const events = useAppStore((state) => state.events);
   const updateProfile = useAppStore((state) => state.updateWorkProfile);
-  const startWorkShift = useAppStore((state) => state.startWorkShift);
-  const endWorkShift = useAppStore((state) => state.endWorkShift);
-  const setWorkPrivacyBlur = useAppStore((state) => state.setWorkPrivacyBlur);
   const addTask = useAppStore((state) => state.addTask);
   const toggleTask = useAppStore((state) => state.toggleTask);
   const addEvent = useAppStore((state) => state.addEvent);
@@ -200,12 +171,10 @@ export function WorkHubPage() {
   const [editingMeetingId, setEditingMeetingId] = useState<string>();
   const [confirmDeleteMeeting, setConfirmDeleteMeeting] = useState(false);
   const [now, setNow] = useState(Date.now());
-  const nowDate = new Date(now);
-  const today = dateKey(nowDate);
+  const today = dateKey(new Date(now));
   const emptyMeeting = (): MeetingDraft => ({ title: '', date: today, startTime: '09:00', endTime: '09:30', repeat: 'none', note: '' });
   const [meeting, setMeeting] = useState<MeetingDraft>(() => emptyMeeting());
 
-  const activeShift = shifts.find((shift) => !shift.endedAt);
   const incidents = profile.incidents ?? [];
   const taskStates = profile.workTaskStates ?? {};
   const notes = profile.notes ?? [];
@@ -214,7 +183,7 @@ export function WorkHubPage() {
   useEffect(() => {
     const refreshClock = () => setNow(Date.now());
     refreshClock();
-    const timer = window.setInterval(refreshClock, activeShift ? 1000 : 30_000);
+    const timer = window.setInterval(refreshClock, 30_000);
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') refreshClock();
     };
@@ -223,7 +192,7 @@ export function WorkHubPage() {
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [activeShift]);
+  }, []);
 
   const workTasks = useMemo(() => tasks.filter((task) => task.areaId === 'work'), [tasks]);
   const workMeetingSeries = useMemo(() => events
@@ -233,18 +202,6 @@ export function WorkHubPage() {
   const openIncidents = incidents.filter((item) => item.status !== 'closed' && item.status !== 'resolved');
   const openChanges = changes.filter((item) => item.status !== 'completed' && item.status !== 'cancelled');
   const dueNotes = notes.filter((note) => note.reminderDate && note.reminderDate <= today);
-
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-  const earnedToday = shifts.reduce(
-    (total, shift) => total + shiftEarningsInRange(shift, profile, todayStart.getTime(), now, now),
-    0,
-  );
-  const liveEarnings = activeShift ? shiftEarnings(activeShift, profile, now) : 0;
-  const livePerSecond = activeShift
-    ? Math.max(0, shiftEarnings(activeShift, profile, now + 1000) - liveEarnings)
-    : Math.max(0, effectiveHourlyRate(profile) / 3600);
-  const liveElapsed = activeShift ? workedHours(activeShift, now) : 0;
 
   const saveProfile = (patch: Partial<ExtendedWorkProfile>) => updateProfile({ ...profile, ...patch } as WorkProfile);
 
@@ -464,11 +421,7 @@ export function WorkHubPage() {
         <button className="work-header-details" onClick={() => navigate('/work/details')} type="button">View details <ChevronRight size={14} /></button>
       </header>
 
-      <section className="work-live-card card" aria-label="Live work and pay tracker">
-        <div className="work-live-top"><span className="work-live-icon"><BriefcaseBusiness size={21} /></span><div className="work-live-copy"><small>{activeShift ? 'Working now' : 'Ready when you are'}</small><strong className={privacyBlur && activeShift ? 'is-private' : ''}>{activeShift ? money(liveEarnings, profile.currency) : nowDate.toLocaleDateString(undefined, { weekday: 'long' })}</strong></div><button className="work-live-eye" onClick={() => setWorkPrivacyBlur(!privacyBlur)} type="button" aria-label={privacyBlur ? 'Show earnings' : 'Hide earnings'}>{privacyBlur ? <EyeOff size={19} /> : <Eye size={19} />}</button></div>
-        <div className="work-live-meta">{activeShift ? <><span>{durationLabel(liveElapsed)}</span><span className={privacyBlur ? 'is-private' : ''}>{money(livePerSecond, profile.currency, 4)} / sec</span><span className={privacyBlur ? 'is-private' : ''}>{money(earnedToday, profile.currency)} today</span></> : <><span>No break timer</span><span className={privacyBlur ? 'is-private' : ''}>{money(livePerSecond, profile.currency, 4)} / sec</span></>}</div>
-        <div className="work-live-actions"><button disabled={Boolean(activeShift)} onClick={startWorkShift} type="button"><LogIn size={18} />Clock in</button><button disabled={!activeShift} onClick={endWorkShift} type="button"><LogOut size={18} />Clock out</button></div>
-      </section>
+      <WorkLiveTracker />
 
       <section className="work-overview" aria-label="Work summary">
         <article><small>Meetings today</small><strong>{todayMeetings.length}</strong><span>{todayMeetings[0]?.startTime ? `Next ${timeLabel(todayMeetings[0].startTime)}` : 'Calendar clear'}</span></article>
