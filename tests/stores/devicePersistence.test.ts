@@ -10,7 +10,7 @@ describe('device persistence boundary', () => {
     const persisted = devicePersistedState({
       notificationsEnabled: true,
       autoWeather: false,
-      weather: 'sunny',
+      weather: 'partly-sunny',
       occasion: undefined,
     });
 
