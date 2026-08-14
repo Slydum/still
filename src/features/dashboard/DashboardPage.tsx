@@ -42,6 +42,11 @@ import {
   type WeatherKey,
 } from '../../theme/stillContext';
 import { buildStillTheme } from '../../theme/themeEngine';
+import {
+  dashboardGreeting,
+  shouldAutoRequestLocationWeather,
+  shouldShowNotificationDot,
+} from './dashboardBehavior';
 import '../../theme/hero-v3.css';
 import '../../theme/home-simplification.css';
 
@@ -154,7 +159,6 @@ export function DashboardPage() {
   const weather = useAppStore((state) => state.weather);
   const occasion = useAppStore((state) => state.occasion);
   const name = useAppStore((state) => state.name);
-  const notificationsEnabled = useAppStore((state) => state.notificationsEnabled);
   const hasUnreadNotifications = useAppStore((state) => state.notifications.some((notification) => !notification.read));
   const autoWeather = useAppStore((state) => state.autoWeather);
   const replaceTodayCheckIn = useAppStore((state) => state.replaceTodayCheckIn);
@@ -246,7 +250,8 @@ export function DashboardPage() {
   }, [setWeather]);
 
   useEffect(() => {
-    if (!autoWeather) {
+    const locationWeatherEnabled = window.localStorage.getItem(LOCATION_WEATHER_KEY) === 'true';
+    if (!shouldAutoRequestLocationWeather(autoWeather, locationWeatherEnabled)) {
       requestedLocationWeather.current = false;
       setWeatherStatus('idle');
       setTemperature(null);
@@ -254,8 +259,7 @@ export function DashboardPage() {
     }
     if (requestedLocationWeather.current) return;
     requestedLocationWeather.current = true;
-    const locationWeatherEnabled = window.localStorage.getItem(LOCATION_WEATHER_KEY) === 'true';
-    refreshWeatherFromLocation(!locationWeatherEnabled);
+    refreshWeatherFromLocation(false);
   }, [autoWeather, refreshWeatherFromLocation]);
 
   const weatherHeadline = weatherStatus === 'ready' && temperature !== null
@@ -280,6 +284,7 @@ export function DashboardPage() {
     : context.timeOfDay === 'night'
       ? '🌙'
       : '☀️';
+  const greeting = dashboardGreeting(getGreeting(context.timeOfDay), name);
 
   useEffect(() => {
     let active = true;
@@ -368,15 +373,18 @@ export function DashboardPage() {
         </div>
         <button className="icon-button" onClick={() => navigate('/notifications')} type="button" aria-label="Open notifications">
           <Bell size={20} />
-          {(hasUnreadNotifications || !notificationsEnabled) && <span className="notification-dot" />}
+          {shouldShowNotificationDot(hasUnreadNotifications) && <span className="notification-dot" />}
         </button>
       </header>
 
       <section className={`hero hero-v3 ${theme.paletteClass}`}>
         <div className="hero-v3-copy">
           <h1>
-            <span className="hero-v3-title-line">{getGreeting(context.timeOfDay).replace('.', '')},</span>
-            <span className="hero-v3-title-line">{name}. <span className="hero-v3-sun" aria-hidden="true">{heroConditionSymbol}</span></span>
+            <span className="hero-v3-title-line">{greeting.firstLine}</span>
+            {greeting.secondLine && (
+              <span className="hero-v3-title-line">{greeting.secondLine} <span className="hero-v3-sun" aria-hidden="true">{heroConditionSymbol}</span></span>
+            )}
+            {!greeting.secondLine && <span className="hero-v3-sun" aria-hidden="true">{heroConditionSymbol}</span>}
           </h1>
           <p className={`hero-v3-quote ${isLoading ? 'is-loading' : ''}`}>{quote.text}</p>
         </div>
