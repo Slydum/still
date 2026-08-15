@@ -32,7 +32,7 @@ npm run build:budget     # bundle-size guardrail (after build)
 
 CI also runs the headless-browser Demo Sandbox/IndexedDB migration test, responsive and keyboard route QA, Work laptop and interaction QA, a disposable local-Supabase pgTAP suite covering RLS and the sync RPC, and a disposable browser acceptance flow covering signup/login, password recovery, granular settings plus record synchronization, deletion propagation, account binding, and both logout modes.
 
-Phase 4 adds a retained visual release matrix across 390×844, 1024×768, 1280×900, 1440×900, and 1680×1050 for Home, Work, Money, Health, Settings, and Quick Add modal states. The same `scripts/live-visual-check.mjs` suite runs against the local production preview before merge and against the real GitHub Pages URL after deployment. Screenshots and measured geometry are kept as workflow artifacts for review.
+Phase 4 adds a retained visual release matrix across 390×844, 1024×768, 1280×900, 1440×900, and 1680×1050 for Home, Work, Love, Money, Health, Settings, and Quick Add modal states. The same `scripts/live-visual-check.mjs` suite runs against the local production preview before merge and against the real GitHub Pages URL after deployment. It captures 35 viewport/states per run and keeps the screenshots plus measured geometry as workflow artifacts for review.
 
 After a production GitHub Pages deployment, `live-pages-smoke` opens the actual deployed site in headless Chrome and verifies Demo Sandbox entry, direct nested routing, the `/still/` service-worker scope, and an offline reload of the cached app shell. `live-visual-qa` reruns the release visual matrix against that deployed build.
 
