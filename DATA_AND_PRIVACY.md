@@ -4,7 +4,9 @@ This document is the product contract for how Still stores, synchronizes, and re
 
 ## Local-first storage
 
-Still saves supported personal records to IndexedDB on the current browser/device before cloud synchronization. This local copy is what lets an already loaded, signed-in Still installation continue to work when cloud access is temporarily unavailable.
+Still saves supported personal records to IndexedDB on the current browser/device before cloud synchronization. IndexedDB is the authoritative durable local store for account-backed records and local notification history. This local copy is what lets an already loaded, signed-in Still installation continue to work when cloud access is temporarily unavailable.
+
+A small Zustand/localStorage record is intentionally limited to device experience state: whether browser notifications are enabled in Still, the automatic-weather preference, the current weather condition, and the optional occasion. Durable personal records and synced profile/domain settings do not use localStorage as a second permanent database.
 
 Offline use has limits:
 
@@ -26,7 +28,12 @@ A signed-in account can synchronize these record types through Supabase:
 - entity links
 - work shifts
 - check-ins
-- account settings: profile name, appearance tone, reduced-motion choice, reminder schedule preferences, work profile, and work privacy preference
+- general account settings: profile name, appearance tone, reduced-motion choice, and reminder schedule preferences
+- Work settings: work profile and Work privacy preference
+- Money settings: accounts, bills, savings goals, and Money privacy preference
+- Health settings: routines and Health signal preferences
+
+General, Work, Money, and Health settings are independent synchronization records. This keeps a change in one domain from turning the entire account preference bundle into one conflict unit.
 
 Cloud sync does **not** run continuously after every edit. Still persists edits locally first. Cloud synchronization is attempted when the signed-in app starts, when the user chooses **Sync now**, and during logout flows.
 
@@ -44,14 +51,15 @@ Still's cloud sync is **not** an end-to-end encrypted vault. Do not describe Sup
 
 Some state is intentionally local to the browser/device and is not part of account cloud sync, including:
 
-- browser notification permission and whether reminders are enabled on that browser
+- browser notification permission and whether notifications are enabled in Still on that browser
 - local notification history
 - reminder delivery bookkeeping and check-in snooze state
 - automatic-weather preference, current weather/location-derived state, and browser location permission
+- optional occasion state used by the local presentation context
 - daily quote selection/history
 - PWA caches and other browser-managed site state
 
-Reminder schedule choices such as task reminders, event reminders, daily check-in reminders, reminder time, and event lead time do sync as account settings. Whether a particular browser is allowed to display notifications remains device-specific.
+Reminder schedule choices such as task reminders, event reminders, daily check-in reminders, reminder time, and event lead time do sync as general account settings. Whether a particular browser is allowed to display notifications remains device-specific.
 
 ## Weather and location
 
@@ -64,6 +72,12 @@ Turning automatic weather off stops Still from making automatic weather requests
 Still reminders are local browser notifications; there is no server-side push-notification service. Reminder checks are driven by the running page/PWA process. Browsers may throttle or suspend background timers, and a fully closed browser cannot receive these local-only reminders.
 
 Still checks again when its page becomes active, subject to the reminder delivery windows implemented by the app. Product copy must not promise guaranteed background or closed-browser delivery.
+
+## Migration compatibility
+
+Older Still builds persisted a much larger `still-app-state-v1` payload in localStorage. Current builds can still hydrate that payload long enough to import supported durable data into IndexedDB. Subsequent persistence writes retain only the device-scoped state described above, so the old duplicate durable localStorage payload is pruned after migration.
+
+Older bundled account settings are likewise split into independent general, Work, Money, and Health records during repository bootstrap. Existing real granular records take precedence over migration placeholders so a fresh device default cannot overwrite cloud data.
 
 ## Demo sandbox
 
