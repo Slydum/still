@@ -58,7 +58,7 @@ Browser migration coverage in `scripts/e2e-demo-browser.mjs` must remain green b
 
 `scripts/live-visual-check.mjs` is shared by pull-request preview CI and post-deploy Pages QA. Without `STILL_LIVE_URL` it starts a local Vite preview; with `STILL_LIVE_URL` it tests the deployed release.
 
-The Phase 4 matrix covers 390×844, 1024×768, 1280×900, 1440×900, and 1680×1050 across Home, Work, Money, Health, and Settings, plus Quick Add modal geometry and keyboard focus. Screenshots and measured geometry are written under `artifacts/release-visual` and retained by CI.
+The Phase 4 matrix covers 390×844, 1024×768, 1280×900, 1440×900, and 1680×1050 across Home, Work, Love, Money, Health, and Settings, plus Quick Add modal geometry and keyboard focus. That produces 35 captured viewport/states per run. Screenshots and measured geometry are written under `artifacts/release-visual` and retained by CI.
 
 ## Asset paths
 
