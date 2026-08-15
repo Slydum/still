@@ -7,8 +7,8 @@ import {
 } from '../domain/domainCorrectness';
 import { shiftEarnings, type WorkShift } from '../domain/work';
 import { devicePersistedState } from './devicePersistence';
-import { useAppStore as legacyStore } from './useAppStoreLegacy';
-import type { EventInput, ExpenseInput } from './useAppStoreLegacy';
+import { useAppStore as coreStore } from './appStoreCore';
+import type { EventInput, ExpenseInput } from './appStoreCore';
 
 export type {
   AppNotification,
@@ -27,7 +27,7 @@ export type {
   TaskInput,
   TaskPriority,
   TaskRepeat,
-} from './useAppStoreLegacy';
+} from './appStoreCore';
 
 function createRecordId(prefix = 'record') {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
@@ -50,20 +50,20 @@ function correctedExpenseInput(input: ExpenseInput): ExpenseInput {
   return { ...input, amount: normalizeFiniteMoney(input.amount) };
 }
 
-const originalActions = legacyStore.getState();
+const originalActions = coreStore.getState();
 
 // v1 persisted nearly the whole application in localStorage as well as IndexedDB.
-// Keep legacy hydration readable for migration, but every write from this adapter
-// now retains device-only state. Repository snapshots therefore prune old durable
+// Keep v1 hydration readable for migration, but every write from the public store
+// retains device-only state. Repository snapshots therefore prune old durable
 // localStorage payloads after they have been imported into IndexedDB.
-legacyStore.persist.setOptions({
+coreStore.persist.setOptions({
   partialize: (state) => devicePersistedState(state),
 });
 
-legacyStore.setState((state) => ({
+coreStore.setState((state) => ({
   workShifts: state.workShifts.map((shift) => ensureWorkShiftTimestamps(shift)),
 
-  toggleTask: (id) => legacyStore.setState((current) => {
+  toggleTask: (id) => coreStore.setState((current) => {
     const selected = current.tasks.find((task) => task.id === id);
     if (!selected) return current;
 
@@ -104,7 +104,7 @@ legacyStore.setState((state) => ({
   addExpense: (input) => originalActions.addExpense(correctedExpenseInput(input)),
   updateExpense: (id, input) => originalActions.updateExpense(id, correctedExpenseInput(input)),
 
-  startWorkShift: () => legacyStore.setState((current) => {
+  startWorkShift: () => coreStore.setState((current) => {
     if (current.workShifts.some((shift) => !shift.endedAt)) return current;
     const now = Date.now();
     const shift = {
@@ -117,7 +117,7 @@ legacyStore.setState((state) => ({
     return { workShifts: [shift, ...current.workShifts] };
   }),
 
-  endWorkShift: () => legacyStore.setState((current) => {
+  endWorkShift: () => coreStore.setState((current) => {
     const active = current.workShifts.find((shift) => !shift.endedAt);
     if (!active) return current;
     const endedAt = Date.now();
@@ -136,7 +136,7 @@ legacyStore.setState((state) => ({
     };
   }),
 
-  toggleWorkBreak: () => legacyStore.setState((current) => {
+  toggleWorkBreak: () => coreStore.setState((current) => {
     const active = current.workShifts.find((shift) => !shift.endedAt);
     if (!active) return current;
     const now = Date.now();
@@ -155,7 +155,7 @@ legacyStore.setState((state) => ({
     };
   }),
 
-  addWorkShift: (input) => legacyStore.setState((current) => {
+  addWorkShift: (input) => coreStore.setState((current) => {
     const now = Date.now();
     const shift: WorkShift & { createdAt: number; updatedAt: number } = {
       id: createRecordId('shift'),
@@ -176,7 +176,7 @@ legacyStore.setState((state) => ({
     };
   }),
 
-  updateWorkShift: (id, input) => legacyStore.setState((current) => ({
+  updateWorkShift: (id, input) => coreStore.setState((current) => ({
     workShifts: current.workShifts
       .map((shift) => {
         if (shift.id !== id || !shift.endedAt) return shift;
@@ -199,4 +199,4 @@ legacyStore.setState((state) => ({
   })),
 }));
 
-export const useAppStore = legacyStore;
+export const useAppStore = coreStore;
