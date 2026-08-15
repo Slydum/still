@@ -30,14 +30,19 @@ npm run build            # production build
 npm run build:budget     # bundle-size guardrail (after build)
 ```
 
-CI also runs the headless-browser Demo Sandbox/IndexedDB integration test, a disposable local-Supabase pgTAP suite covering RLS and the sync RPC, and a disposable browser acceptance flow covering signup/login, password recovery, cross-browser synchronization, deletion propagation, account binding, and both logout modes.
+CI also runs the headless-browser Demo Sandbox/IndexedDB migration test, responsive and keyboard route QA, Work laptop and interaction QA, a disposable local-Supabase pgTAP suite covering RLS and the sync RPC, and a disposable browser acceptance flow covering signup/login, password recovery, granular settings plus record synchronization, deletion propagation, account binding, and both logout modes.
 
-After a production GitHub Pages deployment, `live-pages-smoke` opens the actual deployed site in headless Chrome and verifies Demo Sandbox entry, direct nested routing, the `/still/` service-worker scope, and an offline reload of the cached app shell.
+Phase 4 adds a retained visual release matrix across 390×844, 1024×768, 1280×900, 1440×900, and 1680×1050 for Home, Work, Money, Health, Settings, and Quick Add modal states. The same `scripts/live-visual-check.mjs` suite runs against the local production preview before merge and against the real GitHub Pages URL after deployment. Screenshots and measured geometry are kept as workflow artifacts for review.
+
+After a production GitHub Pages deployment, `live-pages-smoke` opens the actual deployed site in headless Chrome and verifies Demo Sandbox entry, direct nested routing, the `/still/` service-worker scope, and an offline reload of the cached app shell. `live-visual-qa` reruns the release visual matrix against that deployed build.
 
 ## Data, synchronization, and recovery
 
-- IndexedDB/Dexie is the local persistence layer for supported personal records.
+- IndexedDB/Dexie is the authoritative durable local persistence layer for supported personal records, settings records, and local notification history.
+- Zustand/localStorage is intentionally limited to four device-scoped values: notification enablement, automatic-weather preference, current weather, and optional occasion state.
 - Supabase holds the cloud copy of records that have completed a successful sync.
+- General account settings plus Work, Money, and Health settings synchronize as independent records rather than one giant preference bundle.
+- Local notification history is durable on the current device but is not cloud-synced.
 - Edits are saved locally first; cloud sync is attempted when the signed-in app starts, when **Sync now** is used, and during logout flows. It does not run continuously after every edit.
 - Sync conflicts resolve deterministically with logical record revisions rather than device wall-clock order.
 - Deletions are represented by tombstones so offline devices cannot silently resurrect removed records.
@@ -45,7 +50,9 @@ After a production GitHub Pages deployment, `live-pages-smoke` opens the actual 
 - **Log out and clear this device** requires a successful sync before removing Still-managed local account data.
 - A new device can recover only records that previously reached Supabase. Unsynced local edits are not a cloud backup.
 
-See `DATA_AND_PRIVACY.md` for the canonical list of cloud-synced versus device-specific data, the Supabase privacy boundary, weather/location behavior, reminder limitations, demo boundaries, and recovery language.
+Older `still-app-state-v1` localStorage payloads and bundled v1 settings remain migration-readable. Repository bootstrap imports supported durable data into IndexedDB, splits settings into independent domain records, and subsequent persistence writes prune the old duplicate durable localStorage state.
+
+See `DATA_AND_PRIVACY.md` for the canonical list of cloud-synced versus device-specific data, the Supabase privacy boundary, weather/location behavior, reminder limitations, demo boundaries, migration language, and recovery guarantees. `IMPLEMENTATION_NOTES.md` documents the corresponding code-level storage and synchronization architecture.
 
 Database schema changes belong in `supabase/migrations/`. Security-sensitive database behavior should have a corresponding test in `supabase/tests/database/`.
 
@@ -57,11 +64,11 @@ Reminders are local browser notifications driven by the running page/PWA process
 
 ## Deployment
 
-GitHub Pages is the active production deployment path. The workflow builds Still under `/still/`, verifies nested-base PWA output, uploads the Pages artifact, deploys only for non-pull-request runs, and then smoke-tests the deployed PWA before the commit is considered release-ready.
+GitHub Pages is the active production deployment path. The workflow builds Still under `/still/`, verifies nested-base PWA output, uploads the Pages artifact, deploys only for non-pull-request runs, and then smoke-tests the deployed PWA plus the full visual release matrix before the commit is considered release-ready.
 
 `vercel.json` remains as SPA rewrite configuration, but Vercel Git deployments are intentionally disabled with `git.deploymentEnabled: false`.
 
-See `RELEASE_CHECKLIST.md` for the release gates, post-merge verification, and repository settings expected around `main`.
+See `RELEASE_CHECKLIST.md` for the release gates, post-merge verification, artifact review, and repository settings expected around `main`.
 
 ## Artwork and licensing
 
