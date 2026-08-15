@@ -29,12 +29,19 @@ for (const section of ['dependencies', 'devDependencies']) {
 
 const sourceFiles = (await walk(path.join(root, 'src')))
   .filter((file) => codeExtensions.has(path.extname(file)));
+const retiredLegacyStorePath = path.join(root, 'src', 'stores', 'useAppStoreLegacy.ts');
+if (sourceFiles.includes(retiredLegacyStorePath)) {
+  failures.push('src/stores/useAppStoreLegacy.ts: retired Phase 4 runtime path must not be reintroduced');
+}
 
 for (const file of sourceFiles) {
   const relative = path.relative(root, file);
   const content = await readFile(file, 'utf8');
   if (/\bdebugger\s*;?/.test(content)) failures.push(`${relative}: debugger statement is not allowed`);
   if (/\bconsole\.log\s*\(/.test(content)) failures.push(`${relative}: console.log is not allowed in production source`);
+  if (content.includes('useAppStoreLegacy')) {
+    failures.push(`${relative}: imports or references the retired useAppStoreLegacy runtime path`);
+  }
 
   const workRelated = relative.startsWith(`src${path.sep}features${path.sep}work${path.sep}`)
     || (relative.startsWith(`src${path.sep}theme${path.sep}`) && /work/i.test(path.basename(relative)));
