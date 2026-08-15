@@ -4,7 +4,7 @@ Before merging a change to `main`:
 
 - `app-quality` passes: formatting baseline, TypeScript/source hygiene, unit tests, dependency audit, production build, bundle budget, browser demo/IndexedDB integration, the responsive/keyboard route matrix, Work laptop/interaction QA, and the Phase 4 release visual matrix.
 - The responsive/keyboard route matrix covers primary routes at 320px, 390px, 768px, and 1280px, rejects horizontal overflow or missing page headings, verifies the displayed release version against `package.json`, and exercises modal focus trapping, unsaved-draft protection, Escape behavior, and focus restoration.
-- The Phase 4 release visual matrix covers Home, Work, Money, Health, and Settings at 390×844, 1024×768, 1280×900, 1440×900, and 1680×1050. It also opens Quick Add at every viewport, verifies dialog geometry and keyboard focus, and stores screenshots plus measured geometry as a CI artifact.
+- The Phase 4 release visual matrix covers Home, Work, Love, Money, Health, and Settings at 390×844, 1024×768, 1280×900, 1440×900, and 1680×1050. It also opens Quick Add at every viewport, verifies dialog geometry and keyboard focus, and stores 35 screenshots plus measured geometry as a CI artifact.
 - The route matrix must exercise the real Journal (`/today`), dedicated Health (`/health`), and Work detail (`/work/details`) surfaces rather than relying on fallback or redirect routes to pass.
 - Work-specific QA must pass at 1366×768 and 1440×900 and retain the Option 1 geometry plus persisted meeting deletion flow.
 - `database-security` passes: migrations apply cleanly, pgTAP verifies RLS plus synchronization behavior, and the disposable browser acceptance flow covers signup/login, password recovery, cross-browser sync, deletion propagation, granular Work/Money/Health settings, logout/local-copy behavior, account binding, and sync-gated local clearing.
@@ -37,7 +37,7 @@ After a merge to `main`:
 - Confirm the GitHub Pages `build`, **deploy**, `live-pages-smoke`, and `live-visual-qa` jobs complete successfully for the merge commit. A pull-request Pages build does not prove that production was deployed or that the deployed service worker can reload offline.
 - `live-pages-smoke` must exercise the deployed Demo Sandbox, a direct nested route, the `/still/` service-worker scope, and an offline reload of the installed app shell.
 - `live-visual-qa` must rerun the same five-viewport release matrix against the deployed Pages URL and retain its screenshot/metrics artifact.
-- Review the release visual artifact for Home, Work, Money, Health, Settings, and Quick Add at all target widths rather than relying only on geometry assertions.
+- Review the release visual artifact for Home, Work, Love, Money, Health, Settings, and Quick Add at all target widths rather than relying only on geometry assertions.
 - For a release containing a production database migration, confirm the production schema/security boundary still matches the tested migration and review Supabase security advisors.
 - Smoke-check any release-specific browser/device behavior that cannot be automated reliably, especially notification and location permission UX on the intended mobile browsers.
 
