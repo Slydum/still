@@ -20,6 +20,7 @@ const viewports = [
 const features = [
   { path: '/', selector: '.dashboard-v2', key: 'home', label: 'Home' },
   { path: '/work', selector: '.work-hub-page', key: 'work', label: 'Work' },
+  { path: '/life/love', selector: '.love-page', key: 'love', label: 'Love' },
   { path: '/money', selector: '.money-page', key: 'money', label: 'Money' },
   { path: '/health', selector: '.health-page', key: 'health', label: 'Health' },
   { path: '/more', selector: '.more-page', key: 'settings', label: 'Settings' },
