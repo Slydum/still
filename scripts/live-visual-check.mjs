@@ -210,6 +210,9 @@ async function inspectQuickAdd(cdp, viewport) {
   assert(opened, `${viewport.key} Quick Add: Add trigger is missing.`);
   await poll(cdp, "Boolean(document.querySelector('[role=dialog][aria-modal=true]'))", `${viewport.key} Quick Add dialog`);
   await poll(cdp, "document.querySelector('[role=dialog][aria-modal=true]')?.contains(document.activeElement) === true", `${viewport.key} Quick Add focus`);
+  // The sheet has a short translateY entrance animation. Measure the resting box,
+  // not the transient animated frame that intentionally starts below the viewport.
+  await new Promise((resolve) => setTimeout(resolve, 320));
 
   const modal = await evaluate(cdp, `(() => {
     const dialog = document.querySelector('[role=dialog][aria-modal=true]');
@@ -229,7 +232,7 @@ async function inspectQuickAdd(cdp, viewport) {
   assert(modal, `${viewport.key} Quick Add: dialog geometry is missing.`);
   assert(modal.width > 0 && modal.height > 0, `${viewport.key} Quick Add: dialog is not visible.`);
   assert(modal.left >= -2 && modal.right <= viewport.width + 2, `${viewport.key} Quick Add: dialog exceeds the horizontal viewport.`);
-  assert(modal.top >= -2 && modal.bottom <= viewport.height + 2, `${viewport.key} Quick Add: dialog exceeds the vertical viewport.`);
+  assert(modal.top >= -2 && modal.bottom <= viewport.height + 2, `${viewport.key} Quick Add: settled dialog exceeds the vertical viewport (${Math.round(modal.top)}..${Math.round(modal.bottom)} in ${viewport.height}px).`);
   assert(modal.overflow <= 2, `${viewport.key} Quick Add: dialog creates ${modal.overflow}px horizontal overflow.`);
   assert(modal.focusInside, `${viewport.key} Quick Add: keyboard focus is outside the dialog.`);
   await capture(cdp, `${viewport.key}-quick-add`);
