@@ -48,6 +48,16 @@ jobs:
         run: node scripts/e2e-work-laptop-qa.mjs
       - name: Run Work Option 1 and meeting deletion QA
         run: node scripts/e2e-work-meeting-delete.mjs
+      - name: Run Phase 4 release visual matrix and capture screenshots
+        run: node scripts/live-visual-check.mjs
+      - name: Upload Phase 4 release visual QA artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-visual-matrix
+          path: artifacts/release-visual
+          if-no-files-found: warn
+          retention-days: 14
 
   database-security:
     name: database-security

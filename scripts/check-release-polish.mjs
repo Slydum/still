@@ -21,7 +21,13 @@ expect(more.includes('STILL_VERSION') && !more.includes('Version 0.3.0'), 'Setti
 expect(releaseQa.includes("'/today'") && !releaseQa.includes("'/journal'"), 'Release QA must exercise the real Journal route.');
 expect(releaseQa.includes("'/health'") && releaseQa.includes("'/work/details'"), 'Release QA must exercise the dedicated Health and Work detail surfaces.');
 expect(releaseQa.includes('packageJson.version'), 'Release QA must verify the version from package.json rather than a hard-coded historical value.');
-expect(liveVisual.includes("'love-mobile'") && liveVisual.includes("'money-mobile'") && liveVisual.includes("'health-mobile'"), 'Live visual QA must cover Love, Money, and Health in addition to Home and Work.');
+for (const path of ["'/work'", "'/life/love'", "'/money'", "'/health'", "'/more'"]) {
+  expect(liveVisual.includes(path), `Release visual QA must cover ${path}.`);
+}
+for (const viewport of ['390x844', '1024x768', '1280x900', '1440x900', '1680x1050']) {
+  expect(liveVisual.includes(viewport), `Release visual QA must retain the ${viewport} target viewport.`);
+}
+expect(liveVisual.includes('inspectQuickAdd') && liveVisual.includes("[role=dialog][aria-modal=true]"), 'Release visual QA must cover Quick Add dialog geometry and focus.');
 
 expect(iosForms.includes('.app input') && iosForms.includes('.app select') && iosForms.includes('.app textarea'), 'iOS form protection must cover app-wide form controls, not only Quick Add.');
 expect(!main.includes('quick-add-interactions'), 'Quick Add interactions must not rely on a global MutationObserver side-effect import.');

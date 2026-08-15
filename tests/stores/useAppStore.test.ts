@@ -110,4 +110,32 @@ describe('quick add store modes', () => {
     assert.equal(useAppStore.getState().expenses.some((expense) => expense.id === created.id), false);
   });
 
+  it('deduplicates notification ids and keeps read/clear semantics explicit', async () => {
+    installMemoryStorage();
+    const { useAppStore } = await import('../../src/stores/useAppStore.js');
+    useAppStore.getState().clearNotifications();
+
+    useAppStore.getState().addNotification({
+      id: 'release-notification',
+      title: 'First',
+      body: 'One notification',
+      kind: 'system',
+    });
+    useAppStore.getState().addNotification({
+      id: 'release-notification',
+      title: 'Duplicate',
+      body: 'Must not create another row',
+      kind: 'system',
+    });
+
+    assert.equal(useAppStore.getState().notifications.length, 1);
+    assert.equal(useAppStore.getState().notifications[0]?.title, 'First');
+    assert.equal(useAppStore.getState().notifications[0]?.read, false);
+
+    useAppStore.getState().markAllNotificationsRead();
+    assert.equal(useAppStore.getState().notifications.every((notification) => notification.read), true);
+
+    useAppStore.getState().clearNotifications();
+    assert.equal(useAppStore.getState().notifications.length, 0);
+  });
 });

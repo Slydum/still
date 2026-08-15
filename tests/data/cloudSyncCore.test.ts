@@ -139,4 +139,36 @@ describe('cloud sync core', () => {
     assert.equal(recovered, 'recovered');
     assert.equal(attempts, 2);
   });
+
+  it('reconciles an offline local edit after reconnect and preserves its acknowledgement', () => {
+    const offlineLocal: MergeFixture[] = [{
+      id: 'one',
+      syncCounter: 8,
+      mutationId: 'device-z-offline',
+      title: 'edited offline',
+      dirty: true,
+    }];
+    const staleCloud: MergeFixture[] = [{
+      id: 'one',
+      syncCounter: 7,
+      mutationId: 'device-a-cloud',
+      title: 'older cloud value',
+      dirty: false,
+      serverRevision: 50,
+    }];
+
+    const beforePush = mergeByKey(offlineLocal, staleCloud, (record) => record.id);
+    assert.equal(beforePush[0].title, 'edited offline');
+    assert.equal(beforePush[0].dirty, true);
+
+    const acknowledgement: MergeFixture[] = [{
+      ...offlineLocal[0],
+      dirty: false,
+      serverRevision: 51,
+    }];
+    const afterReconnect = mergeByKey(beforePush, acknowledgement, (record) => record.id);
+    assert.equal(afterReconnect[0].title, 'edited offline');
+    assert.equal(afterReconnect[0].dirty, false);
+    assert.equal(afterReconnect[0].serverRevision, 51);
+  });
 });
