@@ -1,3 +1,3 @@
-import './workFeatureStyles';
+import './workStyles';
 
 export { WorkHubPage } from './WorkHubContent';
