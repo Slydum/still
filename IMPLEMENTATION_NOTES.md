@@ -23,6 +23,14 @@ Zustand persistence keeps the historical `still-app-state-v1` storage name so ol
 
 Durable personal data and synced domain settings must not be added back to that allowlist.
 
+## Frontend structure
+
+`src/main.tsx` intentionally imports a single frontend theme/runtime entrypoint: `src/theme/runtimeTheme.ts`. That module owns the global CSS and style-enhancement import order. The order is part of the visual contract because later layers refine earlier layers, so new global theme imports should be added there rather than directly to `main.tsx`.
+
+Historical version/experiment filenames are retired once a direction becomes canonical. Home styling now uses semantic `home-*` names, responsive shell rules live under `responsive-layout.css`, and the selected Work hub implementation lives in `WorkHubContent.tsx` rather than an `Option1` module. `scripts/check-source-hygiene.mjs` rejects reintroducing the retired option/version paths or bypassing the canonical theme entrypoint.
+
+Work route entry modules remain intentionally thin. `WorkHubPage.tsx` owns feature-level style loading and exports the selected Work hub content module, while `WorkDetailsPage.tsx` does the same for detailed Work tooling. This keeps route wiring separate from the large feature implementations without changing behavior during structural cleanup.
+
 ## Persistence and cloud synchronization
 
 Still is local-first. `usePermanentDataRepository.ts` persists supported edits to the Dexie database before cloud synchronization. IndexedDB is the canonical durable local database.
@@ -64,7 +72,7 @@ Browser migration coverage in `scripts/e2e-demo-browser.mjs` must remain green b
 
 `scripts/live-visual-check.mjs` is shared by pull-request preview CI and post-deploy Pages QA. Without `STILL_LIVE_URL` it starts a local Vite preview; with `STILL_LIVE_URL` it tests the deployed release.
 
-The Phase 4 matrix covers 390×844, 1024×768, 1280×900, 1440×900, and 1680×1050 across Home, Work, Love, Money, Health, and Settings, plus Quick Add modal geometry and keyboard focus. That produces 35 captured viewport/states per run. Screenshots and measured geometry are written under `artifacts/release-visual` and retained by CI.
+The release matrix covers 390×844, 1024×768, 1280×900, 1440×900, and 1680×1050 across Home, Work, Love, Money, Health, and Settings, plus Quick Add modal geometry and keyboard focus. That produces 35 captured viewport/states per run. Screenshots and measured geometry are written under `artifacts/release-visual` and retained by CI.
 
 ## Asset paths
 
