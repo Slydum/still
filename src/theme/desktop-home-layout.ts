@@ -1,4 +1,4 @@
-const styleId = 'still-desktop-home-option1';
+const styleId = 'still-desktop-home-layout';
 
 if (!document.getElementById(styleId)) {
   const style = document.createElement('style');
