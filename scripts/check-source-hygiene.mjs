@@ -32,6 +32,14 @@ const sourceFiles = allSourceFiles.filter((file) => codeExtensions.has(path.extn
 const retiredSourcePaths = [
   'src/stores/useAppStoreLegacy.ts',
   'src/features/work/WorkHubPageOption1.tsx',
+  'src/features/work/WorkPage.tsx',
+  'src/features/work/workFeatureStyles.ts',
+  'src/features/work/work-polish.css',
+  'src/features/work/desktop-work-laptop.css',
+  'src/features/work/desktop-work-scale.css',
+  'src/features/work/desktop-work-full-canvas.css',
+  'src/theme/work-hub-fixes.css',
+  'src/theme/work-hub-fixes.ts',
   'src/theme/desktop-home-option1.ts',
   'src/theme/v03-ux-correctness.css',
   'src/theme/v03-accessibility.css',
@@ -56,8 +64,13 @@ for (const file of sourceFiles) {
   if (content.includes('useAppStoreLegacy')) {
     failures.push(`${relative}: imports or references the retired useAppStoreLegacy runtime path`);
   }
-  if (content.includes('WorkHubPageOption1') || content.includes('desktop-home-option1')) {
-    failures.push(`${relative}: references a retired frontend option/fidelity path`);
+  if (
+    content.includes('WorkHubPageOption1')
+    || content.includes('desktop-home-option1')
+    || content.includes('workFeatureStyles')
+    || content.includes('work-hub-fixes')
+  ) {
+    failures.push(`${relative}: references a retired frontend option/version path`);
   }
 
   const workRelated = relative.startsWith(`src${path.sep}features${path.sep}work${path.sep}`)
