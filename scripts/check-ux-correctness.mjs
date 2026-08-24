@@ -15,14 +15,15 @@ async function walk(directory) {
   return files;
 }
 
-const correctnessCss = await readFile(path.join(root, 'src/theme/v03-ux-correctness.css'), 'utf8');
+const correctnessCss = await readFile(path.join(root, 'src/theme/interaction-correctness.css'), 'utf8');
 const authSelectedCss = await readFile(path.join(root, 'src/theme/auth-selected-fidelity.css'), 'utf8');
 const authSource = await readFile(path.join(root, 'src/features/auth/AuthPage.tsx'), 'utf8');
-const desktopHomeSource = await readFile(path.join(root, 'src/theme/desktop-home-option1.ts'), 'utf8');
-const desktopWorkSource = await readFile(path.join(root, 'src/features/work/desktop-work-laptop.css'), 'utf8');
-const workStylesSource = await readFile(path.join(root, 'src/features/work/workFeatureStyles.ts'), 'utf8');
+const desktopHomeSource = await readFile(path.join(root, 'src/theme/desktop-home-layout.ts'), 'utf8');
+const desktopWorkSource = await readFile(path.join(root, 'src/features/work/work-desktop-laptop.css'), 'utf8');
+const workStylesSource = await readFile(path.join(root, 'src/features/work/workStyles.ts'), 'utf8');
 const mainSource = await readFile(path.join(root, 'src/main.tsx'), 'utf8');
-const workHubSource = await readFile(path.join(root, 'src/features/work/WorkHubPageOption1.tsx'), 'utf8');
+const runtimeThemeSource = await readFile(path.join(root, 'src/theme/runtimeTheme.ts'), 'utf8');
+const workHubSource = await readFile(path.join(root, 'src/features/work/WorkHubContent.tsx'), 'utf8');
 const moneySource = await readFile(path.join(root, 'src/features/money/MoneyPage.tsx'), 'utf8');
 const healthSource = await readFile(path.join(root, 'src/features/health/HealthPage.tsx'), 'utf8');
 const currentDateSource = await readFile(path.join(root, 'src/hooks/useCurrentDate.ts'), 'utf8');
@@ -34,16 +35,19 @@ if (!/garden-card\.love[\s\S]*garden-card\.health[\s\S]*pointer-events:\s*auto/.
   failures.push('Love and Health Life Areas must remain interactive.');
 }
 if (!/weekly-reflection-entry[\s\S]*order:\s*5/.test(correctnessCss)) {
-  failures.push('Weekly overview must remain after Life Garden in the Phase 1 hierarchy.');
+  failures.push('Weekly overview must remain after Life Garden in the Home hierarchy.');
 }
-if (!mainSource.includes("import './theme/base-path-assets';")) {
-  failures.push('Base-path asset normalization must load before app rendering.');
+if (!mainSource.includes("import './theme/runtimeTheme';")) {
+  failures.push('The app entrypoint must load the canonical theme runtime before rendering.');
 }
-if (!mainSource.includes("import './theme/desktop-home-option1';")) {
-  failures.push('The selected desktop Home skin must load after the existing Home styles.');
+if (!runtimeThemeSource.includes("import './base-path-assets';")) {
+  failures.push('Base-path asset normalization must remain part of the canonical theme runtime.');
+}
+if (!runtimeThemeSource.includes("import './desktop-home-layout';")) {
+  failures.push('The selected desktop Home layout must load after the existing Home styles.');
 }
 if (!desktopHomeSource.includes('@media (min-width: 1024px)') || desktopHomeSource.includes('@media (max-width: 1023px)')) {
-  failures.push('The Option 1 Home redesign must remain desktop-only so phone Home stays unchanged.');
+  failures.push('The desktop Home redesign must remain desktop-only so phone Home stays unchanged.');
 }
 if (!desktopHomeSource.includes('.app .bottom-nav') || !desktopHomeSource.includes('transform: none !important') || !desktopHomeSource.includes('.app {\n    padding-left: 252px;')) {
   failures.push('Desktop navigation must remain a fully visible persistent app shell instead of inheriting the mobile floating-nav transform.');
@@ -51,13 +55,13 @@ if (!desktopHomeSource.includes('.app .bottom-nav') || !desktopHomeSource.includ
 if (!desktopHomeSource.includes('grid-template-areas:') || !desktopHomeSource.includes("'upcoming checkin'")) {
   failures.push('Desktop Home must keep the selected wide focus / two-column content composition.');
 }
-if (!workStylesSource.includes("import './work-polish.css';") || !workStylesSource.includes("import './desktop-work-laptop.css';")) {
-  failures.push('The Work feature must load its polish and laptop layout styles from the route-owned style entry.');
+if (!workStylesSource.includes("import './work-surfaces.css';") || !workStylesSource.includes("import './work-desktop-laptop.css';")) {
+  failures.push('The Work feature must load its surface and laptop layout styles from the route-owned style entry.');
 }
 const allowedDesktopWorkMobileVisibility = /@media \(max-width: 1023px\) \{\s*\.work-header-details,\s*\.work-quick-access \{\s*display: none !important;\s*\}\s*\}/;
 const desktopWorkWithoutVisibilityGuard = desktopWorkSource.replace(allowedDesktopWorkMobileVisibility, '');
 if (!desktopWorkSource.includes('@media (min-width: 1024px)') || desktopWorkWithoutVisibilityGuard.includes('@media (max-width: 1023px)')) {
-  failures.push('The work-laptop redesign must remain desktop-only so phone and tablet Work stay unchanged.');
+  failures.push('The Work laptop layout must remain desktop-only so phone and tablet Work stay unchanged.');
 }
 if (!desktopWorkSource.includes('grid-template-columns: repeat(12, minmax(0, 1fr))') || !desktopWorkSource.includes('.work-hub-page .work-live-card') || !desktopWorkSource.includes('.work-hub-page .work-board') || !desktopWorkSource.includes('.work-hub-page .work-meetings')) {
   failures.push('Desktop Work must keep the live shift, summary, meetings, and My Work laptop composition.');
@@ -95,7 +99,7 @@ if (!authSelectedCss.includes('grid-template-columns:') || !authSelectedCss.incl
 
 const sourceFiles = (await walk(path.join(root, 'src')))
   .filter((file) => ['.ts', '.tsx'].includes(path.extname(file)));
-const legacyRootAssetAllowlist = new Set(['src/features/work/WorkPage.tsx']);
+const legacyRootAssetAllowlist = new Set(['src/features/work/WorkDetailsContent.tsx']);
 for (const file of sourceFiles) {
   const relative = path.relative(root, file).replaceAll('\\', '/');
   const content = await readFile(file, 'utf8');
