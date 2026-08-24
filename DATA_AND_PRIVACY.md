@@ -45,6 +45,8 @@ Ordinary logout is best-effort: Still tries to sync first, but logout can still 
 
 Synced Still rows are stored in Supabase and are scoped to the authenticated account with row-level security. The browser uses only Supabase publishable client configuration; privileged service-role credentials must never be shipped to the client.
 
+The database also enforces the synchronization protocol at the write boundary. The signed-in client role cannot control server revision numbers, change record ownership/identity columns, truncate the table, or physically delete synchronized rows. Accepted updates must advance Still's logical record version, and synchronized deletion uses tombstones so it can propagate to other devices. The sync RPC also rejects oversized batches server-side. These rules protect synchronization correctness in addition to the account isolation provided by RLS.
+
 Still's cloud sync is **not** an end-to-end encrypted vault. Do not describe Supabase-synced data as inaccessible to the service provider or as encrypted with keys only the user controls.
 
 ## Device-specific state
