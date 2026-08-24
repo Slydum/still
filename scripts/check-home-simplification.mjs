@@ -11,7 +11,7 @@ expect(dashboard.includes('HOME_TASK_PREVIEW_COUNT = 3'), 'Home must default to 
 expect(dashboard.includes('taskListExpanded'), 'Home must preserve access to the full task list through disclosure.');
 expect(dashboard.includes('Show less') && dashboard.includes('Show ${hiddenTaskCount} more'), 'Task disclosure must clearly expose expansion and collapse.');
 expect(dashboard.includes('HOME_EVENT_PREVIEW_COUNT = 3'), 'Home must limit the calendar preview to three events.');
-expect(dashboard.includes('Weekly overview'), 'Home must use the Phase 3 Weekly overview destination name.');
+expect(dashboard.includes('Weekly overview'), 'Home must use the canonical Weekly overview destination name.');
 expect(dashboard.includes('Life areas'), 'Home must present the garden as concise Life Area navigation.');
 expect(!dashboard.includes('getSecondaryQuote'), 'Home must not render a second inspirational quote after the hero.');
 expect(!dashboard.includes('closing-note closing-note-v2'), 'The redundant closing reminder must stay off Home.');
