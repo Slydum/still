@@ -38,6 +38,8 @@ Account settings are stored as four independent records in the existing settings
 
 `cloudSync.ts` maps those to independent Supabase record types. Record conflicts are ordered by logical `syncCounter`, then deterministic `mutationId` tie-breaking rather than device wall-clock timestamps. Server acknowledgements carry `serverRevision` and clear local dirty state on an exact logical-version match. Deletions use tombstones.
 
+Incremental cloud pulls use `server_revision` keyset pagination rather than offset pagination, so an existing cloud row receiving a newer revision while a multi-page pull is in progress cannot shift an unseen row behind an offset. The durable pull cursor advances only through revisions actually consumed from that ordered pull stream. Push acknowledgements may update local records, but they never independently advance the durable cursor. After a pulled legacy settings row is migrated and pushed, Still performs a final pull before saving the cursor so concurrent revisions cannot be skipped behind that push acknowledgement.
+
 Cloud sync is currently triggered when the authenticated app starts, when the user selects **Sync now**, and during logout flows. It is not a continuous per-edit background sync service.
 
 The canonical product-facing storage, privacy, recovery, and sync contract is `DATA_AND_PRIVACY.md`. Update that document and matching UI copy whenever these behaviors change.

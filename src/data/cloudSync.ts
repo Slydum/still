@@ -2,10 +2,10 @@ import type { Table } from 'dexie';
 import {
   assertCloudUserCompatibility,
   chunkRows,
-  collectPaginatedRows,
+  collectKeysetPaginatedRows,
   createSingleFlight,
-  maxServerRevision,
   mergeByKey,
+  runPullBoundSyncCycle,
 } from './cloudSyncCore';
 import {
   markCloudSyncFailure,
@@ -168,21 +168,21 @@ async function readPullCursor() {
   return Number.isFinite(value) && value >= 0 ? value : 0;
 }
 
-async function pullRows(cursor: number): Promise<RemoteRecord[]> {
+async function pullRows(cursor: number) {
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error('Cloud sync could not load on this device.');
 
-  return collectPaginatedRows(async (from, to) => {
+  return collectKeysetPaginatedRows(async (afterCursor, pageSize) => {
     const { data, error } = await supabase
       .from('still_records')
       .select('*')
-      .gt('server_revision', cursor)
+      .gt('server_revision', afterCursor)
       .order('server_revision', { ascending: true })
-      .range(from, to);
+      .limit(pageSize);
 
     if (error) throw new Error(error.message);
     return (data ?? []) as RemoteRecord[];
-  }, PULL_PAGE_SIZE);
+  }, PULL_PAGE_SIZE, cursor, (row) => row.server_revision);
 }
 
 function remoteEntityRecord(row: RemoteRecord, userId: string): LocalSyncedRecord {
@@ -261,12 +261,17 @@ async function applyRemoteRows(rows: RemoteRecord[], userId: string) {
   );
 }
 
-async function pushDirtyRows(userId: string, cursor: number) {
+async function pushDirtyRows(userId: string) {
   const dirtyRows = await readDirtyRows();
-  if (!dirtyRows.length) return cursor;
+  if (!dirtyRows.length) return;
   const acknowledgements = await pushRows(dirtyRows);
   await applyRemoteRows(acknowledgements, userId);
-  return maxServerRevision(acknowledgements, cursor);
+}
+
+async function pullAndApplyRows(cursor: number, userId: string) {
+  const pulled = await pullRows(cursor);
+  await applyRemoteRows(pulled.rows, userId);
+  return pulled.cursor;
 }
 
 async function savePullCursor(cursor: number) {
@@ -313,18 +318,18 @@ async function runCloudSync(): Promise<PermanentDataSnapshot> {
   await localStillRepository.load();
 
   const cursor = await readPullCursor();
-  let nextCursor = await pushDirtyRows(session.user.id, cursor);
-
-  const remoteRows = await pullRows(cursor);
-  await applyRemoteRows(remoteRows, session.user.id);
-  nextCursor = maxServerRevision(remoteRows, nextCursor);
-
-  // A pulled legacy settings/account row can come from an older client. Loading
-  // sanitizes that row and creates any missing granular rows without overwriting
-  // already-present Work/Money/Health records, then this second push publishes
-  // the migration in the same sync cycle.
-  await localStillRepository.load();
-  nextCursor = await pushDirtyRows(session.user.id, nextCursor);
+  const nextCursor = await runPullBoundSyncCycle(cursor, {
+    push: () => pushDirtyRows(session.user.id),
+    pullAndApply: (pullCursor) => pullAndApplyRows(pullCursor, session.user.id),
+    migrate: async () => {
+      // A pulled legacy settings/account row can come from an older client. Loading
+      // sanitizes that row and creates any missing granular rows without overwriting
+      // already-present Work/Money/Health records. The following push publishes
+      // that migration, and the final pull consumes every resulting server revision
+      // before the durable cursor is allowed to advance.
+      await localStillRepository.load();
+    },
+  });
 
   if (nextCursor !== cursor) await savePullCursor(nextCursor);
   await compactAcknowledgedLocalTombstones(nextCursor);

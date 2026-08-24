@@ -6,6 +6,12 @@ export type VersionedRecord = {
   dirty?: boolean;
 };
 
+export type PullBoundSyncOperations = {
+  push: () => Promise<void>;
+  pullAndApply: (cursor: number) => Promise<number>;
+  migrate: () => Promise<void>;
+};
+
 export function chunkRows<T>(rows: T[], batchSize: number) {
   if (!Number.isInteger(batchSize) || batchSize < 1) {
     throw new Error('Batch size must be a positive integer.');
@@ -18,20 +24,53 @@ export function chunkRows<T>(rows: T[], batchSize: number) {
   return batches;
 }
 
-export async function collectPaginatedRows<T>(
-  fetchPage: (from: number, to: number) => Promise<T[]>,
+export async function collectKeysetPaginatedRows<T>(
+  fetchPage: (afterCursor: number, pageSize: number) => Promise<T[]>,
   pageSize: number,
+  initialCursor: number,
+  cursorOf: (row: T) => number,
 ) {
   if (!Number.isInteger(pageSize) || pageSize < 1) {
     throw new Error('Page size must be a positive integer.');
   }
+  if (!Number.isFinite(initialCursor) || initialCursor < 0) {
+    throw new Error('Initial cursor must be a non-negative finite number.');
+  }
 
   const rows: T[] = [];
-  for (let from = 0; ; from += pageSize) {
-    const page = await fetchPage(from, from + pageSize - 1);
+  let cursor = initialCursor;
+
+  for (;;) {
+    const page = await fetchPage(cursor, pageSize);
+    if (page.length === 0) return { rows, cursor };
+
+    const nextCursor = page.reduce((maximum, row) => {
+      const rowCursor = cursorOf(row);
+      return Number.isFinite(rowCursor) ? Math.max(maximum, rowCursor) : Number.NaN;
+    }, cursor);
+
+    if (!Number.isFinite(nextCursor) || nextCursor <= cursor) {
+      throw new Error('Keyset page did not advance the sync cursor.');
+    }
+
     rows.push(...page);
-    if (page.length < pageSize) return rows;
+    cursor = nextCursor;
+    if (page.length < pageSize) return { rows, cursor };
   }
+}
+
+export async function runPullBoundSyncCycle(
+  initialCursor: number,
+  operations: PullBoundSyncOperations,
+) {
+  await operations.push();
+  let cursor = await operations.pullAndApply(initialCursor);
+
+  await operations.migrate();
+  await operations.push();
+  cursor = await operations.pullAndApply(cursor);
+
+  return cursor;
 }
 
 export function compareVersion(left: VersionedRecord, right: VersionedRecord) {
