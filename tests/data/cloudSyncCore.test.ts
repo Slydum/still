@@ -3,10 +3,11 @@ import { describe, it } from 'node:test';
 import {
   assertCloudUserCompatibility,
   chunkRows,
-  collectPaginatedRows,
+  collectKeysetPaginatedRows,
   createSingleFlight,
   maxServerRevision,
   mergeByKey,
+  runPullBoundSyncCycle,
 } from '../../src/data/cloudSyncCore.js';
 
 type MergeFixture = {
@@ -17,6 +18,11 @@ type MergeFixture = {
   deletedAt?: number;
   serverRevision?: number;
   dirty?: boolean;
+};
+
+type RevisionFixture = {
+  id: number;
+  server_revision: number;
 };
 
 describe('cloud sync core', () => {
@@ -31,16 +37,86 @@ describe('cloud sync core', () => {
     assert.equal(batches.flat().length, 501);
   });
 
-  it('paginates until the final partial page', async () => {
-    const source = Array.from({ length: 1001 }, (_, index) => index);
-    const calls: string[] = [];
-    const rows = await collectPaginatedRows(async (from, to) => {
-      calls.push(`${from}-${to}`);
-      return source.slice(from, to + 1);
-    }, 500);
+  it('keyset-paginates until the final partial page', async () => {
+    const source: RevisionFixture[] = Array.from({ length: 1001 }, (_, index) => ({
+      id: index + 1,
+      server_revision: index + 1,
+    }));
+    const calls: number[] = [];
+    const result = await collectKeysetPaginatedRows(async (afterCursor, pageSize) => {
+      calls.push(afterCursor);
+      return source
+        .filter((row) => row.server_revision > afterCursor)
+        .sort((left, right) => left.server_revision - right.server_revision)
+        .slice(0, pageSize)
+        .map((row) => ({ ...row }));
+    }, 500, 0, (row) => row.server_revision);
 
-    assert.equal(rows.length, 1001);
-    assert.equal(calls.join(','), '0-499,500-999,1000-1499');
+    assert.equal(result.rows.length, 1001);
+    assert.equal(result.cursor, 1001);
+    assert.deepEqual(calls, [0, 500, 1000]);
+  });
+
+  it('does not skip a row when an earlier record is re-versioned between pull pages', async () => {
+    const source: RevisionFixture[] = Array.from({ length: 1001 }, (_, index) => ({
+      id: index + 1,
+      server_revision: index + 1,
+    }));
+    const calls: number[] = [];
+
+    const result = await collectKeysetPaginatedRows(async (afterCursor, pageSize) => {
+      calls.push(afterCursor);
+      const page = source
+        .filter((row) => row.server_revision > afterCursor)
+        .sort((left, right) => left.server_revision - right.server_revision)
+        .slice(0, pageSize)
+        .map((row) => ({ ...row }));
+
+      if (calls.length === 1) source[0].server_revision = 1002;
+      return page;
+    }, 500, 0, (row) => row.server_revision);
+
+    assert.equal(new Set(result.rows.map((row) => row.id)).size, 1001);
+    assert.ok(result.rows.some((row) => row.id === 501));
+    assert.equal(result.rows.length, 1002);
+    assert.equal(result.cursor, 1002);
+    assert.deepEqual(calls, [0, 500, 1000]);
+  });
+
+  it('keeps push acknowledgements from advancing the durable pull cursor past unseen revisions', async () => {
+    const operations: string[] = [];
+    let pullCount = 0;
+    let pushCount = 0;
+
+    const cursor = await runPullBoundSyncCycle(100, {
+      push: async () => {
+        pushCount += 1;
+        operations.push(pushCount === 2 ? 'push:ack-revision-102' : 'push');
+      },
+      migrate: async () => {
+        operations.push('migrate');
+      },
+      pullAndApply: async (pullCursor) => {
+        pullCount += 1;
+        operations.push(`pull:${pullCursor}`);
+        if (pullCount === 1) return 100;
+
+        // Another device wrote revision 101 before this client's second push
+        // received revision 102. The final pull must still begin at 100 so 101
+        // cannot fall permanently behind the saved cursor.
+        assert.equal(pullCursor, 100);
+        return 102;
+      },
+    });
+
+    assert.equal(cursor, 102);
+    assert.deepEqual(operations, [
+      'push',
+      'pull:100',
+      'migrate',
+      'push:ack-revision-102',
+      'pull:100',
+    ]);
   });
 
   it('uses logical counters instead of device clocks for conflict ordering', () => {
