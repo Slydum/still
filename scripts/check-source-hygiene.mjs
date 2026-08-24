@@ -27,11 +27,33 @@ for (const section of ['dependencies', 'devDependencies']) {
   }
 }
 
-const sourceFiles = (await walk(path.join(root, 'src')))
-  .filter((file) => codeExtensions.has(path.extname(file)));
-const retiredLegacyStorePath = path.join(root, 'src', 'stores', 'useAppStoreLegacy.ts');
-if (sourceFiles.includes(retiredLegacyStorePath)) {
-  failures.push('src/stores/useAppStoreLegacy.ts: retired Phase 4 runtime path must not be reintroduced');
+const allSourceFiles = await walk(path.join(root, 'src'));
+const sourceFiles = allSourceFiles.filter((file) => codeExtensions.has(path.extname(file)));
+const retiredSourcePaths = [
+  'src/stores/useAppStoreLegacy.ts',
+  'src/features/work/WorkHubPageOption1.tsx',
+  'src/features/work/WorkPage.tsx',
+  'src/features/work/workFeatureStyles.ts',
+  'src/features/work/work-polish.css',
+  'src/features/work/desktop-work-laptop.css',
+  'src/features/work/desktop-work-scale.css',
+  'src/features/work/desktop-work-full-canvas.css',
+  'src/theme/work-hub-fixes.css',
+  'src/theme/work-hub-fixes.ts',
+  'src/theme/desktop-home-option1.ts',
+  'src/theme/v03-ux-correctness.css',
+  'src/theme/v03-accessibility.css',
+  'src/theme/v031-mobile-polish.css',
+  'src/theme/v04-home.css',
+  'src/theme/v04-home-refinement.css',
+  'src/theme/v04-home-device-pass.css',
+  'src/theme/phase3-layout.css',
+];
+
+for (const retiredPath of retiredSourcePaths) {
+  if (allSourceFiles.includes(path.join(root, retiredPath))) {
+    failures.push(`${retiredPath}: retired frontend/runtime path must not be reintroduced`);
+  }
 }
 
 for (const file of sourceFiles) {
@@ -42,12 +64,26 @@ for (const file of sourceFiles) {
   if (content.includes('useAppStoreLegacy')) {
     failures.push(`${relative}: imports or references the retired useAppStoreLegacy runtime path`);
   }
+  if (
+    content.includes('WorkHubPageOption1')
+    || content.includes('desktop-home-option1')
+    || content.includes('workFeatureStyles')
+    || content.includes('work-hub-fixes')
+  ) {
+    failures.push(`${relative}: references a retired frontend option/version path`);
+  }
 
   const workRelated = relative.startsWith(`src${path.sep}features${path.sep}work${path.sep}`)
     || (relative.startsWith(`src${path.sep}theme${path.sep}`) && /work/i.test(path.basename(relative)));
   if (workRelated && /document\.createElement\(['"]style['"]\)/.test(content)) {
     failures.push(`${relative}: Work styles must ship as CSS, not runtime <style> injection`);
   }
+}
+
+const mainSource = await readFile(path.join(root, 'src', 'main.tsx'), 'utf8');
+const themeImports = [...mainSource.matchAll(/import ['"]\.\/theme\/([^'"]+)['"];?/g)].map((match) => match[1]);
+if (themeImports.length !== 1 || themeImports[0] !== 'runtimeTheme') {
+  failures.push('src/main.tsx: theme/runtime imports must be centralized through ./theme/runtimeTheme');
 }
 
 if (failures.length) {

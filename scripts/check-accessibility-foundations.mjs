@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 const tokens = await readFile('src/theme/tokens.css', 'utf8');
 const main = await readFile('src/main.tsx', 'utf8');
+const runtimeTheme = await readFile('src/theme/runtimeTheme.ts', 'utf8');
 const helper = await readFile('src/components/ui/dialogAccessibility.ts', 'utf8');
 const quickAdd = await readFile('src/components/ui/QuickAddSheet.tsx', 'utf8');
 const workModal = await readFile('src/theme/work-modal-interactions.ts', 'utf8');
@@ -47,8 +48,9 @@ if (!quickAdd.includes('role="alertdialog"') || !quickAdd.includes('returnFocusR
 if (!workModal.includes("from '../components/ui/dialogAccessibility'")) {
   failures.push('work-modal-interactions.ts: Work shift editor must use shared dialog accessibility utilities');
 }
-if (!main.includes("'./theme/work-modal-interactions'")) failures.push('main.tsx: Work modal accessibility controller is not loaded');
-if (!main.includes("'./theme/v03-accessibility.css'")) failures.push('main.tsx: accessibility interaction styles are not loaded');
+if (!main.includes("'./theme/runtimeTheme'")) failures.push('main.tsx: canonical theme runtime is not loaded');
+if (!runtimeTheme.includes("'./work-modal-interactions'")) failures.push('runtimeTheme.ts: Work modal accessibility controller is not loaded');
+if (!runtimeTheme.includes("'./accessibility.css'")) failures.push('runtimeTheme.ts: accessibility interaction styles are not loaded');
 
 if (failures.length) {
   console.error('Accessibility foundation checks failed:');

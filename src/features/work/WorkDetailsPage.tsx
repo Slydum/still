@@ -1,3 +1,3 @@
-import './workFeatureStyles';
+import './workStyles';
 
-export { WorkPage as WorkDetailsPage } from './WorkPage';
+export { WorkPage as WorkDetailsPage } from './WorkDetailsContent';
