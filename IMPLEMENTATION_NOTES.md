@@ -54,6 +54,21 @@ Direct own-row Data API writes are therefore not treated as a privileged bypass.
 
 Cloud sync is currently triggered when the authenticated app starts, when the user selects **Sync now**, and during logout flows. It is not a continuous per-edit background sync service.
 
+## Account lifecycle
+
+`accountLifecycleCore.ts` owns the explicit logout/clear state machine. Ordinary logout performs a best-effort cloud sync and then ends only the current Supabase browser session; sync failure does not delete local data and does not block ordinary logout.
+
+Clear-device logout is stricter and ordered as:
+
+1. required cloud sync;
+2. drain the repository write queue;
+3. clear Still-managed device state and delete the local Dexie database;
+4. sign out the current Supabase browser session.
+
+A required sync, write-drain, or local-clear failure stops the flow before sign-out so the user does not end up logged out while Still data remains unexpectedly on the device. `Dexie.delete()` leaves the database instance closed by default, which prevents a late write from silently recreating the just-cleared database during the final session transition. If the local clear succeeds but Supabase sign-out fails, the UI exposes that partial state and offers an explicit retry rather than reloading and restoring the cloud copy behind the user's back.
+
+`signOutCloud()` uses Supabase Auth's `scope: 'local'`; Still's device logout must not revoke unrelated sessions on other browsers or devices.
+
 The canonical product-facing storage, privacy, recovery, and sync contract is `DATA_AND_PRIVACY.md`. Update that document and matching UI copy whenever these behaviors change.
 
 ## Migration model
