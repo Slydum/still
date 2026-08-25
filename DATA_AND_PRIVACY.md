@@ -37,9 +37,9 @@ General, Work, Money, and Health settings are independent synchronization record
 
 Cloud sync does **not** run continuously after every edit. Still persists edits locally first. Cloud synchronization is attempted when the signed-in app starts, when the user chooses **Sync now**, and during logout flows.
 
-Ordinary logout is best-effort: Still tries to sync first, but logout can still complete if cloud synchronization is unavailable. Any unsynced changes remain in that browser and can only sync later after the same account signs in again.
+Ordinary logout is best-effort: Still tries to sync first, but logout can still complete if cloud synchronization is unavailable. Any unsynced changes remain in that browser and can only sync later after the same account signs in again. Logout is scoped to the current Supabase session, so signing out one browser does not intentionally sign out the account's other devices.
 
-**Log out and clear this device** is stricter. Still requires a successful synchronization before it signs out and clears the account's Still-managed local database and device state. If synchronization fails, the local copy is not cleared.
+**Log out and clear this device** is stricter and uses an ordered lifecycle. Still first requires a successful cloud synchronization, then drains queued local persistence work, removes Still-managed device state and the local IndexedDB database, and only after that ends the current browser session. If required sync, queued-write draining, or local clearing fails, Still keeps the account signed in rather than claiming the device was cleared. If the local clear succeeds but the final session sign-out fails, Still reports that partial state and offers a sign-out retry instead of recreating the local copy.
 
 ## Cloud privacy boundary
 
