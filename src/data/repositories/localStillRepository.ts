@@ -264,6 +264,14 @@ async function ensureGranularSettingsRecords(cache?: Pick<
 
   await stillDb.transaction('rw', [stillDb.accountSettings, stillDb.syncOutbox], async () => {
     const rows = await stillDb.accountSettings.toArray();
+    // This table is permanently bounded to the four domain settings rows. Repairing
+    // their outbox keys here keeps old/raw IndexedDB migrations recoverable without
+    // reintroducing scans over user collections on the normal sync hot path.
+    await syncOutboxForRows(
+      'accountSettings',
+      rows as unknown as Array<Record<string, unknown>>,
+      'id',
+    );
     const byId = new Map(rows.map((row) => [row.id, row] as const));
     const existingAccount = byId.get('account');
 
