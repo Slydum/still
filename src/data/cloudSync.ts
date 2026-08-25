@@ -20,6 +20,7 @@ import {
   createSyncOutboxRecord,
   SYNC_OUTBOX_SOURCES,
   syncOutboxKey,
+  type SyncOutboxRecord,
   type SyncOutboxSource,
 } from './syncOutboxCore';
 import { getCloudSession, getSupabaseClient } from './supabaseClient';
@@ -309,7 +310,7 @@ async function reconcileOutboxForRemoteRows(rows: RemoteRecord[]) {
   for (const [source, idsSet] of affected) {
     const ids = [...idsSet];
     const records = await outboxTable(source).bulkGet(ids);
-    const dirtyEntries = [];
+    const dirtyEntries: SyncOutboxRecord[] = [];
     const cleanKeys: string[] = [];
 
     records.forEach((record, index) => {
