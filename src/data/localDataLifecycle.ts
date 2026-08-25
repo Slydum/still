@@ -8,9 +8,13 @@ export const STILL_LOCAL_STORAGE_KEYS = [
 ] as const;
 
 export async function clearLocalStillData() {
-  await stillDb.delete();
-
+  // Clear lightweight device state first. If browser storage access fails, keep
+  // IndexedDB intact so the signed-in account still has its durable local copy.
   for (const key of STILL_LOCAL_STORAGE_KEYS) {
     window.localStorage.removeItem(key);
   }
+
+  // Dexie.delete() leaves this instance closed by default. That prevents a
+  // late repository write from silently recreating the database during logout.
+  await stillDb.delete();
 }
