@@ -21,6 +21,11 @@ import {
 } from '../accountSettings';
 import { stillDb, withCheckInSyncMetadata } from '../localDb';
 import type { CheckInRecord } from '../records';
+import {
+  syncOutboxKey,
+  syncOutboxRecordForDirtyRow,
+  type SyncOutboxSource,
+} from '../syncOutboxCore';
 import { activeRecords, addSyncMetadata, createMutationId, reconcileCollection } from './reconcile';
 import type { CollectionChanges } from './recordChanges';
 import {
@@ -43,12 +48,39 @@ type RepositoryEntity = {
   createdAt?: number;
 };
 
+async function syncOutboxForRows(
+  source: SyncOutboxSource,
+  rows: Array<Record<string, unknown>>,
+  idKey: 'id' | 'date',
+) {
+  const dirtyEntries = [];
+  const cleanKeys: string[] = [];
+
+  for (const row of rows) {
+    const recordId = String(row[idKey] ?? '');
+    if (!recordId) continue;
+    const entry = syncOutboxRecordForDirtyRow(source, row, idKey);
+    if (entry) dirtyEntries.push(entry);
+    else cleanKeys.push(syncOutboxKey(source, recordId));
+  }
+
+  if (dirtyEntries.length) await stillDb.syncOutbox.bulkPut(dirtyEntries);
+  if (cleanKeys.length) await stillDb.syncOutbox.bulkDelete(cleanKeys);
+}
+
 async function seedTable<T extends RepositoryEntity>(
+  source: SyncOutboxSource,
   table: Table<SyncedRecord<T>, string>,
   records: T[],
 ) {
   if (!records.length || await table.count() > 0) return;
-  await table.bulkPut(reconcileCollection([], records));
+  const seeded = reconcileCollection([], records);
+  await table.bulkPut(seeded);
+  await syncOutboxForRows(
+    source,
+    seeded as unknown as Array<Record<string, unknown>>,
+    'id',
+  );
 }
 
 async function seedLocalTable<T extends { id: string }>(
@@ -60,6 +92,7 @@ async function seedLocalTable<T extends { id: string }>(
 }
 
 async function persistTableChanges<T extends RepositoryEntity>(
+  source: SyncOutboxSource,
   table: Table<SyncedRecord<T>, string>,
   changes: CollectionChanges<T>,
 ) {
@@ -69,33 +102,43 @@ async function persistTableChanges<T extends RepositoryEntity>(
     ...changes.upserts.map((record) => record.id),
     ...changes.deletedIds,
   ])];
-  const existingRows = await table.bulkGet(ids);
-  const existingById = new Map(
-    ids.flatMap((id, index) => {
-      const record = existingRows[index];
-      return record ? [[id, record] as const] : [];
-    }),
-  );
 
-  const upserts = changes.upserts.map((record) => addSyncMetadata(record, existingById.get(record.id)));
+  await stillDb.transaction('rw', [table, stillDb.syncOutbox], async () => {
+    const existingRows = await table.bulkGet(ids);
+    const existingById = new Map(
+      ids.flatMap((id, index) => {
+        const record = existingRows[index];
+        return record ? [[id, record] as const] : [];
+      }),
+    );
 
-  const now = Date.now();
-  const tombstones = changes.deletedIds.flatMap((id) => {
-    const existing = existingById.get(id);
-    if (!existing) return [];
-    if (existing.deletedAt) return [existing];
+    const upserts = changes.upserts.map((record) => addSyncMetadata(record, existingById.get(record.id)));
 
-    return [{
-      ...existing,
-      updatedAt: now,
-      deletedAt: now,
-      syncCounter: existing.syncCounter + 1,
-      mutationId: createMutationId(),
-      dirty: true,
-    }];
+    const now = Date.now();
+    const tombstones = changes.deletedIds.flatMap((id) => {
+      const existing = existingById.get(id);
+      if (!existing) return [];
+      if (existing.deletedAt) return [existing];
+
+      return [{
+        ...existing,
+        updatedAt: now,
+        deletedAt: now,
+        syncCounter: existing.syncCounter + 1,
+        mutationId: createMutationId(),
+        dirty: true,
+      }];
+    });
+
+    const changedRows = [...upserts, ...tombstones];
+    if (!changedRows.length) return;
+    await table.bulkPut(changedRows);
+    await syncOutboxForRows(
+      source,
+      changedRows as unknown as Array<Record<string, unknown>>,
+      'id',
+    );
   });
-
-  await table.bulkPut([...upserts, ...tombstones]);
 }
 
 function stripCheckInMetadata(record: SyncedCheckInRecord): CheckInRecord {
@@ -168,7 +211,16 @@ function createSettingsPlaceholder(
   } as SyncedSettingsRecord;
 }
 
-async function seedSettingsRecord(
+async function putSettingsRecordInTransaction(record: SyncedSettingsRecord) {
+  await stillDb.accountSettings.put(record);
+  await syncOutboxForRows(
+    'accountSettings',
+    [record as unknown as Record<string, unknown>],
+    'id',
+  );
+}
+
+async function seedSettingsRecordInTransaction(
   settings: PermanentSettingsRecord,
   userId = LOCAL_DEVICE_USER_ID,
 ) {
@@ -177,28 +229,30 @@ async function seedSettingsRecord(
   const seeded = isDefaultSettingsRecord(settings)
     ? createSettingsPlaceholder(settings, userId)
     : addSyncMetadata(settings, undefined, userId) as unknown as SyncedSettingsRecord;
-  await stillDb.accountSettings.put(seeded);
+  await putSettingsRecordInTransaction(seeded);
 }
 
 async function persistSettingsRecord<T extends PermanentSettingsRecord>(settings: T) {
-  const existing = await stillDb.accountSettings.get(settings.id);
-  if (existing) {
-    const existingValue = stripSettingsMetadata(existing as SyncedSettingsRecord) as PermanentSettingsRecord;
-    if (!isLegacyBundledAccountSettings(existingValue as unknown as Record<string, unknown>)
-      && settingsRecordEqual(settings, existingValue)) return;
-  }
-  const next = addSyncMetadata(settings, existing) as unknown as SyncedSettingsRecord;
-  await stillDb.accountSettings.put(next);
+  await stillDb.transaction('rw', [stillDb.accountSettings, stillDb.syncOutbox], async () => {
+    const existing = await stillDb.accountSettings.get(settings.id);
+    if (existing) {
+      const existingValue = stripSettingsMetadata(existing as SyncedSettingsRecord) as PermanentSettingsRecord;
+      if (!isLegacyBundledAccountSettings(existingValue as unknown as Record<string, unknown>)
+        && settingsRecordEqual(settings, existingValue)) return;
+    }
+    const next = addSyncMetadata(settings, existing) as unknown as SyncedSettingsRecord;
+    await putSettingsRecordInTransaction(next);
+  });
 }
 
-async function migrateLegacyDomainSetting(
+async function migrateLegacyDomainSettingInTransaction(
   existing: SyncedSettingsRecord | undefined,
   settings: WorkSettings | MoneySettings | HealthSettings,
   userId: string,
 ) {
   if (existing && !isLocalPlaceholder(existing)) return;
   const migrated = addSyncMetadata(settings, existing, userId) as unknown as SyncedSettingsRecord;
-  await stillDb.accountSettings.put(migrated);
+  await putSettingsRecordInTransaction(migrated);
 }
 
 async function ensureGranularSettingsRecords(cache?: Pick<
@@ -206,32 +260,35 @@ async function ensureGranularSettingsRecords(cache?: Pick<
   'accountSettings' | 'workSettings' | 'moneySettings' | 'healthSettings'
 >) {
   const fallback = cache ?? defaultGranularSettings();
-  const rows = await stillDb.accountSettings.toArray();
-  const byId = new Map(rows.map((row) => [row.id, row] as const));
-  const existingAccount = byId.get('account');
 
-  if (existingAccount) {
-    const accountValue = stripSettingsMetadata(existingAccount as SyncedSettingsRecord);
-    if (isLegacyBundledAccountSettings(accountValue as unknown as Record<string, unknown>)) {
-      const source = splitLegacyAccountSettings(accountValue as AccountSettings);
-      await migrateLegacyDomainSetting(byId.get('work'), source.workSettings, existingAccount.userId);
-      await migrateLegacyDomainSetting(byId.get('money'), source.moneySettings, existingAccount.userId);
-      await migrateLegacyDomainSetting(byId.get('health'), source.healthSettings, existingAccount.userId);
+  await stillDb.transaction('rw', [stillDb.accountSettings, stillDb.syncOutbox], async () => {
+    const rows = await stillDb.accountSettings.toArray();
+    const byId = new Map(rows.map((row) => [row.id, row] as const));
+    const existingAccount = byId.get('account');
 
-      const sanitizedAccount = addSyncMetadata({
-        ...source.accountSettings,
-        updatedAt: Date.now(),
-      }, existingAccount) as unknown as SyncedSettingsRecord;
-      await stillDb.accountSettings.put(sanitizedAccount);
-      return;
+    if (existingAccount) {
+      const accountValue = stripSettingsMetadata(existingAccount as SyncedSettingsRecord);
+      if (isLegacyBundledAccountSettings(accountValue as unknown as Record<string, unknown>)) {
+        const source = splitLegacyAccountSettings(accountValue as AccountSettings);
+        await migrateLegacyDomainSettingInTransaction(byId.get('work'), source.workSettings, existingAccount.userId);
+        await migrateLegacyDomainSettingInTransaction(byId.get('money'), source.moneySettings, existingAccount.userId);
+        await migrateLegacyDomainSettingInTransaction(byId.get('health'), source.healthSettings, existingAccount.userId);
+
+        const sanitizedAccount = addSyncMetadata({
+          ...source.accountSettings,
+          updatedAt: Date.now(),
+        }, existingAccount) as unknown as SyncedSettingsRecord;
+        await putSettingsRecordInTransaction(sanitizedAccount);
+        return;
+      }
+    } else {
+      await seedSettingsRecordInTransaction(fallback.accountSettings);
     }
-  } else {
-    await seedSettingsRecord(fallback.accountSettings);
-  }
 
-  if (!byId.has('work')) await seedSettingsRecord(fallback.workSettings);
-  if (!byId.has('money')) await seedSettingsRecord(fallback.moneySettings);
-  if (!byId.has('health')) await seedSettingsRecord(fallback.healthSettings);
+    if (!byId.has('work')) await seedSettingsRecordInTransaction(fallback.workSettings);
+    if (!byId.has('money')) await seedSettingsRecordInTransaction(fallback.moneySettings);
+    if (!byId.has('health')) await seedSettingsRecordInTransaction(fallback.healthSettings);
+  });
 }
 
 export class LocalStillRepository implements StillRepository {
@@ -249,33 +306,31 @@ export class LocalStillRepository implements StillRepository {
         stillDb.notifications,
         stillDb.entityLinks,
         stillDb.workShifts,
-        stillDb.accountSettings,
         stillDb.repositoryMeta,
+        stillDb.syncOutbox,
       ],
       async () => {
         const alreadyBootstrapped = await stillDb.repositoryMeta.get(BOOTSTRAP_META_KEY);
 
         if (!alreadyBootstrapped) {
-          await seedTable(stillDb.tasks, cache.tasks);
-          await seedTable(stillDb.events, cache.events);
-          await seedTable(stillDb.journalEntries, cache.journalEntries);
-          await seedTable(stillDb.expenses, cache.expenses);
+          await seedTable('tasks', stillDb.tasks, cache.tasks);
+          await seedTable('events', stillDb.events, cache.events);
+          await seedTable('journalEntries', stillDb.journalEntries, cache.journalEntries);
+          await seedTable('expenses', stillDb.expenses, cache.expenses);
           await seedLocalTable(stillDb.notifications, cache.notifications);
-          await seedTable(stillDb.entityLinks, cache.entityLinks);
-          await seedTable(stillDb.workShifts, cache.workShifts);
-          await ensureGranularSettingsRecords(cache);
+          await seedTable('entityLinks', stillDb.entityLinks, cache.entityLinks);
+          await seedTable('workShifts', stillDb.workShifts, cache.workShifts);
 
           await stillDb.repositoryMeta.put({
             key: BOOTSTRAP_META_KEY,
             value: this.provider,
             updatedAt: Date.now(),
           });
-        } else {
-          await ensureGranularSettingsRecords(cache);
         }
       },
     );
 
+    await ensureGranularSettingsRecords(cache);
     return this.load();
   }
 
@@ -330,18 +385,18 @@ export class LocalStillRepository implements StillRepository {
     };
   }
 
-  persistTasks(changes: CollectionChanges<StillTask>) { return persistTableChanges(stillDb.tasks, changes); }
-  persistEvents(changes: CollectionChanges<StillEvent>) { return persistTableChanges(stillDb.events, changes); }
-  persistJournalEntries(changes: CollectionChanges<JournalEntry>) { return persistTableChanges(stillDb.journalEntries, changes); }
-  persistExpenses(changes: CollectionChanges<StillExpense>) { return persistTableChanges(stillDb.expenses, changes); }
+  persistTasks(changes: CollectionChanges<StillTask>) { return persistTableChanges('tasks', stillDb.tasks, changes); }
+  persistEvents(changes: CollectionChanges<StillEvent>) { return persistTableChanges('events', stillDb.events, changes); }
+  persistJournalEntries(changes: CollectionChanges<JournalEntry>) { return persistTableChanges('journalEntries', stillDb.journalEntries, changes); }
+  persistExpenses(changes: CollectionChanges<StillExpense>) { return persistTableChanges('expenses', stillDb.expenses, changes); }
   async persistNotifications(notifications: AppNotification[]) {
     await stillDb.transaction('rw', stillDb.notifications, async () => {
       await stillDb.notifications.clear();
       if (notifications.length) await stillDb.notifications.bulkPut(notifications);
     });
   }
-  persistEntityLinks(changes: CollectionChanges<LifeEntityLink>) { return persistTableChanges(stillDb.entityLinks, changes); }
-  persistWorkShifts(changes: CollectionChanges<WorkShift>) { return persistTableChanges(stillDb.workShifts, changes); }
+  persistEntityLinks(changes: CollectionChanges<LifeEntityLink>) { return persistTableChanges('entityLinks', stillDb.entityLinks, changes); }
+  persistWorkShifts(changes: CollectionChanges<WorkShift>) { return persistTableChanges('workShifts', stillDb.workShifts, changes); }
   persistAccountSettings(settings: GeneralAccountSettings) { return persistSettingsRecord(settings); }
   persistWorkSettings(settings: WorkSettings) { return persistSettingsRecord(settings); }
   persistMoneySettings(settings: MoneySettings) { return persistSettingsRecord(settings); }
@@ -353,34 +408,50 @@ export class LocalStillRepository implements StillRepository {
   }
 
   async saveCheckIn(record: CheckInRecord) {
-    const existing = await stillDb.checkIns.get(record.date);
-    const mergedRecord: CheckInRecord = existing
-      ? { ...stripCheckInMetadata(existing), ...record }
-      : record;
-    const syncedRecord = withCheckInSyncMetadata(mergedRecord);
-    await stillDb.checkIns.put({
-      ...syncedRecord,
-      userId: existing?.userId ?? syncedRecord.userId,
-      deletedAt: undefined,
-      syncCounter: (existing?.syncCounter ?? 0) + 1,
-      mutationId: createMutationId(),
-      serverRevision: existing?.serverRevision,
-      dirty: true,
+    await stillDb.transaction('rw', [stillDb.checkIns, stillDb.syncOutbox], async () => {
+      const existing = await stillDb.checkIns.get(record.date);
+      const mergedRecord: CheckInRecord = existing
+        ? { ...stripCheckInMetadata(existing), ...record }
+        : record;
+      const syncedRecord = withCheckInSyncMetadata(mergedRecord);
+      const next: SyncedCheckInRecord = {
+        ...syncedRecord,
+        userId: existing?.userId ?? syncedRecord.userId,
+        deletedAt: undefined,
+        syncCounter: (existing?.syncCounter ?? 0) + 1,
+        mutationId: createMutationId(),
+        serverRevision: existing?.serverRevision,
+        dirty: true,
+      };
+      await stillDb.checkIns.put(next);
+      await syncOutboxForRows(
+        'checkIns',
+        [next as unknown as Record<string, unknown>],
+        'date',
+      );
     });
   }
 
   async deleteCheckIn(date: string) {
-    const existing = await stillDb.checkIns.get(date);
-    if (!existing) return;
+    await stillDb.transaction('rw', [stillDb.checkIns, stillDb.syncOutbox], async () => {
+      const existing = await stillDb.checkIns.get(date);
+      if (!existing) return;
 
-    const deletedAt = Date.now();
-    await stillDb.checkIns.put({
-      ...existing,
-      updatedAt: deletedAt,
-      deletedAt,
-      syncCounter: existing.syncCounter + 1,
-      mutationId: createMutationId(),
-      dirty: true,
+      const deletedAt = Date.now();
+      const next: SyncedCheckInRecord = {
+        ...existing,
+        updatedAt: deletedAt,
+        deletedAt,
+        syncCounter: existing.syncCounter + 1,
+        mutationId: createMutationId(),
+        dirty: true,
+      };
+      await stillDb.checkIns.put(next);
+      await syncOutboxForRows(
+        'checkIns',
+        [next as unknown as Record<string, unknown>],
+        'date',
+      );
     });
   }
 }
