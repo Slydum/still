@@ -9,6 +9,11 @@ import {
 
 const supabaseClientSource = fs.readFileSync('src/data/supabaseClient.ts', 'utf8');
 
+function requireLifecycleError(error: unknown) {
+  assert.ok(error instanceof AccountLifecycleError);
+  return error as AccountLifecycleError;
+}
+
 describe('account data lifecycle', () => {
   it('attempts a best-effort sync before ordinary logout while keeping local data', async () => {
     const calls: string[] = [];
@@ -57,12 +62,12 @@ describe('account data lifecycle', () => {
       error = caught;
     }
 
-    assert.ok(error instanceof AccountLifecycleError);
-    assert.equal(error.stage, 'syncing');
-    assert.equal(error.message, 'offline');
-    assert.equal(error.progress.synced, false);
-    assert.equal(error.progress.cleared, false);
-    assert.equal(error.progress.signedOut, false);
+    const lifecycleError = requireLifecycleError(error);
+    assert.equal(lifecycleError.stage, 'syncing');
+    assert.equal(lifecycleError.message, 'offline');
+    assert.equal(lifecycleError.progress.synced, false);
+    assert.equal(lifecycleError.progress.cleared, false);
+    assert.equal(lifecycleError.progress.signedOut, false);
     assert.equal(calls.join(','), 'sync');
   });
 
@@ -90,12 +95,12 @@ describe('account data lifecycle', () => {
       error = caught;
     }
 
-    assert.ok(error instanceof AccountLifecycleError);
-    assert.equal(error.stage, 'preparing-local-clear');
-    assert.equal(error.progress.synced, true);
-    assert.equal(error.progress.preparedForClear, false);
-    assert.equal(error.progress.cleared, false);
-    assert.equal(error.progress.signedOut, false);
+    const lifecycleError = requireLifecycleError(error);
+    assert.equal(lifecycleError.stage, 'preparing-local-clear');
+    assert.equal(lifecycleError.progress.synced, true);
+    assert.equal(lifecycleError.progress.preparedForClear, false);
+    assert.equal(lifecycleError.progress.cleared, false);
+    assert.equal(lifecycleError.progress.signedOut, false);
     assert.equal(calls.join(','), 'sync,prepareLocalClear');
   });
 
@@ -123,12 +128,12 @@ describe('account data lifecycle', () => {
       error = caught;
     }
 
-    assert.ok(error instanceof AccountLifecycleError);
-    assert.equal(error.stage, 'clearing-local-data');
-    assert.equal(error.progress.synced, true);
-    assert.equal(error.progress.preparedForClear, true);
-    assert.equal(error.progress.cleared, false);
-    assert.equal(error.progress.signedOut, false);
+    const lifecycleError = requireLifecycleError(error);
+    assert.equal(lifecycleError.stage, 'clearing-local-data');
+    assert.equal(lifecycleError.progress.synced, true);
+    assert.equal(lifecycleError.progress.preparedForClear, true);
+    assert.equal(lifecycleError.progress.cleared, false);
+    assert.equal(lifecycleError.progress.signedOut, false);
     assert.equal(calls.join(','), 'sync,prepareLocalClear,clearLocal');
   });
 
@@ -156,12 +161,12 @@ describe('account data lifecycle', () => {
       error = caught;
     }
 
-    assert.ok(error instanceof AccountLifecycleError);
-    assert.equal(error.stage, 'signing-out');
-    assert.equal(error.progress.synced, true);
-    assert.equal(error.progress.preparedForClear, true);
-    assert.equal(error.progress.cleared, true);
-    assert.equal(error.progress.signedOut, false);
+    const lifecycleError = requireLifecycleError(error);
+    assert.equal(lifecycleError.stage, 'signing-out');
+    assert.equal(lifecycleError.progress.synced, true);
+    assert.equal(lifecycleError.progress.preparedForClear, true);
+    assert.equal(lifecycleError.progress.cleared, true);
+    assert.equal(lifecycleError.progress.signedOut, false);
     assert.equal(calls.join(','), 'sync,prepareLocalClear,clearLocal,signOut');
   });
 
