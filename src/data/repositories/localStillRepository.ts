@@ -24,6 +24,7 @@ import type { CheckInRecord } from '../records';
 import {
   syncOutboxKey,
   syncOutboxRecordForDirtyRow,
+  type SyncOutboxRecord,
   type SyncOutboxSource,
 } from '../syncOutboxCore';
 import { activeRecords, addSyncMetadata, createMutationId, reconcileCollection } from './reconcile';
@@ -53,7 +54,7 @@ async function syncOutboxForRows(
   rows: Array<Record<string, unknown>>,
   idKey: 'id' | 'date',
 ) {
-  const dirtyEntries = [];
+  const dirtyEntries: SyncOutboxRecord[] = [];
   const cleanKeys: string[] = [];
 
   for (const row of rows) {
