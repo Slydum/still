@@ -22,6 +22,11 @@ import {
   type SyncedRecord,
   type SyncedSettingsRecord,
 } from './repositories/types';
+import {
+  syncOutboxRecordForDirtyRow,
+  type SyncOutboxRecord,
+  type SyncOutboxSource,
+} from './syncOutboxCore';
 
 export type RepositoryMetaRecord = {
   key: string;
@@ -72,6 +77,7 @@ export class StillLocalDatabase extends Dexie {
   workShifts!: Table<SyncedRecord<WorkShift & { id: string }>, string>;
   accountSettings!: Table<SyncedSettingsRecord, string>;
   repositoryMeta!: Table<RepositoryMetaRecord, string>;
+  syncOutbox!: Table<SyncOutboxRecord, string>;
 
   constructor(databaseName = appDatabaseName()) {
     super(databaseName);
@@ -158,6 +164,45 @@ export class StillLocalDatabase extends Dexie {
       workShifts: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
       accountSettings: 'id, updatedAt, userId, syncCounter, serverRevision',
       repositoryMeta: 'key, updatedAt',
+    });
+    this.version(7).stores({
+      dailyQuotes: 'date, quoteId, createdAt',
+      checkIns: 'date, updatedAt, scaleVersion, userId, deletedAt, syncCounter, serverRevision',
+      tasks: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      events: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      journalEntries: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      expenses: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      notifications: 'id, createdAt, read, kind',
+      entityLinks: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      workShifts: 'id, updatedAt, userId, deletedAt, syncCounter, serverRevision',
+      accountSettings: 'id, updatedAt, userId, syncCounter, serverRevision',
+      repositoryMeta: 'key, updatedAt',
+      syncOutbox: 'key, source, recordId, enqueuedAt',
+    }).upgrade(async (transaction) => {
+      const outbox = transaction.table<SyncOutboxRecord>('syncOutbox');
+      const sources: Array<{
+        source: SyncOutboxSource;
+        tableName: SyncOutboxSource;
+        idKey: 'id' | 'date';
+      }> = [
+        { source: 'tasks', tableName: 'tasks', idKey: 'id' },
+        { source: 'events', tableName: 'events', idKey: 'id' },
+        { source: 'journalEntries', tableName: 'journalEntries', idKey: 'id' },
+        { source: 'expenses', tableName: 'expenses', idKey: 'id' },
+        { source: 'entityLinks', tableName: 'entityLinks', idKey: 'id' },
+        { source: 'workShifts', tableName: 'workShifts', idKey: 'id' },
+        { source: 'checkIns', tableName: 'checkIns', idKey: 'date' },
+        { source: 'accountSettings', tableName: 'accountSettings', idKey: 'id' },
+      ];
+
+      for (const { source, tableName, idKey } of sources) {
+        const rows = await transaction.table<Record<string, unknown>>(tableName).toArray();
+        const entries = rows.flatMap((row) => {
+          const entry = syncOutboxRecordForDirtyRow(source, row, idKey);
+          return entry ? [entry] : [];
+        });
+        if (entries.length) await outbox.bulkPut(entries);
+      }
     });
   }
 }
