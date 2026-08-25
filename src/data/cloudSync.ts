@@ -16,6 +16,13 @@ import { stillDb } from './localDb';
 import { localStillRepository } from './repositories/localStillRepository';
 import type { PermanentDataSnapshot } from './repositories/types';
 import { flushRepositoryWrites } from './repositoryWriteQueue';
+import {
+  createSyncOutboxRecord,
+  SYNC_OUTBOX_SOURCES,
+  syncOutboxKey,
+  type SyncOutboxRecord,
+  type SyncOutboxSource,
+} from './syncOutboxCore';
 import { getCloudSession, getSupabaseClient } from './supabaseClient';
 
 const CLOUD_USER_META_KEY = 'supabase-user-id-v1';
@@ -118,35 +125,84 @@ function settingsRecordType(id: string): StillRecordType | undefined {
   return undefined;
 }
 
-function toSettingsRpcRecords(records: Array<Record<string, unknown>>) {
-  return records.flatMap((record) => {
-    const recordType = settingsRecordType(String(record.id ?? ''));
-    return recordType ? toRpcRecords(recordType, [record], 'id') : [];
-  });
+function outboxRecordType(source: SyncOutboxSource, recordId: string): StillRecordType | undefined {
+  if (source === 'tasks') return 'task';
+  if (source === 'events') return 'event';
+  if (source === 'journalEntries') return 'journal_entry';
+  if (source === 'expenses') return 'expense';
+  if (source === 'entityLinks') return 'entity_link';
+  if (source === 'workShifts') return 'work_shift';
+  if (source === 'checkIns') return 'check_in';
+  return settingsRecordType(recordId);
+}
+
+function outboxIdKey(source: SyncOutboxSource): 'id' | 'date' {
+  return source === 'checkIns' ? 'date' : 'id';
+}
+
+function outboxTable(source: SyncOutboxSource): Table<any, string> {
+  if (source === 'tasks') return stillDb.tasks;
+  if (source === 'events') return stillDb.events;
+  if (source === 'journalEntries') return stillDb.journalEntries;
+  if (source === 'expenses') return stillDb.expenses;
+  if (source === 'entityLinks') return stillDb.entityLinks;
+  if (source === 'workShifts') return stillDb.workShifts;
+  if (source === 'checkIns') return stillDb.checkIns;
+  return stillDb.accountSettings;
+}
+
+function outboxSourceForRecordType(recordType: StillRecordType): SyncOutboxSource {
+  if (recordType === 'task') return 'tasks';
+  if (recordType === 'event') return 'events';
+  if (recordType === 'journal_entry') return 'journalEntries';
+  if (recordType === 'expense') return 'expenses';
+  if (recordType === 'entity_link') return 'entityLinks';
+  if (recordType === 'work_shift') return 'workShifts';
+  if (recordType === 'check_in') return 'checkIns';
+  return 'accountSettings';
 }
 
 async function readDirtyRows(): Promise<RpcRecord[]> {
-  const [tasks, events, journalEntries, expenses, entityLinks, workShifts, checkIns, settings] = await Promise.all([
-    stillDb.tasks.toArray(),
-    stillDb.events.toArray(),
-    stillDb.journalEntries.toArray(),
-    stillDb.expenses.toArray(),
-    stillDb.entityLinks.toArray(),
-    stillDb.workShifts.toArray(),
-    stillDb.checkIns.toArray(),
-    stillDb.accountSettings.toArray(),
-  ]);
+  return stillDb.transaction(
+    'r',
+    [
+      stillDb.syncOutbox,
+      stillDb.tasks,
+      stillDb.events,
+      stillDb.journalEntries,
+      stillDb.expenses,
+      stillDb.entityLinks,
+      stillDb.workShifts,
+      stillDb.checkIns,
+      stillDb.accountSettings,
+    ],
+    async () => {
+      const entries = await stillDb.syncOutbox.orderBy('enqueuedAt').toArray();
+      if (!entries.length) return [];
 
-  return [
-    ...toRpcRecords('task', tasks as unknown as Array<Record<string, unknown>>, 'id'),
-    ...toRpcRecords('event', events as unknown as Array<Record<string, unknown>>, 'id'),
-    ...toRpcRecords('journal_entry', journalEntries as unknown as Array<Record<string, unknown>>, 'id'),
-    ...toRpcRecords('expense', expenses as unknown as Array<Record<string, unknown>>, 'id'),
-    ...toRpcRecords('entity_link', entityLinks as unknown as Array<Record<string, unknown>>, 'id'),
-    ...toRpcRecords('work_shift', workShifts as unknown as Array<Record<string, unknown>>, 'id'),
-    ...toRpcRecords('check_in', checkIns as unknown as Array<Record<string, unknown>>, 'date'),
-    ...toSettingsRpcRecords(settings as unknown as Array<Record<string, unknown>>),
-  ];
+      const rowsByOutboxKey = new Map<string, RpcRecord>();
+
+      for (const source of SYNC_OUTBOX_SOURCES) {
+        const sourceEntries = entries.filter((entry) => entry.source === source);
+        if (!sourceEntries.length) continue;
+        const records = await outboxTable(source).bulkGet(sourceEntries.map((entry) => entry.recordId));
+
+        sourceEntries.forEach((entry, index) => {
+          const record = records[index] as Record<string, unknown> | undefined;
+          if (!record || record.dirty !== true) return;
+          const recordType = outboxRecordType(source, entry.recordId);
+          if (!recordType) return;
+          const rpcRecord = toRpcRecords(recordType, [record], outboxIdKey(source))[0];
+          if (rpcRecord) rowsByOutboxKey.set(entry.key, rpcRecord);
+        });
+      }
+
+      return entries.flatMap((entry) => {
+        const row = rowsByOutboxKey.get(entry.key);
+        return row ? [row] : [];
+      });
+    },
+  );
 }
 
 async function pushRows(rows: RpcRecord[]): Promise<RemoteRecord[]> {
@@ -225,8 +281,9 @@ async function mergeEntityTable(
 ) {
   const relevant = rows.filter((row) => row.record_type === recordType);
   if (!relevant.length) return;
-  const local = await table.toArray() as LocalSyncedRecord[];
   const remote = relevant.map((row) => remoteEntityRecord(row, userId));
+  const localRows = await table.bulkGet(remote.map((record) => record.id));
+  const local = localRows.filter(Boolean) as LocalSyncedRecord[];
   const merged = mergeByKey(local, remote, (record) => record.id).map((record) => ({ ...record, userId }));
   if (merged.length) await table.bulkPut(merged);
 }
@@ -234,17 +291,58 @@ async function mergeEntityTable(
 async function mergeCheckIns(table: Table<any, string>, rows: RemoteRecord[], userId: string) {
   const relevant = rows.filter((row) => row.record_type === 'check_in');
   if (!relevant.length) return;
-  const local = await table.toArray() as LocalSyncedCheckIn[];
   const remote = relevant.map((row) => remoteCheckInRecord(row, userId));
+  const localRows = await table.bulkGet(remote.map((record) => record.date));
+  const local = localRows.filter(Boolean) as LocalSyncedCheckIn[];
   const merged = mergeByKey(local, remote, (record) => record.date).map((record) => ({ ...record, userId }));
   if (merged.length) await table.bulkPut(merged);
+}
+
+async function reconcileOutboxForRemoteRows(rows: RemoteRecord[]) {
+  const affected = new Map<SyncOutboxSource, Set<string>>();
+  for (const row of rows) {
+    const source = outboxSourceForRecordType(row.record_type);
+    const ids = affected.get(source) ?? new Set<string>();
+    ids.add(row.record_id);
+    affected.set(source, ids);
+  }
+
+  for (const [source, idsSet] of affected) {
+    const ids = [...idsSet];
+    const records = await outboxTable(source).bulkGet(ids);
+    const dirtyEntries: SyncOutboxRecord[] = [];
+    const cleanKeys: string[] = [];
+
+    records.forEach((record, index) => {
+      const id = ids[index];
+      const local = record as LocalSyncFields | undefined;
+      if (local?.dirty === true) {
+        dirtyEntries.push(createSyncOutboxRecord(source, id, local.updatedAt));
+      } else {
+        cleanKeys.push(syncOutboxKey(source, id));
+      }
+    });
+
+    if (dirtyEntries.length) await stillDb.syncOutbox.bulkPut(dirtyEntries);
+    if (cleanKeys.length) await stillDb.syncOutbox.bulkDelete(cleanKeys);
+  }
 }
 
 async function applyRemoteRows(rows: RemoteRecord[], userId: string) {
   if (!rows.length) return;
   await stillDb.transaction(
     'rw',
-    [stillDb.tasks, stillDb.events, stillDb.journalEntries, stillDb.expenses, stillDb.entityLinks, stillDb.workShifts, stillDb.checkIns, stillDb.accountSettings],
+    [
+      stillDb.tasks,
+      stillDb.events,
+      stillDb.journalEntries,
+      stillDb.expenses,
+      stillDb.entityLinks,
+      stillDb.workShifts,
+      stillDb.checkIns,
+      stillDb.accountSettings,
+      stillDb.syncOutbox,
+    ],
     async () => {
       await mergeEntityTable(stillDb.tasks, rows, 'task', userId);
       await mergeEntityTable(stillDb.events, rows, 'event', userId);
@@ -257,6 +355,7 @@ async function applyRemoteRows(rows: RemoteRecord[], userId: string) {
       await mergeEntityTable(stillDb.accountSettings, rows, 'work_settings', userId);
       await mergeEntityTable(stillDb.accountSettings, rows, 'money_settings', userId);
       await mergeEntityTable(stillDb.accountSettings, rows, 'health_settings', userId);
+      await reconcileOutboxForRemoteRows(rows);
     },
   );
 }
@@ -280,23 +379,31 @@ async function savePullCursor(cursor: number) {
 
 async function compactAcknowledgedLocalTombstones(cursor: number) {
   const cutoff = Date.now() - LOCAL_TOMBSTONE_RETENTION_MS;
-  const tables: Array<Table<any, string>> = [
-    stillDb.tasks,
-    stillDb.events,
-    stillDb.journalEntries,
-    stillDb.expenses,
-    stillDb.entityLinks,
-    stillDb.workShifts,
-    stillDb.checkIns,
+  const sources: Array<{ source: SyncOutboxSource; table: Table<any, string> }> = [
+    { source: 'tasks', table: stillDb.tasks },
+    { source: 'events', table: stillDb.events },
+    { source: 'journalEntries', table: stillDb.journalEntries },
+    { source: 'expenses', table: stillDb.expenses },
+    { source: 'entityLinks', table: stillDb.entityLinks },
+    { source: 'workShifts', table: stillDb.workShifts },
+    { source: 'checkIns', table: stillDb.checkIns },
   ];
-  await stillDb.transaction('rw', tables, async () => {
-    for (const table of tables) {
-      await table.filter((record: LocalSyncFields) => Boolean(
-        record.deletedAt
-        && record.deletedAt < cutoff
-        && record.dirty === false
-        && (record.serverRevision ?? Number.MAX_SAFE_INTEGER) <= cursor,
-      )).delete();
+  const tables = sources.map(({ table }) => table);
+
+  await stillDb.transaction('rw', [...tables, stillDb.syncOutbox], async () => {
+    for (const { source, table } of sources) {
+      const primaryKeys = await table
+        .where('deletedAt')
+        .below(cutoff)
+        .filter((record: LocalSyncFields) => Boolean(
+          record.dirty === false
+          && (record.serverRevision ?? Number.MAX_SAFE_INTEGER) <= cursor,
+        ))
+        .primaryKeys();
+      const ids = primaryKeys.map(String);
+      if (!ids.length) continue;
+      await table.bulkDelete(ids);
+      await stillDb.syncOutbox.bulkDelete(ids.map((id) => syncOutboxKey(source, id)));
     }
   });
 }

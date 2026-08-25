@@ -23,18 +23,8 @@ function publish(next: CloudSyncStatusSnapshot) {
   listeners.forEach((listener) => listener());
 }
 
-async function countDirtyRows() {
-  const counts = await Promise.all([
-    stillDb.tasks.filter((record) => record.dirty === true).count(),
-    stillDb.events.filter((record) => record.dirty === true).count(),
-    stillDb.journalEntries.filter((record) => record.dirty === true).count(),
-    stillDb.expenses.filter((record) => record.dirty === true).count(),
-    stillDb.entityLinks.filter((record) => record.dirty === true).count(),
-    stillDb.workShifts.filter((record) => record.dirty === true).count(),
-    stillDb.checkIns.filter((record) => record.dirty === true).count(),
-    stillDb.accountSettings.filter((record) => record.dirty === true).count(),
-  ]);
-  return counts.reduce((total, count) => total + count, 0);
+async function countPendingChanges() {
+  return stillDb.syncOutbox.count();
 }
 
 async function readLastSuccessfulSync() {
@@ -62,7 +52,7 @@ export function subscribeCloudSyncStatus(listener: () => void) {
 
 export async function refreshCloudSyncStatus() {
   const [pendingChanges, lastSyncedAt] = await Promise.all([
-    countDirtyRows(),
+    countPendingChanges(),
     readLastSuccessfulSync(),
   ]);
 
@@ -105,7 +95,7 @@ export async function recordCloudSyncSuccess(completedAt = Date.now()) {
 
   let pendingChanges = snapshot.pendingChanges;
   try {
-    pendingChanges = await countDirtyRows();
+    pendingChanges = await countPendingChanges();
   } catch (error) {
     console.warn('Still could not recount local sync changes after cloud sync:', error);
   }
@@ -121,7 +111,7 @@ export async function recordCloudSyncSuccess(completedAt = Date.now()) {
 export async function markCloudSyncFailure(error: unknown) {
   let pendingChanges = snapshot.pendingChanges;
   try {
-    pendingChanges = await countDirtyRows();
+    pendingChanges = await countPendingChanges();
   } catch (countError) {
     console.warn('Still could not recount local sync changes after a cloud error:', countError);
   }
