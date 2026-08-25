@@ -3,6 +3,7 @@ import {
   Bell,
   BriefcaseBusiness,
   Check,
+  Clock3,
   Heart,
   HeartPulse,
   Sparkles,
@@ -93,7 +94,7 @@ export function MobileHomeOverlay() {
     return left.createdAt - right.createdAt;
   }), [tasks]);
 
-  const visibleTasks = orderedTasks.slice(0, 3);
+  const visibleTasks = orderedTasks.slice(0, 4);
   const lifeSummaries = useMemo(() => buildLifeGardenSummaries({
     tasks,
     events,
@@ -221,7 +222,7 @@ export function MobileHomeOverlay() {
       <section className="still-mobile-section still-mobile-tasks">
         <div className="still-mobile-section-head">
           <h2>Tasks</h2>
-          <button onClick={() => navigate('/tasks')} type="button">View all</button>
+          <button onClick={() => navigate('/tasks')} type="button">See all</button>
         </div>
 
         <div className="still-task-list">
@@ -241,7 +242,7 @@ export function MobileHomeOverlay() {
                   aria-label={`${task.completed ? 'Mark incomplete' : 'Complete'} ${task.title}`}
                   aria-pressed={task.completed}
                 >
-                  {task.completed && <Check size={15} />}
+                  {task.completed && <Check size={14} />}
                 </button>
                 <button className="still-task-main" onClick={() => openTaskEditor(task.id)} type="button">
                   <span className={`still-task-icon area-${task.areaId ?? 'personal'}`}><Icon size={17} /></span>
@@ -249,7 +250,7 @@ export function MobileHomeOverlay() {
                     <strong>{task.title}</strong>
                     <small>{label}</small>
                   </span>
-                  <span className="still-task-due">{taskDueLabel(task, todayKey)}</span>
+                  <span className="still-task-due"><Clock3 size={12} />{taskDueLabel(task, todayKey)}</span>
                 </button>
               </div>
             );
