@@ -1,10 +1,16 @@
 import { Cloud, LogOut, RefreshCw, RotateCcw, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { clearDemoAppState, endDemoSession, isDemoMode } from '../../app/demoMode';
-import { signOutAndClearDevice, signOutKeepingLocalCopy } from '../../data/accountLifecycleCore';
+import {
+  AccountLifecycleError,
+  signOutAndClearDevice,
+  signOutKeepingLocalCopy,
+  type AccountLifecycleStage,
+} from '../../data/accountLifecycleCore';
 import { synchronizeCloudData } from '../../data/cloudSync';
 import { clearLocalStillData } from '../../data/localDataLifecycle';
 import { stillDb } from '../../data/localDb';
+import { flushRepositoryWrites } from '../../data/repositoryWriteQueue';
 import {
   getCloudSession,
   getSupabaseConfigurationError,
@@ -15,6 +21,14 @@ import {
 } from '../../data/supabaseClient';
 import { useCloudSyncStatus } from '../../hooks/useCloudSyncStatus';
 import { applyPermanentDataSnapshot } from '../../hooks/usePermanentDataRepository';
+
+function clearStageMessage(stage: AccountLifecycleStage) {
+  if (stage === 'syncing') return 'Syncing everything before clearing this browser…';
+  if (stage === 'preparing-local-clear') return 'Finishing queued local saves…';
+  if (stage === 'clearing-local-data') return 'Removing Still data from this browser…';
+  if (stage === 'signing-out') return 'Local data is clear. Signing out this browser…';
+  return 'Finishing logout…';
+}
 
 function DemoSandboxSettings() {
   const [busy, setBusy] = useState(false);
@@ -60,6 +74,7 @@ export function CloudSyncSettings() {
   const [available, setAvailable] = useState(isSupabaseAvailable());
   const [loading, setLoading] = useState(!demoMode);
   const [message, setMessage] = useState('');
+  const [clearPendingSignOut, setClearPendingSignOut] = useState(false);
   const cloudStatus = useCloudSyncStatus();
   const syncing = cloudStatus.phase === 'syncing';
 
@@ -109,23 +124,67 @@ export function CloudSyncSettings() {
     setLoading(true);
     setMessage('Trying one cloud sync before logout…');
     try {
-      await signOutKeepingLocalCopy({ sync: async () => { await performSync(); }, signOut: signOutCloud });
+      await signOutKeepingLocalCopy({
+        sync: async () => { await performSync(); },
+        signOut: signOutCloud,
+        onProgress: (progress) => {
+          if (progress.stage === 'signing-out') {
+            setMessage(progress.synced
+              ? 'Cloud sync finished. Signing out this browser…'
+              : 'Cloud sync could not finish. Signing out while keeping the local copy…');
+          }
+        },
+      });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Still could not sign out right now.');
       setLoading(false);
     }
   };
 
-  const disconnectAndClear = async () => {
-    const confirmation = window.prompt('Still will require a successful cloud sync first, then sign out and remove this account’s Still-managed local database and device preferences from this browser. Browser-granted permissions and cached app files are controlled by the browser and may remain. Type CLEAR to continue.');
-    if (confirmation !== 'CLEAR') return;
+  const retrySignOutAfterClear = async () => {
     setLoading(true);
-    setMessage('Syncing before clearing this browser…');
+    setMessage('Retrying sign out on this browser…');
     try {
-      await signOutAndClearDevice({ sync: async () => { await performSync(); }, signOut: signOutCloud, clearLocal: clearLocalStillData });
+      await signOutCloud();
       window.location.reload();
     } catch (error) {
-      setMessage(error instanceof Error ? `Local data was not cleared because Still could not safely finish the operation: ${error.message}` : 'Local data was not cleared because Still could not safely finish the operation.');
+      setMessage(error instanceof Error
+        ? `Local Still data is already cleared, but this browser session is still active: ${error.message}`
+        : 'Local Still data is already cleared, but this browser session is still active.');
+      setLoading(false);
+    }
+  };
+
+  const disconnectAndClear = async () => {
+    const confirmation = window.prompt('Still will require a successful cloud sync first, finish any queued local saves, remove this account’s Still-managed local database and device preferences from this browser, and then sign out only this browser session. Browser-granted permissions and cached app files are controlled by the browser and may remain. Type CLEAR to continue.');
+    if (confirmation !== 'CLEAR') return;
+    setLoading(true);
+    setClearPendingSignOut(false);
+    setMessage('Syncing before clearing this browser…');
+    try {
+      await signOutAndClearDevice({
+        sync: async () => { await performSync(); },
+        prepareLocalClear: flushRepositoryWrites,
+        clearLocal: clearLocalStillData,
+        signOut: signOutCloud,
+        onProgress: (progress) => setMessage(clearStageMessage(progress.stage)),
+      });
+      window.location.reload();
+    } catch (error) {
+      if (error instanceof AccountLifecycleError && error.progress.cleared && !error.progress.signedOut) {
+        setClearPendingSignOut(true);
+        setMessage(`Your synced Still data was removed from this browser, but the browser session could not be signed out: ${error.message}`);
+      } else if (error instanceof AccountLifecycleError && error.stage === 'syncing') {
+        setMessage(`Nothing was cleared and you are still signed in because the required cloud sync failed: ${error.message}`);
+      } else if (error instanceof AccountLifecycleError && error.stage === 'preparing-local-clear') {
+        setMessage(`Nothing was cleared and you are still signed in because Still could not finish queued local saves: ${error.message}`);
+      } else if (error instanceof AccountLifecycleError && error.stage === 'clearing-local-data') {
+        setMessage(`The browser clear could not finish, so Still kept this account signed in: ${error.message}`);
+      } else {
+        setMessage(error instanceof Error
+          ? `Still could not safely finish the clear-device logout: ${error.message}`
+          : 'Still could not safely finish the clear-device logout.');
+      }
       setLoading(false);
     }
   };
@@ -136,7 +195,9 @@ export function CloudSyncSettings() {
       <div className="card settings-card">
         {!available ? <p className="settings-message" role="status">{message || 'Account access is not configured for this deployment.'}</p>
           : loading ? <p className="settings-message" role="status">Loading your account…</p>
-            : session ? <>
+            : session ? clearPendingSignOut ? <>
+              <div className="settings-action-row"><span><strong>Local Still data is cleared</strong><small>The cloud sync completed, but this browser session is still active. Finish signing out before continuing here.</small></span><button className="settings-primary-action" onClick={() => void retrySignOutAfterClear()} type="button"><LogOut size={15} /> Retry sign out</button></div>
+            </> : <>
               <div className="settings-action-row"><span><strong>{session.user.email ?? 'Still account'}</strong><small>{cloudStatus.pendingChanges > 0
                 ? `${cloudStatus.pendingChanges} local ${cloudStatus.pendingChanges === 1 ? 'change is' : 'changes are'} saved here and waiting for cloud sync.`
                 : cloudStatus.error
@@ -148,7 +209,7 @@ export function CloudSyncSettings() {
             </> : <p className="settings-message" role="status">Your account session ended. Return to the login screen to continue.</p>}
         {available && message && <p className="settings-message" role="status">{message}</p>}
         <p className="settings-footnote">Profile name, appearance, reminder schedule choices, work profile, and work privacy preference sync with your account. Browser notification permission, whether reminders are enabled on this browser, notification history, location/weather state, and reminder delivery bookkeeping stay device-specific.</p>
-        <p className="settings-footnote">Ordinary logout tries to sync first but can still log out if cloud sync is unavailable; any unsynced changes remain only in this browser until the same account signs in and syncs successfully. Clearing local data is stricter and will not proceed unless sync succeeds.</p>
+        <p className="settings-footnote">Ordinary logout tries to sync first but can still log out if cloud sync is unavailable; any unsynced changes remain only in this browser until the same account signs in and syncs successfully. Clearing local data is stricter: sync and queued local writes must finish first, the local copy is cleared before logout, and a clear failure keeps this browser signed in. Logout affects only the current browser session, not your other signed-in devices.</p>
       </div>
     </section>
   );

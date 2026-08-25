@@ -98,7 +98,7 @@ export async function signOutCloud() {
   const supabase = getSupabaseClient();
   if (!supabase) return;
 
-  const { error } = await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut({ scope: 'local' });
   if (error) throw new Error(error.message);
 }
 
