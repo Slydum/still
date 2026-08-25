@@ -1,0 +1,6 @@
+@media (max-width: 1023px) {
+  html:has(.still-mobile-home) .dashboard-shell {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
