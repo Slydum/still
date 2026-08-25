@@ -17,9 +17,8 @@ describe('sync outbox core', () => {
   });
 
   it('keeps identical record ids distinct across sync sources', () => {
-    assert.notEqual(
-      syncOutboxKey('tasks', 'shared-id'),
-      syncOutboxKey('events', 'shared-id'),
+    assert.ok(
+      syncOutboxKey('tasks', 'shared-id') !== syncOutboxKey('events', 'shared-id'),
     );
   });
 
