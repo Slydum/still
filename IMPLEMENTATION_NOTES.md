@@ -35,7 +35,13 @@ Work route entry modules remain intentionally thin. `WorkHubPage.tsx` owns featu
 
 Still is local-first. `usePermanentDataRepository.ts` persists supported edits to the Dexie database before cloud synchronization. IndexedDB is the canonical durable local database.
 
-The current Dexie schema stores tasks, events, journal entries, expenses, notification history, entity links, Work shifts, check-ins, settings records, and repository metadata. Notification history is durable on the local device but is intentionally excluded from cloud synchronization.
+The current Dexie schema stores tasks, events, journal entries, expenses, notification history, entity links, Work shifts, check-ins, settings records, repository metadata, and a local sync outbox. Notification history is durable on the local device but is intentionally excluded from cloud synchronization.
+
+The sync outbox is an index of pending work, not a second data store. Each entry contains only the local table source, record ID, and enqueue time. The authoritative record payload and logical sync version remain in the normal Dexie table. Local mutations write the record and its outbox entry in the same Dexie transaction, so a queued identifier cannot represent an uncommitted record change. Repeated edits to the same record overwrite the same stable outbox key, so the queue grows with the number of distinct pending records rather than the number of edits.
+
+Dexie schema v7 seeds the outbox once for dirty rows already present on an upgraded installation. After that migration, normal push discovery reads only queued identifiers and fetches those records by primary key instead of scanning every permanent table for `dirty === true`. Sync status likewise uses the outbox count. Remote acknowledgements and pulls reconcile affected outbox keys in the same transaction that merges the authoritative cloud rows, preserving a newer local dirty mutation if one raced with an in-flight push.
+
+Cloud pull application fetches only the local records whose IDs appear in the remote page before running the existing logical-version merge. A pull therefore no longer loads a whole local table just to merge a handful of cloud changes. Acknowledged tombstone compaction starts from the existing `deletedAt` index and removes matching outbox keys defensively, rather than filtering every row in every synchronized collection.
 
 Account settings are stored as four independent records in the existing settings table:
 
@@ -76,6 +82,7 @@ The canonical product-facing storage, privacy, recovery, and sync contract is `D
 Repository bootstrap is intentionally backwards-compatible:
 
 - older Dexie schemas are upgraded in place without deleting existing records;
+- Dexie v7 performs a one-time scan of existing synchronized tables to seed outbox entries for already-dirty rows, then steady-state sync uses the queue instead of full-table dirty scans;
 - old `still-app-state-v1` durable fields can hydrate long enough to seed IndexedDB, after which device-only persistence prunes the duplicate localStorage payload;
 - a bundled v1 `account` settings row is split into `account`, `work`, `money`, and `health` rows;
 - fresh-device default settings use clean zero-revision placeholders so real cloud settings beat defaults;
