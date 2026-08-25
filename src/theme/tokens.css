@@ -22,7 +22,7 @@
   --text: var(--still-ink);
   --text-strong: #272321;
   --muted: #756f6b;
-  --muted-soft: #8a837f;
+  --muted-soft: #77706c;
 
   /* Compatibility aliases for older feature styles. */
   --lavender: var(--still-blush);
