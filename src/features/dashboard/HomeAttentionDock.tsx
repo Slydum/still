@@ -1,7 +1,9 @@
 import { addDays, format } from 'date-fns';
-import { AlertCircle, CalendarDays, ChevronRight, Search, Sparkles, SquareCheckBig, X } from 'lucide-react';
+import { AlertCircle, Bell, CalendarDays, ChevronRight, Search, Sparkles, SquareCheckBig, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { nextReminderOccurrence, reminderFromEntry } from '../../domain/reminders';
+import { useCurrentDate } from '../../hooks/useCurrentDate';
 import { useAppStore } from '../../stores/useAppStore';
 import { getLocalDateKey } from '../../theme/stillContext';
 import { getEventOccurrences } from '../calendar/eventUtils';
@@ -9,7 +11,7 @@ import './home-attention-dock.css';
 
 type AttentionItem = {
   id: string;
-  kind: 'overdue' | 'task' | 'event' | 'check-in';
+  kind: 'overdue' | 'task' | 'event' | 'check-in' | 'reminder';
   title: string;
   detail: string;
   priority: number;
@@ -27,8 +29,10 @@ export function HomeAttentionDock() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
+  const now = useCurrentDate();
   const tasks = useAppStore((state) => state.tasks);
   const events = useAppStore((state) => state.events);
+  const journalEntries = useAppStore((state) => state.journalEntries);
   const mood = useAppStore((state) => state.mood);
   const energy = useAppStore((state) => state.energy);
   const checkInDate = useAppStore((state) => state.checkInDate);
@@ -36,7 +40,7 @@ export function HomeAttentionDock() {
   const openEventEditor = useAppStore((state) => state.openEventEditor);
   const openQuickAdd = useAppStore((state) => state.openQuickAdd);
 
-  const today = getLocalDateKey();
+  const today = getLocalDateKey(now);
   const tomorrow = format(addDays(new Date(`${today}T12:00:00`), 1), 'yyyy-MM-dd');
 
   const items = useMemo<AttentionItem[]>(() => {
@@ -74,6 +78,25 @@ export function HomeAttentionDock() {
       });
     }
 
+    journalEntries.map(reminderFromEntry).forEach((reminder) => {
+      if (!reminder?.active) return;
+      const occurrence = nextReminderOccurrence(reminder, now);
+      if (!occurrence) return;
+      const date = getLocalDateKey(occurrence);
+      if (date !== today && date !== tomorrow) return;
+      next.push({
+        id: `reminder:${reminder.id}:${occurrence.getTime()}`,
+        kind: 'reminder',
+        title: reminder.title,
+        detail: `${date === today ? 'Reminder today' : 'Reminder tomorrow'} · ${occurrence.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`,
+        priority: date === today ? 2.5 : 5.5,
+        open: () => {
+          setExpanded(false);
+          navigate('/reminders');
+        },
+      });
+    });
+
     if (checkInDate !== today || !mood || !energy) {
       next.push({
         id: 'check-in:today',
@@ -91,7 +114,7 @@ export function HomeAttentionDock() {
     return next
       .sort((left, right) => left.priority - right.priority || left.title.localeCompare(right.title))
       .slice(0, 6);
-  }, [checkInDate, energy, events, mood, openEventEditor, openQuickAdd, openTaskEditor, tasks, today, tomorrow]);
+  }, [checkInDate, energy, events, journalEntries, mood, navigate, now, openEventEditor, openQuickAdd, openTaskEditor, tasks, today, tomorrow]);
 
   if (pathname !== '/') return null;
 
@@ -109,7 +132,7 @@ export function HomeAttentionDock() {
             {items.length === 0 ? (
               <div className="home-attention-clear"><Sparkles size={20} /><span><strong>You’re caught up.</strong><small>Still will surface something here when it needs you.</small></span></div>
             ) : items.map((item) => {
-              const Icon = item.kind === 'event' ? CalendarDays : item.kind === 'check-in' ? Sparkles : item.kind === 'overdue' ? AlertCircle : SquareCheckBig;
+              const Icon = item.kind === 'event' ? CalendarDays : item.kind === 'reminder' ? Bell : item.kind === 'check-in' ? Sparkles : item.kind === 'overdue' ? AlertCircle : SquareCheckBig;
               return (
                 <button key={item.id} className={`home-attention-row is-${item.kind}`} onClick={item.open} type="button">
                   <span className="home-attention-icon"><Icon size={17} /></span>
