@@ -2,8 +2,10 @@ import { addDays, format, parseISO, subDays } from 'date-fns';
 import { CalendarDays, CheckSquare, Clock3, HeartPulse, Link2, NotebookPen, Sparkles } from 'lucide-react';
 import { useMemo } from 'react';
 import type { CheckInRecord } from '../../data/stillDb';
+import { isAttachmentEntry } from '../../domain/attachments';
 import { goalConnections, goalFromEntry, isGoalEntry, type GoalRecord } from '../../domain/goals';
 import type { LifeEntityRef } from '../../domain/lifeAreas';
+import { isReminderEntry } from '../../domain/reminders';
 import { getWeekWindow } from '../../domain/weeklyReflection';
 import { useAppStore } from '../../stores/useAppStore';
 import { getLocalDateKey } from '../../theme/stillContext';
@@ -47,7 +49,8 @@ export function ContinuityPanel({ anchorDate, checkIns }: { anchorDate: string; 
   }, [anchorDate]);
 
   const eventOccurrences = useMemo(() => getEventOccurrences(events, windows.previousStart, windows.end), [events, windows.end, windows.previousStart]);
-  const reflections = useMemo(() => journalEntries.filter((entry) => !isGoalEntry(entry)), [journalEntries]);
+  const reflections = useMemo(() => journalEntries.filter((entry) =>
+    !isGoalEntry(entry) && !isReminderEntry(entry) && !isAttachmentEntry(entry)), [journalEntries]);
 
   const metrics = useMemo<WindowMetric[]>(() => {
     const completedDates = tasks.filter((task) => task.completedAt).map((task) => dayKey(task.completedAt!));

@@ -30,6 +30,8 @@ const LifeAreaPage = lazy(() => import('../features/life-area/LifeAreaPage').the
 const SearchPage = lazy(() => import('../features/search/SearchPage').then((module) => ({ default: module.SearchPage })));
 const WeeklyReflectionPage = lazy(() => import('../features/reflection/WeeklyReflectionPage').then((module) => ({ default: module.WeeklyReflectionPage })));
 const GoalsPage = lazy(() => import('../features/goals/GoalsPage').then((module) => ({ default: module.GoalsPage })));
+const RemindersPage = lazy(() => import('../features/reminders/RemindersPage').then((module) => ({ default: module.RemindersPage })));
+const AttachmentsPage = lazy(() => import('../features/attachments/AttachmentsPage').then((module) => ({ default: module.AttachmentsPage })));
 const HomeAttentionDock = lazy(() => import('../features/dashboard/HomeAttentionDock').then((module) => ({ default: module.HomeAttentionDock })));
 const HomeGoalsStrip = lazy(() => import('../features/goals/HomeGoalsStrip').then((module) => ({ default: module.HomeGoalsStrip })));
 
@@ -75,6 +77,8 @@ function AppRoutes() {
     <Route path="/calendar" element={<CalendarPage />} />
     <Route path="/search" element={<Suspense fallback={<AppLoading message="Opening search…" />}><SearchPage /></Suspense>} />
     <Route path="/goals" element={<Suspense fallback={<AppLoading message="Opening goals…" />}><GoalsPage /></Suspense>} />
+    <Route path="/reminders" element={<Suspense fallback={<AppLoading message="Opening reminders…" />}><RemindersPage /></Suspense>} />
+    <Route path="/attachments" element={<Suspense fallback={<AppLoading message="Opening attachments…" />}><AttachmentsPage /></Suspense>} />
     <Route path="/check-ins" element={<Suspense fallback={<AppLoading message="Opening check-ins…" />}><CheckInHistoryPage /></Suspense>} />
     <Route path="/more" element={<Suspense fallback={<AppLoading message="Opening Settings…" />}><MorePage /></Suspense>} />
     <Route path="/reflection" element={<Suspense fallback={<AppLoading message="Opening your overview…" />}><WeeklyReflectionPage /></Suspense>} />

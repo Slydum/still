@@ -17,6 +17,7 @@ export type WeeklyJournalRecord = {
   id: string;
   entryDate: string;
   areaId?: LifeAreaId;
+  tags?: string[];
 };
 
 export type WeeklyExpenseRecord = {
@@ -81,6 +82,7 @@ export type WeeklyReflection = {
 };
 
 const lifeAreaIds: LifeAreaId[] = ['work', 'love', 'health', 'money'];
+const SYSTEM_JOURNAL_TAGS = new Set(['still-goal', 'still-reminder', 'still-attachment']);
 
 export function getWeekWindow(anchorDate: string) {
   const start = startOfWeek(parseISO(anchorDate), { weekStartsOn: 1 });
@@ -118,7 +120,9 @@ export function buildWeeklyReflection(input: WeeklyReflectionInput): WeeklyRefle
   const completedTasks = input.tasks.filter((task) => task.completedAt
     && inWindow(localDateKeyFromTimestamp(task.completedAt), startDate, endDate));
   const events = input.events.filter((event) => inWindow(event.date, startDate, endDate));
-  const journalEntries = input.journalEntries.filter((entry) => inWindow(entry.entryDate, startDate, endDate));
+  const journalEntries = input.journalEntries.filter((entry) =>
+    inWindow(entry.entryDate, startDate, endDate)
+    && !entry.tags?.some((tag) => SYSTEM_JOURNAL_TAGS.has(tag)));
   const expenses = input.expenses.filter((expense) => inWindow(expense.expenseDate, startDate, endDate));
   const workShifts = input.workShifts.filter((shift) => inWindow(localDateKeyFromTimestamp(shift.startedAt), startDate, endDate));
   const checkIns = input.checkIns.filter((record) => inWindow(record.date, startDate, endDate));

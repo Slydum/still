@@ -1,10 +1,12 @@
 import {
   ArrowLeft,
+  Bell,
   BriefcaseBusiness,
   CalendarDays,
   Heart,
   HeartPulse,
   NotebookPen,
+  Paperclip,
   Search,
   SquareCheckBig,
   Target,
@@ -15,10 +17,12 @@ import {
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBackNavigation } from '../../components/navigation/useBackNavigation';
+import { attachmentFromEntry } from '../../domain/attachments';
+import { reminderFromEntry } from '../../domain/reminders';
 import { useAppStore } from '../../stores/useAppStore';
 import './search.css';
 
-type SearchKind = 'task' | 'event' | 'journal' | 'person' | 'money' | 'work' | 'health' | 'goal';
+type SearchKind = 'task' | 'event' | 'journal' | 'person' | 'money' | 'work' | 'health' | 'goal' | 'reminder' | 'attachment';
 
 type SearchResult = {
   id: string;
@@ -56,6 +60,8 @@ const KIND_LABELS: Record<SearchKind, string> = {
   work: 'Work',
   health: 'Health',
   goal: 'Goal',
+  reminder: 'Reminder',
+  attachment: 'Attachment',
 };
 
 const KIND_ICONS: Record<SearchKind, LucideIcon> = {
@@ -67,6 +73,8 @@ const KIND_ICONS: Record<SearchKind, LucideIcon> = {
   work: BriefcaseBusiness,
   health: HeartPulse,
   goal: Target,
+  reminder: Bell,
+  attachment: Paperclip,
 };
 
 function normalize(value: string | number | undefined) {
@@ -130,6 +138,34 @@ export function SearchPage() {
     }
 
     for (const entry of journalEntries) {
+      const reminder = reminderFromEntry(entry);
+      if (reminder) {
+        results.push({
+          id: `reminder:${entry.id}`,
+          kind: 'reminder',
+          title: reminder.title,
+          detail: new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(reminder.remindAt)),
+          searchable: `${reminder.note ?? ''} ${reminder.repeat} ${reminder.target?.title ?? ''}`,
+          updatedAt: entry.updatedAt,
+          open: () => navigate('/reminders'),
+        });
+        continue;
+      }
+
+      const attachment = attachmentFromEntry(entry);
+      if (attachment) {
+        results.push({
+          id: `attachment:${entry.id}`,
+          kind: 'attachment',
+          title: attachment.name,
+          detail: `${attachment.target.kind === 'transaction' ? 'Money' : 'Journal'} attachment`,
+          searchable: `${attachment.mimeType} ${attachment.target.title}`,
+          updatedAt: entry.updatedAt,
+          open: () => navigate('/attachments'),
+        });
+        continue;
+      }
+
       const isGoal = entry.tags.includes('still-goal');
       const isPerson = !isGoal && entry.areaId === 'love' && entry.tags.includes('love-person');
       const kind: SearchKind = isGoal ? 'goal' : isPerson ? 'person' : 'journal';
@@ -247,7 +283,7 @@ export function SearchPage() {
         <input
           autoFocus
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search tasks, goals, people, journal, money…"
+          placeholder="Search tasks, reminders, goals, people, journal…"
           type="search"
           value={query}
           aria-label="Search Still"
@@ -259,7 +295,7 @@ export function SearchPage() {
         <section className="card search-empty-state">
           <Search size={25} />
           <strong>Your records are searchable together.</strong>
-          <p>Try a goal, person, task, place, note, bill, category, or something you remember writing.</p>
+          <p>Try a reminder, goal, person, task, attachment, bill, category, or something you remember writing.</p>
         </section>
       ) : matches.length === 0 ? (
         <section className="card search-empty-state" aria-live="polite">

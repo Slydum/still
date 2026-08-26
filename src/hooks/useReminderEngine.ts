@@ -6,6 +6,7 @@ import {
   getCheckInReminderCopy,
   getCheckInSnooze,
 } from '../features/check-ins/checkInReminder';
+import { reminderFromEntry, reminderOccurrenceAtOrBefore } from '../domain/reminders';
 import { useAppStore } from '../stores/useAppStore';
 import { getLocalDateKey } from '../theme/stillContext';
 
@@ -14,7 +15,7 @@ const CHECK_INTERVAL_MS = 30_000;
 const DELIVERY_WINDOW_MS = 15 * 60_000;
 const SNOOZE_DELIVERY_WINDOW_MS = 60 * 60_000;
 
-type ReminderKind = 'task' | 'event' | 'check-in';
+type ReminderKind = 'task' | 'event' | 'check-in' | 'reminder';
 type ActionableNotificationOptions = NotificationOptions & {
   actions?: Array<{ action: string; title: string }>;
 };
@@ -41,7 +42,7 @@ async function displayReminder(title: string, body: string, tag: string, kind: R
     tag,
     data: {
       kind,
-      url: isCheckIn ? '/?checkin=now' : '/notifications',
+      url: isCheckIn ? '/?checkin=now' : kind === 'reminder' ? '/reminders' : '/notifications',
     },
   };
 
@@ -107,7 +108,7 @@ export function useReminderEngine() {
         const elapsed = now.getTime() - dueAt.getTime();
         if (sent.has(id) || elapsed < 0 || elapsed > deliveryWindowMs) return;
         sent.add(id);
-        state.addNotification({ id, title, body, kind });
+        state.addNotification({ id, title, body, kind: kind === 'reminder' ? 'system' : kind });
         void displayReminder(title, body, id, kind);
       };
 
@@ -124,6 +125,19 @@ export function useReminderEngine() {
           queue(`event:${event.occurrenceId}:${state.eventReminderMinutes}`, dueAt, 'An event is coming up', `${event.title} starts at ${event.startTime}`, 'event');
         });
       }
+
+      state.journalEntries
+        .map(reminderFromEntry)
+        .filter((reminder) => reminder?.active)
+        .forEach((reminder) => {
+          if (!reminder) return;
+          const dueAt = reminderOccurrenceAtOrBefore(reminder, now);
+          if (!dueAt || getLocalDateKey(dueAt) !== today) return;
+          const id = `reminder:${reminder.id}:${today}:${dueAt.getTime()}`;
+          const body = reminder.note?.trim()
+            || (reminder.target ? `Related to ${reminder.target.title}` : reminder.title);
+          queue(id, dueAt, reminder.title, body, 'reminder');
+        });
 
       if (state.checkInDate === today) {
         clearCheckInSnooze();
