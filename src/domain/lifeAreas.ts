@@ -48,7 +48,8 @@ export type LifeEntityKind =
   | 'shift'
   | 'transaction'
   | 'person'
-  | 'health-record';
+  | 'health-record'
+  | 'goal';
 
 export type LifeEntityRef = {
   kind: LifeEntityKind;
