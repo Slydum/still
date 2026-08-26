@@ -10,6 +10,7 @@ import { getCloudSession, isSupabaseAvailable, signOutCloud, subscribeToCloudSes
 import { AuthPage } from '../features/auth/AuthPage';
 import { CalendarPage } from '../features/calendar/CalendarPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
+import { HomeAttentionDock } from '../features/dashboard/HomeAttentionDock';
 import { JournalPage } from '../features/journal/JournalPage';
 import { WeeklyReflectionPage } from '../features/reflection/WeeklyReflectionPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
@@ -84,7 +85,7 @@ function AppRoutes() {
     <Route path="/life/love" element={<Suspense fallback={<AppLoading message="Opening Love…" />}><LovePage /></Suspense>} />
     <Route path="/life/:areaId" element={<Suspense fallback={<AppLoading message="Opening your Life Area…" />}><LifeAreaPage /></Suspense>} />
     <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes><SyncConfidenceIndicator /><BottomNav /><QuickAddSheet /></div>;
+  </Routes><SyncConfidenceIndicator /><HomeAttentionDock /><BottomNav /><QuickAddSheet /></div>;
 }
 
 function DemoApp() {
