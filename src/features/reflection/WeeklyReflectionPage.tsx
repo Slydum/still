@@ -19,6 +19,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBackNavigation } from '../../components/navigation/useBackNavigation';
 import { listCheckIns, type CheckInRecord } from '../../data/stillDb';
+import { isGoalEntry } from '../../domain/goals';
 import {
   buildWeeklyReflection,
   getWeekWindow,
@@ -28,6 +29,7 @@ import type { LifeAreaId } from '../../domain/lifeAreas';
 import { useAppStore } from '../../stores/useAppStore';
 import { getLocalDateKey } from '../../theme/stillContext';
 import { getEventOccurrences } from '../calendar/eventUtils';
+import { ContinuityPanel } from './ContinuityPanel';
 import './weekly-reflection.css';
 
 const lifeAreas: Array<{ id: LifeAreaId; label: string }> = [
@@ -96,7 +98,7 @@ function buildReflectionForAnchor(
     anchorDate,
     tasks,
     events: eventOccurrences,
-    journalEntries,
+    journalEntries: journalEntries.filter((entry) => !isGoalEntry(entry)),
     expenses,
     workShifts,
     checkIns,
@@ -191,6 +193,8 @@ export function WeeklyReflectionPage() {
         <WeeklyMetric icon={<Timer size={19} />} value={reflection.shifts} label="work shifts" />
         <WeeklyMetric icon={<ReceiptText size={19} />} value={reflection.expenses} label="expenses recorded" />
       </section>
+
+      <ContinuityPanel anchorDate={anchorDate} checkIns={checkIns} />
 
       {reflection.highlights.length > 0 && (
         <section className="card weekly-highlights" aria-labelledby="weekly-highlights-title">
