@@ -84,7 +84,10 @@ export function SearchPage() {
   const openTaskEditor = useAppStore((state) => state.openTaskEditor);
   const openEventEditor = useAppStore((state) => state.openEventEditor);
   const openJournalEditor = useAppStore((state) => state.openJournalEditor);
-  const supplemental = useAppStore((state) => state as unknown as SearchSupplementState);
+  const healthRoutines = useAppStore((state) => (state as unknown as SearchSupplementState).healthRoutines ?? []);
+  const moneyAccounts = useAppStore((state) => (state as unknown as SearchSupplementState).moneyAccounts ?? []);
+  const moneyBills = useAppStore((state) => (state as unknown as SearchSupplementState).moneyBills ?? []);
+  const moneySavingsGoals = useAppStore((state) => (state as unknown as SearchSupplementState).moneySavingsGoals ?? []);
 
   const allResults = useMemo<SearchResult[]>(() => {
     const results: SearchResult[] = [];
@@ -149,12 +152,12 @@ export function SearchPage() {
         title: shift.note.trim(),
         detail: new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(shift.startedAt)),
         searchable: 'work shift note',
-        updatedAt: shift.updatedAt ?? shift.endedAt ?? shift.startedAt,
+        updatedAt: shift.endedAt ?? shift.startedAt,
         open: () => navigate('/work'),
       });
     }
 
-    for (const routine of supplemental.healthRoutines ?? []) {
+    for (const routine of healthRoutines) {
       results.push({
         id: `health:routine:${routine.id}`,
         kind: 'health',
@@ -166,7 +169,7 @@ export function SearchPage() {
       });
     }
 
-    for (const account of supplemental.moneyAccounts ?? []) {
+    for (const account of moneyAccounts) {
       results.push({
         id: `money:account:${account.id}`,
         kind: 'money',
@@ -178,7 +181,7 @@ export function SearchPage() {
       });
     }
 
-    for (const bill of supplemental.moneyBills ?? []) {
+    for (const bill of moneyBills) {
       results.push({
         id: `money:bill:${bill.id}`,
         kind: 'money',
@@ -190,7 +193,7 @@ export function SearchPage() {
       });
     }
 
-    for (const goal of supplemental.moneySavingsGoals ?? []) {
+    for (const goal of moneySavingsGoals) {
       results.push({
         id: `money:goal:${goal.id}`,
         kind: 'money',
@@ -203,7 +206,7 @@ export function SearchPage() {
     }
 
     return results;
-  }, [events, expenses, journalEntries, navigate, openEventEditor, openJournalEditor, openTaskEditor, supplemental.healthRoutines, supplemental.moneyAccounts, supplemental.moneyBills, supplemental.moneySavingsGoals, tasks, workShifts]);
+  }, [events, expenses, healthRoutines, journalEntries, moneyAccounts, moneyBills, moneySavingsGoals, navigate, openEventEditor, openJournalEditor, openTaskEditor, tasks, workShifts]);
 
   const terms = normalize(query).split(/\s+/).filter(Boolean);
   const matches = useMemo(
