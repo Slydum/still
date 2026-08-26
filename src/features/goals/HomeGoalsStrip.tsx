@@ -33,7 +33,7 @@ export function HomeGoalsStrip() {
         <div className="home-goals-list">
           {activeGoals.map((goal) => {
             const connections = goalConnections(goal.id, entityLinks).length;
-            return <button key={goal.id} onClick={() => navigate(`/goals?goal=${encodeURIComponent(goal.id)}`)} type="button"><CircleDot size={17} /><span><strong>{goal.title}</strong><small>{connections} connected {connections === 1 ? 'record' : 'records'}{goal.targetDate ? ` · target ${goal.targetDate}` : ''}</small></span><ArrowRight size={15} /></button>;
+            return <button key={goal.id} onClick={() => navigate('/goals')} type="button"><CircleDot size={17} /><span><strong>{goal.title}</strong><small>{connections} connected {connections === 1 ? 'record' : 'records'}{goal.targetDate ? ` · target ${goal.targetDate}` : ''}</small></span><ArrowRight size={15} /></button>;
           })}
         </div>
       )}
