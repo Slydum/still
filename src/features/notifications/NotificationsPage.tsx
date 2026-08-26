@@ -1,8 +1,8 @@
-import { ArrowLeft, Bell, CalendarClock, CheckCheck, CircleCheckBig, Sparkles, Trash2 } from 'lucide-react';
+import { ArrowLeft, Bell, CalendarClock, CheckCheck, CircleCheckBig, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CHECK_IN_FOCUS_EVENT } from '../check-ins/checkInReminder';
-import { useAppStore, type AppNotificationKind } from '../../stores/useAppStore';
+import { useAppStore, type AppNotification, type AppNotificationKind } from '../../stores/useAppStore';
 
 const notificationIcons = {
   task: CircleCheckBig,
@@ -18,6 +18,10 @@ function formatNotificationTime(createdAt: number) {
     return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   }
   return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+function isUniversalReminder(notification: AppNotification) {
+  return notification.id.startsWith('reminder:');
 }
 
 export function NotificationsPage() {
@@ -36,49 +40,59 @@ export function NotificationsPage() {
     window.requestAnimationFrame(() => window.dispatchEvent(new Event(CHECK_IN_FOCUS_EVENT)));
   };
 
-  const openNotification = (kind: AppNotificationKind) => {
-    if (kind === 'check-in') {
+  const openNotification = (notification: AppNotification) => {
+    if (isUniversalReminder(notification)) {
+      navigate('/reminders');
+      return;
+    }
+    if (notification.kind === 'check-in') {
       openCheckIn();
       return;
     }
-    if (kind === 'task') navigate('/tasks');
-    if (kind === 'event') navigate('/calendar');
+    if (notification.kind === 'task') navigate('/tasks');
+    if (notification.kind === 'event') navigate('/calendar');
   };
 
   return (
     <main className="shell notification-center-page">
       <header className="notification-center-header">
         <button onClick={() => navigate('/')} type="button" aria-label="Back home"><ArrowLeft size={19} /></button>
-        <div><p className="section-kicker">Your gentle reminders</p><h1>Notifications</h1><p className="subtle">Recent reminders from tasks, events, and daily check-ins.</p></div>
+        <div><p className="section-kicker">Your gentle reminders</p><h1>Notifications</h1><p className="subtle">Recent task, event, check-in, and saved reminders.</p></div>
       </header>
 
-      {notifications.length > 0 && <div className="notification-center-actions">
-        <button onClick={markAllNotificationsRead} type="button"><CheckCheck size={15} /> Mark all read</button>
-        <button onClick={() => { if (window.confirm('Clear every notification from Still?')) clearNotifications(); }} type="button"><Trash2 size={15} /> Clear all</button>
-      </div>}
+      <div className="notification-center-actions">
+        <button onClick={() => navigate('/reminders')} type="button"><Plus size={15} /> Manage reminders</button>
+        {notifications.length > 0 && <>
+          <button onClick={markAllNotificationsRead} type="button"><CheckCheck size={15} /> Mark all read</button>
+          <button onClick={() => { if (window.confirm('Clear every notification from Still?')) clearNotifications(); }} type="button"><Trash2 size={15} /> Clear all</button>
+        </>}
+      </div>
 
       {notifications.length === 0 ? <section className="notification-center-empty">
-        <span><Bell size={25} /></span><strong>All quiet for now</strong><p>Task, event, and check-in reminders will appear here after Still sends them.</p>
+        <span><Bell size={25} /></span><strong>All quiet for now</strong><p>Tasks, events, check-ins, and your own saved reminders will appear here after Still sends them.</p>
       </section> : <section className="notification-center-list" aria-label="Recent notifications">
         {notifications.map((notification) => {
           const Icon = notificationIcons[notification.kind];
-          const actionable = notification.kind !== 'system';
-          const destination = notification.kind === 'task'
-            ? 'Open tasks.'
-            : notification.kind === 'event'
-              ? 'Open calendar.'
-              : notification.kind === 'check-in'
-                ? 'Open today’s check-in.'
-                : '';
+          const universal = isUniversalReminder(notification);
+          const actionable = universal || notification.kind !== 'system';
+          const destination = universal
+            ? 'Open reminders.'
+            : notification.kind === 'task'
+              ? 'Open tasks.'
+              : notification.kind === 'event'
+                ? 'Open calendar.'
+                : notification.kind === 'check-in'
+                  ? 'Open today’s check-in.'
+                  : '';
 
           return <article
             className={`card notification-center-item${notification.read ? '' : ' is-unread'}${actionable ? ' is-actionable' : ''}`}
             key={notification.id}
-            onClick={actionable ? () => openNotification(notification.kind) : undefined}
+            onClick={actionable ? () => openNotification(notification) : undefined}
             onKeyDown={actionable ? (event) => {
               if (event.key !== 'Enter' && event.key !== ' ') return;
               event.preventDefault();
-              openNotification(notification.kind);
+              openNotification(notification);
             } : undefined}
             role={actionable ? 'button' : undefined}
             tabIndex={actionable ? 0 : undefined}
