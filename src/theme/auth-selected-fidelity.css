@@ -61,7 +61,7 @@
 
 .auth-hero-copy p {
   margin: 8px 0 0;
-  color: #7d7773;
+  color: #6f6965;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -106,8 +106,8 @@
   padding: 0 14px;
   border: 1px solid #ece5e1;
   border-radius: 16px;
-  color: #75877d;
-  background: rgba(255, 255, 255, .95);
+  color: #687b71;
+  background: rgba(255, 255, 255, .96);
   box-shadow: 0 5px 16px rgba(79, 69, 65, .035);
   transition: border-color .18s ease, box-shadow .18s ease;
 }
@@ -130,14 +130,14 @@
   font-size: 16px;
 }
 
-.auth-input-wrap input::placeholder { color: #aaa39f; }
+.auth-input-wrap input::placeholder { color: #9e9792; }
 
 .auth-password-toggle {
   width: 38px;
   height: 38px;
   margin-right: -7px;
   border-radius: 11px;
-  color: #7d7773;
+  color: #6f6965;
 }
 
 .auth-back,
@@ -166,15 +166,15 @@
 
 .auth-status {
   padding: 11px 13px;
-  border: 1px solid rgba(189, 209, 197, .6);
+  border: 1px solid rgba(189, 209, 197, .72);
   border-radius: 13px;
-  color: #65736b;
+  color: #59665f;
   background: #f2f6f3;
 }
 
 .auth-status.is-error {
-  border-color: rgba(211, 162, 157, .62);
-  color: #8b5354;
+  border-color: rgba(211, 162, 157, .7);
+  color: #7f494a;
   background: #fbefee;
 }
 
@@ -208,7 +208,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  color: #918a86;
+  color: #756f6b;
   font-size: 12px;
 }
 
@@ -225,7 +225,7 @@
 
 .auth-switch {
   margin: 20px 0 0;
-  color: #8a837f;
+  color: #756f6b;
   font-size: 13px;
 }
 
@@ -237,11 +237,11 @@
 .auth-privacy {
   margin: 22px 0 0;
   padding-top: 0;
-  color: #98918d;
+  color: #756f6b;
   font-size: 10px;
 }
 
-.auth-privacy svg { color: #9eaba2; }
+.auth-privacy svg { color: #728078; }
 
 .auth-loading {
   background:
@@ -271,6 +271,16 @@
   .auth-card-title { font-size: 27px; }
 }
 
+@media (max-width: 360px) {
+  .auth-native-shell {
+    padding-inline: 16px;
+  }
+
+  .auth-brand { font-size: 44px; }
+  .auth-card { margin-top: 28px; }
+  .auth-card-title { font-size: 25px; }
+}
+
 @media (max-height: 700px) {
   .auth-native-shell {
     justify-content: flex-start;
@@ -280,6 +290,22 @@
   .auth-card { margin-top: 28px; }
 }
 
+@media (max-height: 640px) and (orientation: landscape) {
+  .auth-native-shell {
+    min-height: auto;
+    justify-content: flex-start;
+    padding-top: max(14px, env(safe-area-inset-top));
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+
+  .auth-brand { font-size: 40px; }
+  .auth-card { margin-top: 18px; }
+  .auth-form { gap: 12px; }
+  .auth-input-wrap { min-height: 50px; }
+  .auth-input-wrap input { height: 48px; }
+  .auth-submit { min-height: 50px; }
+}
+
 @media (min-width: 900px) {
   .auth-native-shell {
     width: min(100%, 430px);
@@ -287,20 +313,57 @@
     padding-inline: 0;
   }
 
-  .auth-page--login .auth-hero,
-  .auth-page--login .auth-card,
-  .auth-page--login .auth-switch {
-    grid-column: auto;
-    grid-row: auto;
+  .auth-page--login .auth-native-shell {
+    width: min(100%, 1080px);
+    max-width: 1080px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
+    grid-template-rows: auto auto;
+    align-content: center;
+    column-gap: clamp(64px, 8vw, 112px);
+    padding: 48px clamp(36px, 5vw, 64px);
   }
 
   .auth-page--login .auth-hero {
-    max-width: none;
-    align-self: auto;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    max-width: 520px;
+    align-self: center;
     text-align: left;
   }
 
-  .auth-page--login .auth-brand { font-size: 52px; }
-  .auth-page--login .auth-card { width: 100%; margin-top: 38px; padding: 0; align-self: auto; }
-  .auth-page--login .auth-switch { margin-top: 20px; align-self: auto; }
+  .auth-page--login .auth-hero-copy {
+    display: block;
+    margin-top: 32px;
+  }
+
+  .auth-page--login .auth-hero-copy h1 {
+    max-width: 520px;
+    font-size: clamp(48px, 5vw, 64px);
+    letter-spacing: -1.8px;
+  }
+
+  .auth-page--login .auth-hero-copy p {
+    margin-top: 14px;
+    font-size: 18px;
+  }
+
+  .auth-page--login .auth-brand {
+    font-size: 58px;
+  }
+
+  .auth-page--login .auth-card {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    margin-top: 0;
+    align-self: end;
+  }
+
+  .auth-page--login .auth-switch {
+    grid-column: 2;
+    grid-row: 2;
+    margin-top: 20px;
+    align-self: start;
+  }
 }
