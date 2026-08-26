@@ -40,17 +40,17 @@ export function NotificationsPage() {
     window.requestAnimationFrame(() => window.dispatchEvent(new Event(CHECK_IN_FOCUS_EVENT)));
   };
 
-  const openNotification = (notification: AppNotification) => {
-    if (isUniversalReminder(notification)) {
+  const openNotification = (kind: AppNotificationKind, universal = false) => {
+    if (universal) {
       navigate('/reminders');
       return;
     }
-    if (notification.kind === 'check-in') {
+    if (kind === 'check-in') {
       openCheckIn();
       return;
     }
-    if (notification.kind === 'task') navigate('/tasks');
-    if (notification.kind === 'event') navigate('/calendar');
+    if (kind === 'task') navigate('/tasks');
+    if (kind === 'event') navigate('/calendar');
   };
 
   return (
@@ -88,11 +88,11 @@ export function NotificationsPage() {
           return <article
             className={`card notification-center-item${notification.read ? '' : ' is-unread'}${actionable ? ' is-actionable' : ''}`}
             key={notification.id}
-            onClick={actionable ? () => openNotification(notification) : undefined}
+            onClick={actionable ? () => openNotification(notification.kind, universal) : undefined}
             onKeyDown={actionable ? (event) => {
               if (event.key !== 'Enter' && event.key !== ' ') return;
               event.preventDefault();
-              openNotification(notification);
+              openNotification(notification.kind, universal);
             } : undefined}
             role={actionable ? 'button' : undefined}
             tabIndex={actionable ? 0 : undefined}
