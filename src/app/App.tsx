@@ -13,6 +13,7 @@ import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { JournalPage } from '../features/journal/JournalPage';
 import { WeeklyReflectionPage } from '../features/reflection/WeeklyReflectionPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
+import { SearchPage } from '../features/search/SearchPage';
 import { TasksPage } from '../features/tasks/TasksPage';
 import { useAppStore } from '../stores/useAppStore';
 import { applyPermanentDataSnapshot, initializePermanentDataRepository, usePermanentDataRepository } from '../hooks/usePermanentDataRepository';
@@ -69,6 +70,7 @@ function AppRoutes() {
     <Route path="/tasks" element={<TasksPage />} />
     <Route path="/today" element={<JournalPage />} />
     <Route path="/calendar" element={<CalendarPage />} />
+    <Route path="/search" element={<SearchPage />} />
     <Route path="/check-ins" element={<Suspense fallback={<AppLoading message="Opening check-ins…" />}><CheckInHistoryPage /></Suspense>} />
     <Route path="/more" element={<Suspense fallback={<AppLoading message="Opening Settings…" />}><MorePage /></Suspense>} />
     <Route path="/reflection" element={<WeeklyReflectionPage />} />
