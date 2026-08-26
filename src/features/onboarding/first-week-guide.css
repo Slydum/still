@@ -1,0 +1,19 @@
+.first-week-guide { width: min(1120px, calc(100% - 28px)); margin: 14px auto 0; border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line)); border-radius: 18px; background: color-mix(in srgb, var(--surface) 94%, var(--accent) 6%); padding: 13px 44px 13px 14px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; position: relative; }
+.first-week-guide-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px; background: color-mix(in srgb, var(--accent) 15%, transparent); }
+.first-week-guide-copy { min-width: 0; display: grid; gap: 3px; }
+.first-week-guide-meta { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: .72rem; }
+.first-week-guide-meta span { font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.first-week-guide-copy > strong { font-size: .93rem; }
+.first-week-guide-copy > p { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.35; }
+.first-week-guide-progress { display: flex; gap: 5px; margin-top: 4px; }
+.first-week-guide-progress i { width: 18px; height: 5px; border-radius: 999px; background: color-mix(in srgb, currentColor 10%, transparent); display: grid; place-items: center; font-style: normal; overflow: visible; }
+.first-week-guide-progress i.is-done { background: var(--accent); }
+.first-week-guide-progress i.is-current { background: color-mix(in srgb, var(--accent) 48%, transparent); }
+.first-week-guide-progress svg { display: none; }
+.first-week-guide-action { min-height: 42px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-contrast, #fff); padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; white-space: nowrap; }
+.first-week-guide-dismiss { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); display: grid; place-items: center; }
+@media (max-width: 700px) {
+  .first-week-guide { width: calc(100% - 24px); grid-template-columns: auto minmax(0, 1fr); padding: 12px 40px 12px 12px; }
+  .first-week-guide-action { grid-column: 1 / -1; min-height: 44px; width: 100%; }
+  .first-week-guide-copy > p { white-space: normal; }
+}

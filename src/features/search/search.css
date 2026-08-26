@@ -54,6 +54,49 @@
   color: inherit;
 }
 
+.search-filter-row {
+  display: flex;
+  gap: 7px;
+  margin: 12px -2px 0;
+  padding: 2px 2px 5px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.search-filter-row::-webkit-scrollbar { display: none; }
+
+.search-filter-row button {
+  min-height: 38px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, currentColor 11%, transparent);
+  border-radius: 999px;
+  background: var(--surface, #fff);
+  color: inherit;
+  font-size: .78rem;
+  font-weight: 750;
+}
+
+.search-filter-row button span {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  font-size: .68rem;
+}
+
+.search-filter-row button.is-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 11%, var(--surface, #fff));
+}
+
 .search-empty-state {
   display: grid;
   justify-items: start;
@@ -74,7 +117,7 @@
 }
 
 .search-results {
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 .search-results-heading {
@@ -133,6 +176,9 @@
 .search-result-icon.is-money { background: #edf5f1; }
 .search-result-icon.is-work { background: #f0f1f4; }
 .search-result-icon.is-health { background: #eef6f6; }
+.search-result-icon.is-goal { background: #f4f1e7; }
+.search-result-icon.is-reminder { background: #f7f1ec; }
+.search-result-icon.is-attachment { background: #f0f2f3; }
 
 .search-result-copy {
   min-width: 0;
@@ -158,6 +204,11 @@
 .search-result-copy span {
   color: var(--text-muted, #746d68);
   font-size: 0.82rem;
+}
+
+@media (max-width: 520px) {
+  .search-results-heading { align-items: flex-start; flex-direction: column; gap: 2px; }
+  .search-results-heading span { text-align: left; }
 }
 
 @media (min-width: 760px) {

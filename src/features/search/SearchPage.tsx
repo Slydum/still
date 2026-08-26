@@ -23,6 +23,7 @@ import { useAppStore } from '../../stores/useAppStore';
 import './search.css';
 
 type SearchKind = 'task' | 'event' | 'journal' | 'person' | 'money' | 'work' | 'health' | 'goal' | 'reminder' | 'attachment';
+type SearchFilter = 'all' | SearchKind;
 
 type SearchResult = {
   id: string;
@@ -50,6 +51,7 @@ const EMPTY_HEALTH_ROUTINES: HealthRoutineSearchRecord[] = [];
 const EMPTY_MONEY_ACCOUNTS: MoneyAccountSearchRecord[] = [];
 const EMPTY_MONEY_BILLS: MoneyBillSearchRecord[] = [];
 const EMPTY_MONEY_GOALS: MoneyGoalSearchRecord[] = [];
+const KIND_ORDER: SearchKind[] = ['task', 'event', 'reminder', 'goal', 'journal', 'person', 'money', 'health', 'work', 'attachment'];
 
 const KIND_LABELS: Record<SearchKind, string> = {
   task: 'Task',
@@ -97,6 +99,7 @@ export function SearchPage() {
   const navigate = useNavigate();
   const goBack = useBackNavigation('/');
   const [query, setQuery] = useState('');
+  const [kindFilter, setKindFilter] = useState<SearchFilter>('all');
   const tasks = useAppStore((state) => state.tasks);
   const events = useAppStore((state) => state.events);
   const journalEntries = useAppStore((state) => state.journalEntries);
@@ -261,12 +264,27 @@ export function SearchPage() {
   }, [events, expenses, healthRoutines, journalEntries, moneyAccounts, moneyBills, moneySavingsGoals, navigate, openEventEditor, openJournalEditor, openTaskEditor, tasks, workShifts]);
 
   const terms = normalize(query).split(/\s+/).filter(Boolean);
-  const matches = useMemo(
-    () => terms.length === 0
-      ? []
-      : allResults.filter((result) => includesQuery(result, terms)).sort((left, right) => right.updatedAt - left.updatedAt).slice(0, 80),
+  const queryMatches = useMemo(
+    () => terms.length === 0 ? [] : allResults.filter((result) => includesQuery(result, terms)),
     [allResults, terms],
   );
+  const counts = useMemo(() => queryMatches.reduce<Record<SearchKind, number>>((current, result) => {
+    current[result.kind] += 1;
+    return current;
+  }, { task: 0, event: 0, journal: 0, person: 0, money: 0, work: 0, health: 0, goal: 0, reminder: 0, attachment: 0 }), [queryMatches]);
+  const visibleKinds = KIND_ORDER.filter((kind) => counts[kind] > 0);
+  const matches = useMemo(
+    () => queryMatches
+      .filter((result) => kindFilter === 'all' || result.kind === kindFilter)
+      .sort((left, right) => right.updatedAt - left.updatedAt)
+      .slice(0, 80),
+    [kindFilter, queryMatches],
+  );
+
+  const updateQuery = (value: string) => {
+    setQuery(value);
+    setKindFilter('all');
+  };
 
   return (
     <main className="shell search-page">
@@ -282,14 +300,21 @@ export function SearchPage() {
         <Search size={20} aria-hidden="true" />
         <input
           autoFocus
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => updateQuery(event.target.value)}
           placeholder="Search tasks, reminders, goals, people, journal…"
           type="search"
           value={query}
           aria-label="Search Still"
         />
-        {query && <button type="button" onClick={() => setQuery('')} aria-label="Clear search"><X size={17} /></button>}
+        {query && <button type="button" onClick={() => updateQuery('')} aria-label="Clear search"><X size={17} /></button>}
       </section>
+
+      {terms.length > 0 && queryMatches.length > 0 && (
+        <div className="search-filter-row" role="group" aria-label="Filter search results by type">
+          <button className={kindFilter === 'all' ? 'is-active' : ''} onClick={() => setKindFilter('all')} type="button">All <span>{queryMatches.length}</span></button>
+          {visibleKinds.map((kind) => <button className={kindFilter === kind ? 'is-active' : ''} key={kind} onClick={() => setKindFilter(kind)} type="button">{KIND_LABELS[kind]} <span>{counts[kind]}</span></button>)}
+        </div>
+      )}
 
       {terms.length === 0 ? (
         <section className="card search-empty-state">
@@ -297,14 +322,19 @@ export function SearchPage() {
           <strong>Your records are searchable together.</strong>
           <p>Try a reminder, goal, person, task, attachment, bill, category, or something you remember writing.</p>
         </section>
-      ) : matches.length === 0 ? (
+      ) : queryMatches.length === 0 ? (
         <section className="card search-empty-state" aria-live="polite">
           <strong>Nothing matched “{query.trim()}”.</strong>
           <p>Try fewer words or a detail from the record.</p>
         </section>
+      ) : matches.length === 0 ? (
+        <section className="card search-empty-state" aria-live="polite">
+          <strong>No {kindFilter === 'all' ? '' : KIND_LABELS[kindFilter].toLowerCase()} results in these matches.</strong>
+          <p>Choose another type above or search for a different detail.</p>
+        </section>
       ) : (
         <section className="search-results" aria-label={`${matches.length} search results`}>
-          <div className="search-results-heading"><strong>{matches.length} {matches.length === 1 ? 'match' : 'matches'}</strong><span>Newest relevant records first</span></div>
+          <div className="search-results-heading"><strong>{matches.length} {matches.length === 1 ? 'match' : 'matches'}</strong><span>{kindFilter === 'all' ? 'Newest relevant records first' : `${KIND_LABELS[kindFilter]} only`}</span></div>
           <div className="card search-results-card">
             {matches.map((result) => {
               const Icon = KIND_ICONS[result.kind];

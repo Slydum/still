@@ -1,4 +1,26 @@
-/* v0.3 Phase 2 — shared accessibility interaction layer. */
+/* v0.4 — shared accessibility interaction layer. */
+
+.skip-link {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 10000;
+  transform: translateY(-180%);
+  border-radius: 10px;
+  background: var(--surface, #fff);
+  color: var(--ink, #272321);
+  padding: 10px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+  font-weight: 800;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+#route-content:focus {
+  outline: none;
+}
 
 :where(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
   outline: 3px solid var(--focus-ring);
@@ -21,8 +43,28 @@
   overscroll-behavior: contain;
 }
 
+@media (pointer: coarse) {
+  :where(button, [role="button"], summary) {
+    min-height: 44px;
+  }
+
+  :where(.btn-icon, .search-field-wrap button) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html:focus-within {
     scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
