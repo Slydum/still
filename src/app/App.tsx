@@ -12,6 +12,7 @@ import { CalendarPage } from '../features/calendar/CalendarPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { JournalPage } from '../features/journal/JournalPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
+import { FirstWeekGuide } from '../features/onboarding/FirstWeekGuide';
 import { TasksPage } from '../features/tasks/TasksPage';
 import { useAppStore } from '../stores/useAppStore';
 import { applyPermanentDataSnapshot, initializePermanentDataRepository, usePermanentDataRepository } from '../hooks/usePermanentDataRepository';
@@ -70,7 +71,7 @@ async function seedDisplayNameForNewAccount(session: CloudSession) {
 }
 
 function AppRoutes() {
-  return <div className="app"><RouteScrollManager /><Routes>
+  return <div className="app"><RouteScrollManager /><a className="skip-link" href="#route-content">Skip to content</a><FirstWeekGuide /><div id="route-content" tabIndex={-1}><Routes>
     <Route path="/" element={<DashboardPage />} />
     <Route path="/tasks" element={<TasksPage />} />
     <Route path="/today" element={<JournalPage />} />
@@ -92,7 +93,7 @@ function AppRoutes() {
     <Route path="/life/love" element={<Suspense fallback={<AppLoading message="Opening Love…" />}><LovePage /></Suspense>} />
     <Route path="/life/:areaId" element={<Suspense fallback={<AppLoading message="Opening your Life Area…" />}><LifeAreaPage /></Suspense>} />
     <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes><Suspense fallback={null}><HomeGoalsStrip /></Suspense><SyncConfidenceIndicator /><Suspense fallback={null}><HomeAttentionDock /></Suspense><BottomNav /><QuickAddSheet /></div>;
+  </Routes></div><Suspense fallback={null}><HomeGoalsStrip /></Suspense><SyncConfidenceIndicator /><Suspense fallback={null}><HomeAttentionDock /></Suspense><BottomNav /><QuickAddSheet /></div>;
 }
 
 function DemoApp() {
