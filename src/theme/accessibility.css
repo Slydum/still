@@ -1,4 +1,4 @@
-/* v0.3 Phase 2 — shared accessibility interaction layer. */
+/* v0.4 — shared accessibility interaction layer. */
 
 :where(button, a, input, textarea, select, summary, [tabindex]):focus-visible {
   outline: 3px solid var(--focus-ring);
@@ -21,8 +21,28 @@
   overscroll-behavior: contain;
 }
 
+@media (pointer: coarse) {
+  :where(button, [role="button"], summary) {
+    min-height: 44px;
+  }
+
+  :where(.btn-icon, .search-field-wrap button) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html:focus-within {
     scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
