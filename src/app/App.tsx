@@ -28,6 +28,8 @@ const HealthPage = lazy(() => import('../features/health/HealthRoutePage').then(
 const LovePage = lazy(() => import('../features/love/LovePage').then((module) => ({ default: module.LovePage })));
 const MoneyPage = lazy(() => import('../features/money/MoneyRoutePage').then((module) => ({ default: module.MoneyRoutePage })));
 const LifeAreaPage = lazy(() => import('../features/life-area/LifeAreaPage').then((module) => ({ default: module.LifeAreaPage })));
+const SearchPage = lazy(() => import('../features/search/SearchPage').then((module) => ({ default: module.SearchPage })));
+const HomeAttentionDock = lazy(() => import('../features/dashboard/HomeAttentionDock').then((module) => ({ default: module.HomeAttentionDock })));
 
 function replaceBrowserRoute(path: string) {
   window.history.replaceState({}, '', toAppPath(path));
@@ -69,6 +71,7 @@ function AppRoutes() {
     <Route path="/tasks" element={<TasksPage />} />
     <Route path="/today" element={<JournalPage />} />
     <Route path="/calendar" element={<CalendarPage />} />
+    <Route path="/search" element={<Suspense fallback={<AppLoading message="Opening search…" />}><SearchPage /></Suspense>} />
     <Route path="/check-ins" element={<Suspense fallback={<AppLoading message="Opening check-ins…" />}><CheckInHistoryPage /></Suspense>} />
     <Route path="/more" element={<Suspense fallback={<AppLoading message="Opening Settings…" />}><MorePage /></Suspense>} />
     <Route path="/reflection" element={<WeeklyReflectionPage />} />
@@ -82,7 +85,7 @@ function AppRoutes() {
     <Route path="/life/love" element={<Suspense fallback={<AppLoading message="Opening Love…" />}><LovePage /></Suspense>} />
     <Route path="/life/:areaId" element={<Suspense fallback={<AppLoading message="Opening your Life Area…" />}><LifeAreaPage /></Suspense>} />
     <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes><SyncConfidenceIndicator /><BottomNav /><QuickAddSheet /></div>;
+  </Routes><SyncConfidenceIndicator /><Suspense fallback={null}><HomeAttentionDock /></Suspense><BottomNav /><QuickAddSheet /></div>;
 }
 
 function DemoApp() {
