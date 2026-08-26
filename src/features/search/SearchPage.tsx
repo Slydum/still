@@ -7,6 +7,7 @@ import {
   NotebookPen,
   Search,
   SquareCheckBig,
+  Target,
   WalletCards,
   X,
   type LucideIcon,
@@ -17,7 +18,7 @@ import { useBackNavigation } from '../../components/navigation/useBackNavigation
 import { useAppStore } from '../../stores/useAppStore';
 import './search.css';
 
-type SearchKind = 'task' | 'event' | 'journal' | 'person' | 'money' | 'work' | 'health';
+type SearchKind = 'task' | 'event' | 'journal' | 'person' | 'money' | 'work' | 'health' | 'goal';
 
 type SearchResult = {
   id: string;
@@ -54,6 +55,7 @@ const KIND_LABELS: Record<SearchKind, string> = {
   money: 'Money',
   work: 'Work',
   health: 'Health',
+  goal: 'Goal',
 };
 
 const KIND_ICONS: Record<SearchKind, LucideIcon> = {
@@ -64,6 +66,7 @@ const KIND_ICONS: Record<SearchKind, LucideIcon> = {
   money: WalletCards,
   work: BriefcaseBusiness,
   health: HeartPulse,
+  goal: Target,
 };
 
 function normalize(value: string | number | undefined) {
@@ -127,16 +130,19 @@ export function SearchPage() {
     }
 
     for (const entry of journalEntries) {
-      const isPerson = entry.areaId === 'love' && entry.tags.includes('love-person');
+      const isGoal = entry.tags.includes('still-goal');
+      const isPerson = !isGoal && entry.areaId === 'love' && entry.tags.includes('love-person');
+      const kind: SearchKind = isGoal ? 'goal' : isPerson ? 'person' : 'journal';
       results.push({
-        id: `${isPerson ? 'person' : 'journal'}:${entry.id}`,
-        kind: isPerson ? 'person' : 'journal',
-        title: entry.title || (isPerson ? 'Someone important' : 'Untitled entry'),
-        detail: isPerson ? 'Relationship' : dateDetail(entry.entryDate),
+        id: `${kind}:${entry.id}`,
+        kind,
+        title: entry.title || (isPerson ? 'Someone important' : isGoal ? 'Untitled goal' : 'Untitled entry'),
+        detail: isGoal ? 'Life goal' : isPerson ? 'Relationship' : dateDetail(entry.entryDate),
         searchable: `${entry.body} ${entry.tags.join(' ')} ${entry.areaId ?? ''}`,
         updatedAt: entry.updatedAt,
         open: () => {
-          if (isPerson) navigate('/life/love');
+          if (isGoal) navigate('/goals');
+          else if (isPerson) navigate('/life/love');
           else openJournalEditor(entry.id);
         },
       });
@@ -241,7 +247,7 @@ export function SearchPage() {
         <input
           autoFocus
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search tasks, people, journal, money…"
+          placeholder="Search tasks, goals, people, journal, money…"
           type="search"
           value={query}
           aria-label="Search Still"
@@ -253,7 +259,7 @@ export function SearchPage() {
         <section className="card search-empty-state">
           <Search size={25} />
           <strong>Your records are searchable together.</strong>
-          <p>Try a person, task, place, note, bill, category, or something you remember writing.</p>
+          <p>Try a goal, person, task, place, note, bill, category, or something you remember writing.</p>
         </section>
       ) : matches.length === 0 ? (
         <section className="card search-empty-state" aria-live="polite">

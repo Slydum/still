@@ -27,7 +27,7 @@ function dateHeading(dateKey: string) {
 
 export function JournalPage() {
   const allEntries = useAppStore((state) => state.journalEntries);
-  const entries = useMemo(() => allEntries.filter((entry) => !entry.tags.includes('love-person') && !entry.tags.includes('love-checkin') && !entry.tags.includes('health-note')), [allEntries]);
+  const entries = useMemo(() => allEntries.filter((entry) => !entry.tags.includes('love-person') && !entry.tags.includes('love-checkin') && !entry.tags.includes('health-note') && !entry.tags.includes('still-goal')), [allEntries]);
   const openJournalEditor = useAppStore((state) => state.openJournalEditor);
   const deleteJournalEntry = useAppStore((state) => state.deleteJournalEntry);
   const todayKey = getLocalDateKey();
