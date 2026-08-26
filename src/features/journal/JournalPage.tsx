@@ -5,6 +5,7 @@ import { attachmentFromEntry, isAttachmentEntry } from '../../domain/attachments
 import { isReminderEntry } from '../../domain/reminders';
 import { useAppStore, type JournalMood } from '../../stores/useAppStore';
 import { getLocalDateKey } from '../../theme/stillContext';
+import './journal-attachments.css';
 
 const writingPrompts = [
   'What felt quietly meaningful today?',
