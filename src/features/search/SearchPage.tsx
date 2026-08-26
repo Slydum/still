@@ -29,12 +29,22 @@ type SearchResult = {
   open: () => void;
 };
 
+type HealthRoutineSearchRecord = { id: string; title: string; note?: string; updatedAt?: number };
+type MoneyAccountSearchRecord = { id: string; name: string; type?: string; currency?: string; updatedAt?: number };
+type MoneyBillSearchRecord = { id: string; title: string; amount?: number; currency?: string; updatedAt?: number };
+type MoneyGoalSearchRecord = { id: string; title: string; targetAmount?: number; currency?: string; updatedAt?: number };
+
 type SearchSupplementState = {
-  healthRoutines?: Array<{ id: string; title: string; note?: string; updatedAt?: number }>;
-  moneyAccounts?: Array<{ id: string; name: string; type?: string; currency?: string; updatedAt?: number }>;
-  moneyBills?: Array<{ id: string; title: string; amount?: number; currency?: string; updatedAt?: number }>;
-  moneySavingsGoals?: Array<{ id: string; title: string; targetAmount?: number; currency?: string; updatedAt?: number }>;
+  healthRoutines?: HealthRoutineSearchRecord[];
+  moneyAccounts?: MoneyAccountSearchRecord[];
+  moneyBills?: MoneyBillSearchRecord[];
+  moneySavingsGoals?: MoneyGoalSearchRecord[];
 };
+
+const EMPTY_HEALTH_ROUTINES: HealthRoutineSearchRecord[] = [];
+const EMPTY_MONEY_ACCOUNTS: MoneyAccountSearchRecord[] = [];
+const EMPTY_MONEY_BILLS: MoneyBillSearchRecord[] = [];
+const EMPTY_MONEY_GOALS: MoneyGoalSearchRecord[] = [];
 
 const KIND_LABELS: Record<SearchKind, string> = {
   task: 'Task',
@@ -84,10 +94,10 @@ export function SearchPage() {
   const openTaskEditor = useAppStore((state) => state.openTaskEditor);
   const openEventEditor = useAppStore((state) => state.openEventEditor);
   const openJournalEditor = useAppStore((state) => state.openJournalEditor);
-  const healthRoutines = useAppStore((state) => (state as unknown as SearchSupplementState).healthRoutines ?? []);
-  const moneyAccounts = useAppStore((state) => (state as unknown as SearchSupplementState).moneyAccounts ?? []);
-  const moneyBills = useAppStore((state) => (state as unknown as SearchSupplementState).moneyBills ?? []);
-  const moneySavingsGoals = useAppStore((state) => (state as unknown as SearchSupplementState).moneySavingsGoals ?? []);
+  const healthRoutines = useAppStore((state) => (state as unknown as SearchSupplementState).healthRoutines ?? EMPTY_HEALTH_ROUTINES);
+  const moneyAccounts = useAppStore((state) => (state as unknown as SearchSupplementState).moneyAccounts ?? EMPTY_MONEY_ACCOUNTS);
+  const moneyBills = useAppStore((state) => (state as unknown as SearchSupplementState).moneyBills ?? EMPTY_MONEY_BILLS);
+  const moneySavingsGoals = useAppStore((state) => (state as unknown as SearchSupplementState).moneySavingsGoals ?? EMPTY_MONEY_GOALS);
 
   const allResults = useMemo<SearchResult[]>(() => {
     const results: SearchResult[] = [];
