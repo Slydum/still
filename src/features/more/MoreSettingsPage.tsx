@@ -11,6 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../stores/useAppStore';
 import './more-phase3.css';
+import './more-editorial.css';
 import { DataExportPanel } from './DataExportPanel';
 import { MorePage } from './MorePage';
 
