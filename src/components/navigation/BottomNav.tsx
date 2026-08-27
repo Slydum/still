@@ -1,4 +1,4 @@
-import { BookOpen, BriefcaseBusiness, CalendarDays, CircleEllipsis, Home, Plus } from 'lucide-react';
+import { BookOpen, BriefcaseBusiness, CheckSquare, CircleEllipsis, Home, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/useAppStore';
@@ -8,8 +8,8 @@ const mobileItems = [
   { label: 'Home', path: '/', icon: Home },
   { label: 'Journal', path: '/today', icon: BookOpen },
   { label: 'Add', path: '#', icon: Plus },
-  { label: 'Calendar', path: '/calendar', icon: CalendarDays },
-  { label: 'Settings', path: '/more', icon: CircleEllipsis },
+  { label: 'Tasks', path: '/tasks', icon: CheckSquare },
+  { label: 'More', path: '/more', icon: CircleEllipsis },
 ];
 
 const desktopItems = [
@@ -17,8 +17,8 @@ const desktopItems = [
   { label: 'Work', path: '/work', icon: BriefcaseBusiness },
   { label: 'Journal', path: '/today', icon: BookOpen },
   { label: 'Add', path: '#', icon: Plus },
-  { label: 'Calendar', path: '/calendar', icon: CalendarDays },
-  { label: 'Settings', path: '/more', icon: CircleEllipsis },
+  { label: 'Tasks', path: '/tasks', icon: CheckSquare },
+  { label: 'More', path: '/more', icon: CircleEllipsis },
 ];
 
 function useDesktopNavigation() {
