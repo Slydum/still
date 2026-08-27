@@ -1,7 +1,4 @@
-/* Still editorial direction
-   Warm paper, quiet brown accents, thin rules, and typography-first hierarchy.
-   This layer intentionally comes last so existing feature logic can stay intact. */
-
+/* Still editorial core. Route-specific styling stays with lazy feature chunks. */
 :root,
 :root[data-tone="warm"],
 :root[data-tone="sage"] {
@@ -41,14 +38,11 @@
 
 html,
 body {
-  background: #f8f5f0;
+  background: var(--still-cream);
 }
 
-body,
-:root[data-tone="warm"] body,
-:root[data-tone="sage"] body {
+body {
   color: var(--text);
-  background: #f8f5f0;
 }
 
 button:focus-visible,
@@ -87,11 +81,7 @@ textarea:focus-visible {
 }
 
 .section-kicker,
-.eyebrow {
-  color: #8b7a6e;
-  letter-spacing: .06em;
-}
-
+.eyebrow,
 .link-btn {
   color: var(--accent-text);
 }
@@ -100,11 +90,6 @@ textarea:focus-visible {
 .shell h2,
 .shell h3 {
   color: var(--text-strong);
-}
-
-.still-page-header,
-.page-header {
-  border: 0;
 }
 
 .still-page-heading-copy > h1,
@@ -119,106 +104,18 @@ textarea:focus-visible {
   letter-spacing: -.65px;
 }
 
-/* Desktop Home keeps its information, but loses the illustrated dashboard skin. */
-@media (min-width: 1024px) {
-  .dashboard-v2 .brand {
-    color: var(--text-strong);
-    font-weight: 500;
-  }
-
-  .dashboard-v2 .topbar-date {
-    color: var(--muted);
-  }
-
-  .dashboard-v2 .icon-button {
-    border-color: var(--border);
-    color: var(--accent-text);
-    background: var(--surface);
-    box-shadow: none;
-  }
-
-  .dashboard-v2 .hero-v3 {
-    min-height: 250px;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    background: var(--surface);
-    box-shadow: none;
-  }
-
-  .dashboard-v2 .hero-v3::before,
-  .dashboard-v2 .hero-v3::after,
-  .dashboard-v2 .hero-v3-art,
-  .dashboard-v2 .priority-pet,
-  .dashboard-v2 .hero-scene-sky,
-  .dashboard-v2 .hero-scene-plant,
-  .dashboard-v2 .hero-scene-sparkle {
-    display: none;
-  }
-
-  .dashboard-v2 .hero-v3 h1,
-  .dashboard-v2 .hero-v3-title-line {
-    color: var(--text-strong);
-  }
-
-  .dashboard-v2 .hero-v3-quote {
-    color: var(--muted);
-  }
-
-  .dashboard-v2 .hero-v3-weather {
-    border-color: var(--border);
-    color: var(--accent-text);
-    background: var(--surface-soft);
-    box-shadow: none;
-  }
-
-  .dashboard-v2 .surface-checkin,
-  .dashboard-v2 .surface-focus,
-  .dashboard-v2 .surface-upcoming,
-  .dashboard-v2 .garden-card,
-  .dashboard-v2 .garden-card.work,
-  .dashboard-v2 .garden-card.love,
-  .dashboard-v2 .garden-card.health,
-  .dashboard-v2 .garden-card.money {
-    border-color: var(--border);
-    background: var(--surface);
-    box-shadow: none;
-  }
-
-  .dashboard-v2 .garden-card-head img {
-    display: none;
-  }
-
-  .dashboard-v2 .garden-card-head strong {
-    color: var(--text-strong);
-  }
-}
-
-/* Secondary pages use one shared editorial surface language. */
-.shell.tasks-page,
-.shell.journal-page,
-.shell.health-page,
-.shell.money-page,
-.shell.love-page,
-.shell.work-hub-page,
-.shell.more-page,
-.shell.more-hub,
-.shell.more-export-shell {
-  color: var(--text);
-}
-
-.shell.tasks-page .still-page-header,
-.shell.health-page .still-page-header,
-.shell.money-page .still-page-header,
-.shell.journal-page .journal-page-header,
-.shell.love-page .love-header,
-.shell.work-hub-page .work-hub-header,
-.shell.more-page .more-page-header {
-  border-bottom-color: var(--border);
-}
-
-.shell.tasks-page .still-summary-tile,
-.shell.health-page .still-summary-tile,
-.shell.money-page .still-summary-tile {
+.shell.tasks-page .tasks-record,
+.shell.journal-page .journal-entry-card,
+.shell.health-page .health-today-card,
+.shell.health-page .health-week-strip,
+.shell.health-page .health-routine-list,
+.shell.health-page .health-note-list,
+.shell.money-page .money-list-card,
+.shell.money-page .money-goal-card,
+.shell.love-page .love-person-card,
+.shell.love-page .love-list,
+.shell.work-hub-page .work-board,
+.shell.work-hub-page .work-list-card {
   border-color: var(--border);
   background: var(--surface);
   box-shadow: none;
@@ -232,74 +129,7 @@ textarea:focus-visible {
 }
 
 .shell.tasks-page .still-filter-tabs button.is-active,
-.shell.work-hub-page .work-tabs button.active {
-  color: #fff;
-  background: var(--still-rose);
-  box-shadow: none;
-}
-
-.shell.tasks-page .tasks-record,
-.shell.journal-page .journal-entry-card,
-.shell.health-page .health-today-card,
-.shell.health-page .health-week-strip,
-.shell.health-page .health-routine-list,
-.shell.health-page .health-note-list,
-.shell.health-page .health-details,
-.shell.money-page .money-list-card,
-.shell.money-page .money-goal-card,
-.shell.money-page .money-privacy-setting,
-.shell.love-page .love-summary,
-.shell.love-page .love-person-summary,
-.shell.love-page .love-person-card,
-.shell.love-page .love-list,
-.shell.work-hub-page .work-board,
-.shell.work-hub-page .work-list-card {
-  border-color: var(--border);
-  border-radius: 13px;
-  background: var(--surface);
-  box-shadow: none;
-}
-
-.shell.journal-page .journal-prompt-card {
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface-soft);
-  box-shadow: none;
-}
-
-.shell.journal-page .journal-prompt-icon,
-.shell.money-page .money-row-icon,
-.shell.health-page .health-checkin-mark,
-.shell.love-page .love-summary-icon {
-  color: var(--accent-text);
-  background: var(--lavender-soft);
-}
-
-.shell.love-page .love-header > img {
-  display: none;
-}
-
-.shell.love-page .love-avatar {
-  color: var(--accent-text);
-  background: var(--lavender-soft);
-}
-
-.shell.love-page .love-section-head button,
-.shell.health-page .health-text-action,
-.shell.money-page .money-text-action,
-.shell.work-hub-page .work-section-head button {
-  color: var(--accent-text);
-}
-
-.shell.health-page .health-inline-form,
-.shell.love-page .love-inline-form,
-.shell.work-hub-page .work-inline-form {
-  border-color: var(--border);
-  border-radius: 13px;
-  background: var(--surface);
-  box-shadow: none;
-}
-
+.shell.work-hub-page .work-tabs button.active,
 .shell.health-page .health-soft-button,
 .shell.love-page .love-save,
 .shell.work-hub-page .work-modal-primary {
@@ -308,217 +138,44 @@ textarea:focus-visible {
   box-shadow: none;
 }
 
-.shell.money-page .money-progress,
-.shell.more-page .settings-card,
-.shell.more-page .settings-profile-form,
-.shell.more-page .settings-about-card {
-  border-color: var(--border);
-  background: var(--surface);
-  box-shadow: none;
+.shell.love-page .love-header > img {
+  display: none;
 }
 
 .shell.money-page .money-progress > span {
   background: var(--still-rose);
 }
 
-.shell.work-hub-page .work-overview article,
-.shell.work-hub-page .work-quick-access > button,
-.shell.work-hub-page .work-details-link {
-  border-color: var(--border);
-  background: var(--surface);
-  box-shadow: none;
+@media (min-width: 1024px) {
+  .dashboard-v2 .hero-v3,
+  .dashboard-v2 .surface-checkin,
+  .dashboard-v2 .surface-focus,
+  .dashboard-v2 .surface-upcoming,
+  .dashboard-v2 .garden-card {
+    border-color: var(--border);
+    background: var(--surface);
+    box-shadow: none;
+  }
+
+  .dashboard-v2 .hero-v3::before,
+  .dashboard-v2 .hero-v3::after,
+  .dashboard-v2 .hero-v3-art,
+  .dashboard-v2 .priority-pet,
+  .dashboard-v2 .hero-scene-sky,
+  .dashboard-v2 .hero-scene-plant,
+  .dashboard-v2 .hero-scene-sparkle,
+  .dashboard-v2 .garden-card-head img {
+    display: none;
+  }
+
+  .dashboard-v2 .hero-v3-weather {
+    border-color: var(--border);
+    color: var(--accent-text);
+    background: var(--surface-soft);
+    box-shadow: none;
+  }
 }
 
-.shell.work-hub-page .work-hub-back,
-.shell.love-page .love-back {
-  border-color: var(--border);
-  color: var(--text);
-  background: transparent;
-  box-shadow: none;
-}
-
-.shell.work-hub-page .work-header-details {
-  color: var(--accent-text);
-}
-
-.shell.more-page .settings-section-heading > span {
-  color: var(--accent-text);
-  background: var(--lavender-soft);
-}
-
-.shell.more-page .tone-picker button.is-selected {
-  border-color: var(--still-rose);
-  box-shadow: none;
-}
-
-/* More is a hub first, then the detailed settings that already existed. */
-.more-hub {
-  padding-bottom: 4px;
-}
-
-.more-hub-header {
-  margin: 0 0 18px;
-}
-
-.more-hub-header h1 {
-  margin: 0;
-  color: var(--text-strong);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 34px;
-  font-weight: 500;
-  letter-spacing: -.8px;
-}
-
-.more-profile-card {
-  width: 100%;
-  min-height: 66px;
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 11px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  color: inherit;
-  text-align: left;
-  background: var(--surface);
-}
-
-.more-profile-avatar {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--accent-text);
-  background: var(--lavender-soft);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 20px;
-}
-
-.more-profile-copy strong,
-.more-profile-copy small {
-  display: block;
-}
-
-.more-profile-copy strong {
-  color: var(--text-strong);
-  font-size: 13px;
-}
-
-.more-profile-copy small {
-  margin-top: 3px;
-  color: var(--muted);
-  font-size: 9px;
-}
-
-.more-profile-card > svg {
-  color: #9c9189;
-}
-
-.more-hub-section {
-  margin-top: 22px;
-}
-
-.more-hub-section > h2 {
-  margin: 0 0 9px;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0;
-}
-
-.more-quick-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.more-quick-grid button {
-  min-width: 0;
-  min-height: 70px;
-  padding: 9px 3px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  color: var(--accent-text);
-  background: var(--surface);
-}
-
-.more-quick-grid button span {
-  max-width: 100%;
-  overflow: hidden;
-  color: #655e59;
-  font-size: 9px;
-  font-weight: 650;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.more-life-list {
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 13px;
-  background: var(--surface);
-}
-
-.more-life-list button {
-  width: 100%;
-  min-height: 46px;
-  display: grid;
-  grid-template-columns: 26px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 11px;
-  border: 0;
-  border-top: 1px solid var(--border);
-  color: inherit;
-  text-align: left;
-  background: transparent;
-}
-
-.more-life-list button:first-child {
-  border-top: 0;
-}
-
-.more-life-list button > svg:first-child {
-  color: var(--accent-text);
-}
-
-.more-life-list button > svg:last-child {
-  color: #a0968f;
-}
-
-.more-life-list button span {
-  font-size: 11px;
-  font-weight: 650;
-}
-
-.more-settings-intro {
-  margin: 24px 0 0;
-  padding-top: 17px;
-  border-top: 1px solid var(--border);
-}
-
-.more-settings-intro span {
-  display: block;
-  color: var(--text-strong);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 21px;
-}
-
-.more-settings-intro p {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 1.45;
-}
-
-/* Mobile is the primary Still surface. Keep it flat and close to the reference. */
 @media (max-width: 1023px) {
   .app {
     padding-bottom: calc(76px + env(safe-area-inset-bottom));
@@ -580,78 +237,6 @@ textarea:focus-visible {
     height: 21px;
   }
 
-  .shell.tasks-page,
-  .shell.journal-page,
-  .shell.health-page,
-  .shell.money-page,
-  .shell.love-page,
-  .shell.work-hub-page,
-  .shell.more-page,
-  .shell.more-hub,
-  .shell.more-export-shell {
-    background: transparent;
-  }
-
-  .still-page-heading-copy > h1,
-  .journal-page-header h1,
-  .more-page-header h1,
-  .love-header h1,
-  .work-hub-header h1 {
-    font-size: 30px;
-    line-height: 1.05;
-  }
-
-  .shell.tasks-page .still-page-header,
-  .shell.health-page .still-page-header,
-  .shell.money-page .still-page-header,
-  .shell.journal-page .journal-page-header,
-  .shell.love-page .love-header,
-  .shell.work-hub-page .work-hub-header {
-    margin-bottom: 17px;
-  }
-
-  .shell.tasks-page .tasks-record,
-  .shell.journal-page .journal-entry-card,
-  .shell.health-page .health-today-card,
-  .shell.health-page .health-week-strip,
-  .shell.health-page .health-routine-list,
-  .shell.health-page .health-note-list,
-  .shell.money-page .money-list-card,
-  .shell.money-page .money-goal-card,
-  .shell.love-page .love-person-card,
-  .shell.love-page .love-list,
-  .shell.work-hub-page .work-list-card,
-  .shell.work-hub-page .work-board {
-    border-radius: 12px;
-  }
-
-  .shell.tasks-page .tasks-summary,
-  .shell.health-page .health-summary-grid,
-  .shell.money-page .money-summary-grid,
-  .shell.work-hub-page .work-overview {
-    gap: 8px;
-  }
-
-  .shell.work-hub-page .work-overview article {
-    border-radius: 12px;
-  }
-
-  .shell.more-page {
-    padding-top: 12px;
-  }
-
-  .shell.more-page .more-page-header {
-    padding-top: 0;
-  }
-
-  .shell.more-page .settings-section {
-    margin-top: 24px;
-  }
-
-  .shell.more-page .more-page-header .section-kicker {
-    display: none;
-  }
-
   .sheet {
     border-radius: 18px 18px 0 0;
     background: var(--surface);
@@ -662,15 +247,5 @@ textarea:focus-visible {
     border: 1px solid var(--border);
     border-radius: 12px;
     background: var(--surface);
-  }
-}
-
-@media (max-width: 390px) {
-  .more-quick-grid {
-    gap: 6px;
-  }
-
-  .more-quick-grid button {
-    min-height: 64px;
   }
 }
