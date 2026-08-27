@@ -26,3 +26,4 @@ import './home-refinement.css';
 import './home-responsive.css';
 import './desktop-home-layout';
 import './responsive-layout.css';
+import './still-editorial.css';
