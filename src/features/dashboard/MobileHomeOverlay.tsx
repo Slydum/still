@@ -25,10 +25,10 @@ import './mobile-home-overlay.css';
 import './mobile-home-editorial.css';
 
 const lifeAreaMeta = [
-  { label: 'Work', route: '/life/work', Icon: BriefcaseBusiness },
+  { label: 'Work', route: '/work', Icon: BriefcaseBusiness },
   { label: 'Love', route: '/life/love', Icon: Heart },
-  { label: 'Health', route: '/life/health', Icon: HeartPulse },
-  { label: 'Money', route: '/life/money', Icon: WalletCards },
+  { label: 'Health', route: '/health', Icon: HeartPulse },
+  { label: 'Money', route: '/money', Icon: WalletCards },
 ] as const;
 
 function greetingForHour(hour: number) {
