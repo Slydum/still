@@ -81,8 +81,8 @@ async function navigate(cdp, route) {
 function expectedCurrentNavLabel(pathname, desktop) {
   if (pathname === '/') return 'Home';
   if (pathname === '/today') return 'Journal';
-  if (pathname === '/calendar') return 'Calendar';
-  if (pathname === '/more') return 'Settings';
+  if (pathname === '/tasks') return 'Tasks';
+  if (pathname === '/more') return 'More';
   if (desktop && pathname === '/work') return 'Work';
   return null;
 }
@@ -111,7 +111,7 @@ const viewports = [
   { width: 768, height: 1024, label: 'tablet' },
   { width: 1280, height: 900, label: 'desktop' },
 ];
-const expectedNavLabels = ['Home', 'Journal', 'Add', 'Calendar', 'Settings'];
+const expectedNavLabels = ['Home', 'Journal', 'Add', 'Tasks', 'More'];
 
 await rm(profileDir, { recursive: true, force: true });
 const preview = spawn('npm', ['run', 'preview', '--', '--host', '127.0.0.1', '--port', '4174'], { stdio: 'inherit' });
