@@ -86,12 +86,6 @@ textarea:focus-visible {
   color: var(--accent-text);
 }
 
-.shell h1,
-.shell h2,
-.shell h3 {
-  color: var(--text-strong);
-}
-
 .still-page-heading-copy > h1,
 .page-header-title,
 .journal-page-header h1,
@@ -102,23 +96,6 @@ textarea:focus-visible {
   font-family: Georgia, "Times New Roman", serif;
   font-weight: 500;
   letter-spacing: -.65px;
-}
-
-.shell.tasks-page .tasks-record,
-.shell.journal-page .journal-entry-card,
-.shell.health-page .health-today-card,
-.shell.health-page .health-week-strip,
-.shell.health-page .health-routine-list,
-.shell.health-page .health-note-list,
-.shell.money-page .money-list-card,
-.shell.money-page .money-goal-card,
-.shell.love-page .love-person-card,
-.shell.love-page .love-list,
-.shell.work-hub-page .work-board,
-.shell.work-hub-page .work-list-card {
-  border-color: var(--border);
-  background: var(--surface);
-  box-shadow: none;
 }
 
 .shell.tasks-page .still-filter-tabs,
