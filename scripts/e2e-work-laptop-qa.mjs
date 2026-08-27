@@ -187,12 +187,12 @@ try {
   })()`);
   assert(phoneState.overflow <= 2, `phone Work: horizontal overflow of ${phoneState.overflow}px.`);
   assert(phoneState.display !== 'grid', 'phone Work: desktop Work grid leaked below 1024px.');
-  assert(phoneState.navWidth < 390 && Math.abs(phoneState.navBottom - 844) <= 16, 'phone Work: existing floating bottom navigation changed unexpectedly.');
+  assert(phoneState.navWidth >= 360 && phoneState.navWidth <= 390 && Math.abs(phoneState.navBottom - 844) <= 16, 'phone Work: editorial bottom navigation is not anchored full-width at the viewport bottom.');
   assert(phoneState.navLabels.join('|') === ['Home', 'Journal', 'Add', 'Tasks', 'More'].join('|'), 'phone Work: desktop-only Work navigation leaked into the phone bottom bar.');
   assert(phoneState.activeNavLabels.length === 1 && phoneState.activeNavLabels[0] === 'Home', 'phone Work: existing Home umbrella navigation state changed unexpectedly.');
   assert(phoneState.backDisplay !== 'none', 'phone Work: existing back control was removed by the desktop treatment.');
 
-  console.log('Work laptop QA passed at 1366x768 and 1440x900, with desktop Work navigation and phone Work unchanged.');
+  console.log('Work laptop QA passed at 1366x768 and 1440x900, with desktop Work navigation and the editorial phone navigation intact.');
 } finally {
   cdp?.close();
   chrome?.kill('SIGTERM');
