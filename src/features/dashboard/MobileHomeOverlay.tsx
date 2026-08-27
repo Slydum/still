@@ -1,66 +1,48 @@
 import { addDays, format, startOfWeek } from 'date-fns';
 import {
   Bell,
+  BookOpen,
   BriefcaseBusiness,
+  CalendarDays,
   Check,
-  Clock3,
   Heart,
   HeartPulse,
-  Sparkles,
+  Home,
+  Search,
   WalletCards,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { saveCheckIn } from '../../data/stillDb';
-import { buildLifeGardenSummaries } from '../../domain/lifeGarden';
-import type { LifeAreaId } from '../../domain/lifeAreas';
-import { useAppStore, type StillTask } from '../../stores/useAppStore';
+import { useAppStore } from '../../stores/useAppStore';
 import {
   checkInEnergyOptions,
   checkInMoodOptions,
   getCheckInAnswer,
 } from '../check-ins/checkInScale';
+import { eventTimeLabel, getEventOccurrences, getOccurrencesForDay } from '../calendar/eventUtils';
 import './mobile-home-overlay.css';
+import './mobile-home-editorial.css';
 
-const lifeAreaMeta: Array<{
-  key: LifeAreaId;
-  label: string;
-  route: string;
-  Icon: typeof BriefcaseBusiness;
-}> = [
-  { key: 'work', label: 'Work', route: '/life/work', Icon: BriefcaseBusiness },
-  { key: 'love', label: 'Love', route: '/life/love', Icon: Heart },
-  { key: 'health', label: 'Health', route: '/life/health', Icon: HeartPulse },
-  { key: 'money', label: 'Money', route: '/life/money', Icon: WalletCards },
-];
+const lifeAreaMeta = [
+  { label: 'Work', route: '/work', Icon: BriefcaseBusiness },
+  { label: 'Love', route: '/life/love', Icon: Heart },
+  { label: 'Health', route: '/health', Icon: HeartPulse },
+  { label: 'Money', route: '/money', Icon: WalletCards },
+] as const;
 
-function taskArea(task: StillTask) {
-  switch (task.areaId) {
-    case 'work': return { label: 'Work', Icon: BriefcaseBusiness };
-    case 'love': return { label: 'Love', Icon: Heart };
-    case 'health': return { label: 'Health', Icon: HeartPulse };
-    case 'money': return { label: 'Money', Icon: WalletCards };
-    default: return { label: 'Personal', Icon: Sparkles };
-  }
-}
-
-function taskDueLabel(task: StillTask, todayKey: string) {
-  if (!task.dueDate) return 'Anytime';
-  if (task.dueDate === todayKey) return 'Today';
-  const tomorrowKey = format(addDays(new Date(`${todayKey}T12:00:00`), 1), 'yyyy-MM-dd');
-  if (task.dueDate === tomorrowKey) return 'Tomorrow';
-  if (task.dueDate < todayKey && !task.completed) return 'Overdue';
-  return format(new Date(`${task.dueDate}T12:00:00`), 'MMM d');
+function greetingForHour(hour: number) {
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
 }
 
 export function MobileHomeOverlay() {
   const location = useLocation();
   const navigate = useNavigate();
+  const name = useAppStore((state) => state.name);
   const tasks = useAppStore((state) => state.tasks);
   const events = useAppStore((state) => state.events);
-  const journalEntries = useAppStore((state) => state.journalEntries);
-  const expenses = useAppStore((state) => state.expenses);
-  const workShifts = useAppStore((state) => state.workShifts);
   const storedMood = useAppStore((state) => state.mood);
   const storedEnergy = useAppStore((state) => state.energy);
   const checkInDate = useAppStore((state) => state.checkInDate);
@@ -68,6 +50,8 @@ export function MobileHomeOverlay() {
   const replaceTodayCheckIn = useAppStore((state) => state.replaceTodayCheckIn);
   const toggleTask = useAppStore((state) => state.toggleTask);
   const openTaskEditor = useAppStore((state) => state.openTaskEditor);
+  const openEventEditor = useAppStore((state) => state.openEventEditor);
+  const openJournalEditor = useAppStore((state) => state.openJournalEditor);
 
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [draftMood, setDraftMood] = useState<number>();
@@ -81,10 +65,10 @@ export function MobileHomeOverlay() {
   const checkInAnswer = useMemo(() => getCheckInAnswer(mood, energy), [energy, mood]);
   const hasUnreadNotifications = notifications.some((notification) => !notification.read);
 
-  const weekDays = useMemo(() => {
-    const monday = startOfWeek(now, { weekStartsOn: 1 });
-    return Array.from({ length: 7 }, (_, index) => addDays(monday, index));
-  }, [todayKey]);
+  const todayEvents = useMemo(
+    () => getOccurrencesForDay(getEventOccurrences(events, todayKey, todayKey), todayKey).slice(0, 3),
+    [events, todayKey],
+  );
 
   const orderedTasks = useMemo(() => [...tasks].sort((left, right) => {
     if (left.completed !== right.completed) return left.completed ? 1 : -1;
@@ -94,14 +78,15 @@ export function MobileHomeOverlay() {
     return left.createdAt - right.createdAt;
   }), [tasks]);
 
-  const visibleTasks = orderedTasks.slice(0, 4);
-  const lifeSummaries = useMemo(() => buildLifeGardenSummaries({
-    tasks,
-    events,
-    journalEntries,
-    expenses,
-    workShifts,
-  }), [events, expenses, journalEntries, tasks, workShifts]);
+  const todayTasks = orderedTasks
+    .filter((task) => !task.completed && (task.dueDate === todayKey || !task.dueDate))
+    .slice(0, Math.max(1, 4 - todayEvents.length));
+
+  const weekStart = format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+  const weekEnd = format(addDays(startOfWeek(now, { weekStartsOn: 1 }), 6), 'yyyy-MM-dd');
+  const weekTasks = tasks.filter((task) => task.dueDate && task.dueDate >= weekStart && task.dueDate <= weekEnd);
+  const weekDone = weekTasks.filter((task) => task.completed).length;
+  const weekProgress = weekTasks.length ? Math.round((weekDone / weekTasks.length) * 100) : 0;
 
   if (location.pathname !== '/') return null;
 
@@ -130,160 +115,92 @@ export function MobileHomeOverlay() {
   };
 
   return (
-    <main className="still-mobile-home" aria-label="Still home">
-      <header className="still-mobile-header">
-        <h1>Still</h1>
-        <button
-          className="still-mobile-header-action"
-          onClick={() => navigate('/notifications')}
-          type="button"
-          aria-label="Open notifications"
-        >
-          <Bell size={20} />
-          {hasUnreadNotifications && <span className="still-mobile-notification-dot" />}
-        </button>
+    <main className="still-mobile-home still-editorial-home" aria-label="Still home">
+      <header className="still-editorial-header">
+        <div className="still-editorial-brand">Still</div>
+        <div className="still-editorial-header-actions">
+          <button onClick={() => navigate('/search')} type="button" aria-label="Search Still"><Search size={19} /></button>
+          <button className="still-editorial-notifications" onClick={() => navigate('/notifications')} type="button" aria-label="Open notifications">
+            <Bell size={19} />
+            {hasUnreadNotifications && <span />}
+          </button>
+        </div>
       </header>
 
-      <div className="still-mobile-week" aria-label={`Week of ${format(weekDays[0], 'MMMM d')}`}>
-        {weekDays.map((day) => {
-          const isToday = format(day, 'yyyy-MM-dd') === todayKey;
-          return (
-            <div className={`still-mobile-day ${isToday ? 'is-today' : ''}`} key={day.toISOString()}>
-              <span>{format(day, 'EEE')}</span>
-              <strong>{format(day, 'd')}</strong>
-              <i aria-hidden="true" />
+      <section className="still-editorial-greeting">
+        <h1>{greetingForHour(now.getHours())}{name ? `, ${name}` : ''}.</h1>
+        <p>Let’s take it one step at a time.</p>
+      </section>
+
+      <nav className="still-editorial-life-nav" aria-label="Life areas">
+        <button className="is-active" type="button" aria-current="page"><Home size={18} /><span>Home</span></button>
+        {lifeAreaMeta.map(({ label, route, Icon }) => (
+          <button key={route} onClick={() => navigate(route)} type="button"><Icon size={18} /><span>{label}</span></button>
+        ))}
+      </nav>
+
+      <section className="still-editorial-panel still-editorial-today" aria-labelledby="still-today-title">
+        <div className="still-editorial-panel-head">
+          <h2 id="still-today-title">Today</h2>
+          <button onClick={() => navigate('/calendar')} type="button">View calendar</button>
+        </div>
+
+        <div className="still-editorial-today-list">
+          {todayEvents.map((event) => (
+            <button className="still-editorial-today-row" key={event.occurrenceId} onClick={() => openEventEditor(event.id)} type="button">
+              <span className="still-editorial-row-mark"><CalendarDays size={15} /></span>
+              <span className="still-editorial-row-copy"><strong>{event.title}</strong><small>{event.allDay ? 'All day' : eventTimeLabel(event)}</small></span>
+            </button>
+          ))}
+
+          {todayTasks.map((task) => (
+            <div className="still-editorial-today-row" key={task.id}>
+              <button className={`still-editorial-task-check ${task.completed ? 'is-complete' : ''}`} onClick={() => toggleTask(task.id)} type="button" aria-label={`Complete ${task.title}`} aria-pressed={task.completed}>{task.completed && <Check size={13} />}</button>
+              <button className="still-editorial-row-copy" onClick={() => openTaskEditor(task.id)} type="button"><strong>{task.title}</strong><small>{task.dueDate ? 'Due today' : 'Anytime'}</small></button>
             </div>
-          );
-        })}
+          ))}
+
+          {todayEvents.length === 0 && todayTasks.length === 0 && (
+            <button className="still-editorial-empty-row" onClick={() => openTaskEditor()} type="button">
+              <span>Your day is open.</span><strong>Add something when it matters.</strong>
+            </button>
+          )}
+        </div>
+      </section>
+
+      <div className="still-editorial-duo">
+        <button className="still-editorial-mini-card" onClick={() => openJournalEditor(undefined, todayKey)} type="button">
+          <BookOpen size={18} />
+          <strong>Journal</strong>
+          <span>Capture your thoughts.</span>
+          <b>Write</b>
+        </button>
+        <button className="still-editorial-mini-card" onClick={openCheckIn} type="button">
+          <HeartPulse size={18} />
+          <strong>Check-in</strong>
+          <span>{checkedInToday ? checkInAnswer || 'Today is recorded.' : 'How are you feeling?'}</span>
+          <b>{checkedInToday ? 'Update' : 'Start'}</b>
+        </button>
       </div>
 
-      <section className={`still-checkin-hero ${checkInOpen ? 'is-open' : ''}`}>
-        {!checkInOpen ? (
-          <>
-            <div className="still-checkin-copy">
-              <h2>{checkedInToday ? 'You checked in today.' : 'Take a moment to check in with yourself.'}</h2>
-              <p>{checkedInToday && checkInAnswer ? checkInAnswer : 'A few breaths can change your whole day.'}</p>
-            </div>
-            <button className="still-checkin-cta" onClick={openCheckIn} type="button">
-              <span>{checkedInToday ? 'Update check-in' : 'Start a check-in'}</span>
-            </button>
-          </>
-        ) : (
-          <div className="still-checkin-picker">
-            <div className="still-checkin-picker-head">
-              <div>
-                <span>Check-in</span>
-                <h2>How are you right now?</h2>
-              </div>
-              <button onClick={() => setCheckInOpen(false)} type="button">Cancel</button>
-            </div>
-
-            <div className="still-checkin-scale">
-              <strong>Mood</strong>
-              <div className="still-checkin-options">
-                {checkInMoodOptions.map((item) => (
-                  <button
-                    className={draftMood === item.value ? 'is-selected' : ''}
-                    key={item.key}
-                    onClick={() => selectMood(item.value)}
-                    type="button"
-                    aria-label={`Mood: ${item.label}`}
-                    aria-pressed={draftMood === item.value}
-                  >
-                    <img src={item.asset} alt="" />
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="still-checkin-scale">
-              <strong>Energy</strong>
-              <div className="still-checkin-options">
-                {checkInEnergyOptions.map((item) => (
-                  <button
-                    className={draftEnergy === item.value ? 'is-selected' : ''}
-                    key={item.key}
-                    onClick={() => selectEnergy(item.value)}
-                    type="button"
-                    aria-label={`Energy: ${item.label}`}
-                    aria-pressed={draftEnergy === item.value}
-                  >
-                    <img src={item.asset} alt="" />
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+      {checkInOpen && (
+        <section className="still-editorial-checkin" aria-label="Mood and energy check-in">
+          <div className="still-editorial-checkin-head"><div><small>Check-in</small><h2>How are you right now?</h2></div><button onClick={() => setCheckInOpen(false)} type="button">Cancel</button></div>
+          <div className="still-editorial-checkin-scale">
+            <strong>Mood</strong>
+            <div>{checkInMoodOptions.map((item) => <button className={draftMood === item.value ? 'is-selected' : ''} key={item.key} onClick={() => selectMood(item.value)} type="button" aria-label={`Mood: ${item.label}`} aria-pressed={draftMood === item.value}><img src={item.asset} alt="" /><span>{item.label}</span></button>)}</div>
           </div>
-        )}
-      </section>
+          <div className="still-editorial-checkin-scale">
+            <strong>Energy</strong>
+            <div>{checkInEnergyOptions.map((item) => <button className={draftEnergy === item.value ? 'is-selected' : ''} key={item.key} onClick={() => selectEnergy(item.value)} type="button" aria-label={`Energy: ${item.label}`} aria-pressed={draftEnergy === item.value}><img src={item.asset} alt="" /><span>{item.label}</span></button>)}</div>
+          </div>
+        </section>
+      )}
 
-      <section className="still-mobile-section still-mobile-tasks">
-        <div className="still-mobile-section-head">
-          <h2>Tasks</h2>
-          <button onClick={() => navigate('/tasks')} type="button">See all</button>
-        </div>
-
-        <div className="still-task-list">
-          {visibleTasks.length === 0 ? (
-            <button className="still-task-empty" onClick={() => openTaskEditor()} type="button">
-              <span>Nothing waiting for you.</span>
-              <strong>Add a task</strong>
-            </button>
-          ) : visibleTasks.map((task) => {
-            const { label, Icon } = taskArea(task);
-            return (
-              <div className={`still-task-row ${task.completed ? 'is-complete' : ''}`} key={task.id}>
-                <button
-                  className="still-task-check"
-                  onClick={() => toggleTask(task.id)}
-                  type="button"
-                  aria-label={`${task.completed ? 'Mark incomplete' : 'Complete'} ${task.title}`}
-                  aria-pressed={task.completed}
-                >
-                  {task.completed && <Check size={14} />}
-                </button>
-                <button className="still-task-main" onClick={() => openTaskEditor(task.id)} type="button">
-                  <span className={`still-task-icon area-${task.areaId ?? 'personal'}`}><Icon size={17} /></span>
-                  <span className="still-task-copy">
-                    <strong>{task.title}</strong>
-                    <small>{label}</small>
-                  </span>
-                  <span className="still-task-due"><Clock3 size={12} />{taskDueLabel(task, todayKey)}</span>
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="still-mobile-section still-mobile-life">
-        <div className="still-mobile-section-head">
-          <h2>Your life</h2>
-        </div>
-
-        <div className="still-life-grid">
-          {lifeAreaMeta.map(({ key, label, route, Icon }) => {
-            const summary = lifeSummaries[key];
-            const openAreaTasks = tasks.filter((task) => task.areaId === key && !task.completed).length;
-            const status = key === 'health'
-              ? checkedInToday ? 'Checked in today' : 'Check-in due'
-              : openAreaTasks > 0
-                ? `${openAreaTasks} ${openAreaTasks === 1 ? 'task' : 'tasks'} open`
-                : summary.recordCount > 0
-                  ? summary.detail
-                  : 'Nothing logged yet';
-
-            return (
-              <button className={`still-life-card area-${key}`} onClick={() => navigate(route)} type="button" key={key}>
-                <span className="still-life-icon"><Icon size={18} /></span>
-                <strong>{label}</strong>
-                <small>{status}</small>
-              </button>
-            );
-          })}
-        </div>
+      <section className="still-editorial-week" aria-labelledby="still-week-title">
+        <div className="still-editorial-panel-head"><h2 id="still-week-title">This week</h2><span>{weekProgress}%</span></div>
+        <p>{weekTasks.length ? `${weekDone} of ${weekTasks.length} dated tasks done` : 'Nothing scheduled into this week yet.'}</p>
+        <div className="still-editorial-progress" role="progressbar" aria-label="Weekly task progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={weekProgress}><span style={{ width: `${weekProgress}%` }} /></div>
       </section>
     </main>
   );

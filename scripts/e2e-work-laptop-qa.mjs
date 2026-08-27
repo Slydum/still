@@ -143,7 +143,7 @@ try {
     assert(state.overflow <= 2, `${viewport.label}: horizontal overflow of ${state.overflow}px.`);
     assert(state.navRect && Math.abs(state.navRect.left) <= 1 && Math.abs(state.navRect.width - 252) <= 2, `${viewport.label}: desktop sidebar is not anchored at 252px on the left edge.`);
     assert(state.navPosition === 'fixed' && state.navTransform === 'none', `${viewport.label}: desktop navigation is not a stable fixed rail.`);
-    assert(['Home', 'Work', 'Journal', 'Add', 'Calendar', 'Settings'].every((label) => state.navLabels.includes(label)), `${viewport.label}: desktop navigation labels are incomplete.`);
+    assert(['Home', 'Work', 'Journal', 'Add', 'Tasks', 'More'].every((label) => state.navLabels.includes(label)), `${viewport.label}: desktop navigation labels are incomplete.`);
     assert(state.activeNavLabels.length === 1 && state.activeNavLabels[0] === 'Work', `${viewport.label}: Work is not the single active desktop destination on the Work route.`);
     assert(state.mainRect && state.mainRect.left >= 252 && state.mainDisplay === 'grid', `${viewport.label}: Work is not using the desktop grid inside the app shell.`);
     assert(state.backDisplay === 'none', `${viewport.label}: redundant mobile back control is visible beside the desktop sidebar.`);
@@ -187,12 +187,12 @@ try {
   })()`);
   assert(phoneState.overflow <= 2, `phone Work: horizontal overflow of ${phoneState.overflow}px.`);
   assert(phoneState.display !== 'grid', 'phone Work: desktop Work grid leaked below 1024px.');
-  assert(phoneState.navWidth < 390 && Math.abs(phoneState.navBottom - 844) <= 16, 'phone Work: existing floating bottom navigation changed unexpectedly.');
-  assert(phoneState.navLabels.join('|') === ['Home', 'Journal', 'Add', 'Calendar', 'Settings'].join('|'), 'phone Work: desktop-only Work navigation leaked into the phone bottom bar.');
+  assert(phoneState.navWidth >= 360 && phoneState.navWidth <= 390 && Math.abs(phoneState.navBottom - 844) <= 16, 'phone Work: editorial bottom navigation is not anchored full-width at the viewport bottom.');
+  assert(phoneState.navLabels.join('|') === ['Home', 'Journal', 'Add', 'Tasks', 'More'].join('|'), 'phone Work: desktop-only Work navigation leaked into the phone bottom bar.');
   assert(phoneState.activeNavLabels.length === 1 && phoneState.activeNavLabels[0] === 'Home', 'phone Work: existing Home umbrella navigation state changed unexpectedly.');
   assert(phoneState.backDisplay !== 'none', 'phone Work: existing back control was removed by the desktop treatment.');
 
-  console.log('Work laptop QA passed at 1366x768 and 1440x900, with desktop Work navigation and phone Work unchanged.');
+  console.log('Work laptop QA passed at 1366x768 and 1440x900, with desktop Work navigation and the editorial phone navigation intact.');
 } finally {
   cdp?.close();
   chrome?.kill('SIGTERM');

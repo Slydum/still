@@ -11,7 +11,6 @@ export function isNavSectionActive(itemPath: string, pathname: string, desktop: 
   if (itemPath === '/work') return isWorkPath(pathname);
   if (itemPath === '/') {
     return pathname === '/'
-      || pathname === '/tasks'
       || pathname.startsWith('/life/')
       || (!desktop && isWorkPath(pathname))
       || pathname === '/money'

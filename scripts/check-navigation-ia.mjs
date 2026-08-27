@@ -15,7 +15,9 @@ const settings = read('src/features/more/MorePage.tsx');
 const overview = read('src/features/reflection/WeeklyReflectionPage.tsx');
 
 expect(nav.includes("{ label: 'Home', path: '/', icon: Home }"), 'Primary root navigation must be named Home.');
-expect(nav.includes("{ label: 'Settings', path: '/more'"), 'The settings destination must be labeled Settings in primary navigation.');
+expect(nav.includes("{ label: 'Tasks', path: '/tasks'"), 'Tasks must be a primary navigation destination.');
+expect(nav.includes("{ label: 'More', path: '/more'"), 'The utility and settings destination must be labeled More in primary navigation.');
+expect(!navState.includes("pathname === '/tasks'"), 'Tasks must not inherit Home parent-tab context once promoted to primary navigation.');
 expect(navState.includes("pathname.startsWith('/life/')"), 'Life Area routes must retain Home parent-tab context.');
 expect(navState.includes('!desktop && isWorkPath(pathname)') && navState.includes("pathname === '/money'") && navState.includes("pathname === '/health'"), 'Work, Money, and Health trackers must retain Home parent-tab context.');
 expect(nav.includes('<Link') && nav.includes('to={path}'), 'Primary route navigation must use semantic links.');
@@ -29,7 +31,7 @@ expect(life.includes("useBackNavigation('/')"), 'Life Area pages must use histor
 expect(life.includes("'work tracker'") && life.includes("'spending tracker'"), 'Life Areas must distinguish areas from specialized trackers.');
 expect(health.includes('<h1>How have you been lately?</h1>') && health.includes("useBackNavigation('/')"), 'Health overview naming and contextual Back behavior must remain explicit.');
 expect(money.includes('<h1>Where your money stands.</h1>') && money.includes("useBackNavigation('/life/money')"), 'Money overview naming and fallback must remain explicit.');
-expect(settings.includes('<h1>Settings</h1>'), 'The Settings tab destination must identify itself as Settings.');
+expect(settings.includes('<h1>Settings</h1>'), 'Settings content inside More must remain clearly identified.');
 expect(overview.includes('<h1>Weekly overview</h1>') && overview.includes("useBackNavigation('/')"), 'The factual weekly records page must be named Weekly overview and use contextual Back behavior.');
 
 if (failures.length) {
