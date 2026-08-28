@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 700" role="img" aria-labelledby="title desc">
+  <title id="title">Cozy kitchen inventory room</title>
+  <desc id="desc">A warm stylized kitchen with refrigerator, pantry, stove, sink, cabinets, plants, groceries, and a dining table.</desc>
+  <defs>
+    <linearGradient id="wallL" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#fff7e8"/><stop offset="1" stop-color="#f1dfbd"/></linearGradient>
+    <linearGradient id="wallR" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f7e9cf"/><stop offset="1" stop-color="#ead2a8"/></linearGradient>
+    <linearGradient id="floor" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#dfbd8f"/><stop offset="1" stop-color="#c89462"/></linearGradient>
+    <linearGradient id="sage" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#a8b08a"/><stop offset="1" stop-color="#78815f"/></linearGradient>
+    <linearGradient id="cream" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#fffdf8"/><stop offset="1" stop-color="#e8dcc9"/></linearGradient>
+    <linearGradient id="wood" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#b97d4f"/><stop offset="1" stop-color="#7d5134"/></linearGradient>
+    <linearGradient id="metal" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f8f5ed"/><stop offset="1" stop-color="#bfb9aa"/></linearGradient>
+    <radialGradient id="windowGlow" cx="50%" cy="45%" r="65%"><stop offset="0" stop-color="#fffbd3" stop-opacity="1"/><stop offset="0.55" stop-color="#ffd46e" stop-opacity="0.65"/><stop offset="1" stop-color="#ffca55" stop-opacity="0"/></radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#6f4c31" flood-opacity="0.2"/></filter>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="16"/></filter>
+  </defs>
+
+  <ellipse cx="470" cy="625" rx="350" ry="48" fill="#815d3e" opacity="0.14" filter="url(#soft)"/>
+
+  <g filter="url(#shadow)">
+    <polygon points="96,160 456,62 456,432 96,550" fill="url(#wallL)" stroke="#c8a97c" stroke-width="4"/>
+    <polygon points="456,62 824,164 824,552 456,432" fill="url(#wallR)" stroke="#c8a97c" stroke-width="4"/>
+    <polygon points="96,550 456,432 824,552 458,662" fill="url(#floor)" stroke="#9f704a" stroke-width="4"/>
+  </g>
+
+  <g opacity="0.25" stroke="#966c49" stroke-width="2">
+    <path d="M149 535 511 649M211 515 571 630M276 493 635 611M344 472 698 591M412 450 758 571"/>
+    <path d="M168 527 348 471M244 551 425 494M323 575 500 518M403 600 578 542M485 624 654 566M569 648 730 592"/>
+  </g>
+
+  <g>
+    <rect x="185" y="205" width="148" height="113" rx="8" fill="#c89462" opacity="0.42"/>
+    <rect x="194" y="214" width="130" height="95" rx="4" fill="#fff6c8" stroke="#ae774c" stroke-width="6"/>
+    <rect x="203" y="222" width="112" height="78" rx="2" fill="#ffe48c"/>
+    <ellipse cx="259" cy="261" rx="93" ry="80" fill="url(#windowGlow)" opacity="0.7"/>
+    <path d="M259 223V300M204 260H314" stroke="#b97d4f" stroke-width="7"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="126" y="277" width="132" height="254" rx="22" fill="url(#cream)" stroke="#c9b69e" stroke-width="4"/>
+    <path d="M126 400H258" stroke="#c9b69e" stroke-width="4"/>
+    <rect x="239" y="330" width="8" height="56" rx="4" fill="#8b694e"/>
+    <rect x="239" y="433" width="8" height="52" rx="4" fill="#8b694e"/>
+    <rect x="151" y="321" width="60" height="43" rx="5" fill="#f7efe2" stroke="#c8b9a4"/>
+    <path d="M164 343c8-10 17-10 25 0M176 329v28" stroke="#8b9570" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="201" cy="368" r="4" fill="#d8845c"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <polygon points="276,344 456,293 456,421 276,476" fill="url(#sage)" stroke="#687251" stroke-width="3"/>
+    <polygon points="456,293 531,315 531,443 456,421" fill="#6c7655" stroke="#596245" stroke-width="3"/>
+    <polygon points="276,344 456,293 531,315 353,367" fill="#efe6d7" stroke="#baa88d" stroke-width="3"/>
+    <path d="M353 368v109" stroke="#5c664a" stroke-width="3"/>
+    <path d="M401 354v108M454 338v107" stroke="#5c664a" stroke-width="3"/>
+    <circle cx="377" cy="408" r="4" fill="#e7dac5"/>
+    <circle cx="427" cy="393" r="4" fill="#e7dac5"/>
+    <circle cx="481" cy="375" r="4" fill="#e7dac5"/>
+  </g>
+
+  <g>
+    <polygon points="294,339 376,317 414,328 333,352" fill="#aca99d"/>
+    <polygon points="306,338 376,321 401,329 332,347" fill="#595b56" opacity="0.85"/>
+    <path d="M351 322q0-22 18-25q16 3 15 17" fill="none" stroke="#77766f" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="370" cy="299" r="4" fill="#77766f"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <polygon points="341,203 454,171 506,186 394,219" fill="#96a178" stroke="#6c7655" stroke-width="3"/>
+    <polygon points="341,203 394,219 394,292 341,276" fill="#8d986f" stroke="#6c7655" stroke-width="3"/>
+    <polygon points="394,219 506,186 506,258 394,292" fill="#a7b28b" stroke="#6c7655" stroke-width="3"/>
+    <path d="M450 203v70" stroke="#6c7655" stroke-width="3"/>
+    <circle cx="441" cy="236" r="4" fill="#e9ddc7"/>
+    <circle cx="461" cy="230" r="4" fill="#e9ddc7"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <polygon points="520,305 635,337 635,468 520,433" fill="#e9dfd0" stroke="#b8aa98" stroke-width="3"/>
+    <polygon points="635,337 700,318 700,447 635,468" fill="#d7cabc" stroke="#b8aa98" stroke-width="3"/>
+    <polygon points="520,305 583,287 700,318 635,337" fill="#f3eee5" stroke="#b8aa98" stroke-width="3"/>
+    <polygon points="539,330 617,351 617,423 539,400" fill="#2e302d" stroke="#675e54" stroke-width="4"/>
+    <polygon points="548,339 608,355 608,406 548,389" fill="#403f3b"/>
+    <path d="M547 345 605 361M552 356 608 371" stroke="#77766f" stroke-width="2" opacity="0.5"/>
+    <path d="M548 320 608 336" stroke="#786450" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="536" cy="320" r="5" fill="#876b53"/><circle cx="552" cy="324" r="5" fill="#876b53"/><circle cx="568" cy="329" r="5" fill="#876b53"/><circle cx="584" cy="333" r="5" fill="#876b53"/><circle cx="600" cy="337" r="5" fill="#876b53"/>
+    <ellipse cx="556" cy="308" rx="18" ry="7" fill="#2f312d"/><ellipse cx="607" cy="321" rx="18" ry="7" fill="#2f312d"/>
+    <ellipse cx="575" cy="327" rx="18" ry="7" fill="#2f312d" opacity="0.35"/>
+  </g>
+
+  <g>
+    <path d="M555 290h50l-8-54h-34z" fill="url(#metal)" stroke="#b7ad9f" stroke-width="3"/>
+    <polygon points="544,236 614,255 656,244 588,225" fill="#e9e5dc" stroke="#b7ad9f" stroke-width="3"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <polygon points="682,219 794,250 794,506 682,472" fill="#8c9870" stroke="#667052" stroke-width="4"/>
+    <polygon points="794,250 821,242 821,496 794,506" fill="#6e7957" stroke="#667052" stroke-width="4"/>
+    <polygon points="682,219 710,211 821,242 794,250" fill="#aab490" stroke="#667052" stroke-width="4"/>
+    <rect x="697" y="253" width="82" height="193" rx="6" fill="#6e7957" stroke="#596349" stroke-width="3"/>
+    <path d="M697 299H779M697 346H779M697 393H779" stroke="#aab490" stroke-width="4"/>
+    <g fill="#f0dfbd" stroke="#9f7956" stroke-width="2">
+      <rect x="708" y="265" width="21" height="27" rx="5"/><rect x="738" y="269" width="28" height="23" rx="4"/>
+      <rect x="706" y="312" width="31" height="27" rx="5"/><rect x="747" y="318" width="21" height="21" rx="5"/>
+      <rect x="708" y="356" width="22" height="29" rx="5"/><rect x="740" y="361" width="29" height="24" rx="5"/>
+    </g>
+    <rect x="708" y="405" width="59" height="30" rx="5" fill="#b1845f"/>
+    <path d="M718 420h39" stroke="#e4c39f" stroke-width="3"/>
+  </g>
+
+  <g>
+    <g fill="#8d9570">
+      <ellipse cx="739" cy="204" rx="8" ry="18" transform="rotate(-36 739 204)"/>
+      <ellipse cx="754" cy="199" rx="8" ry="19" transform="rotate(25 754 199)"/>
+      <ellipse cx="751" cy="214" rx="7" ry="17" transform="rotate(58 751 214)"/>
+    </g>
+    <path d="M749 220v-23" stroke="#6b704f" stroke-width="4"/>
+    <path d="M734 220h30l-4 20h-22z" fill="#d9a878"/>
+  </g>
+
+  <g>
+    <g fill="#8f7b5f" stroke="#745e47" stroke-width="2">
+      <rect x="428" y="271" width="13" height="26" rx="4"/><rect x="447" y="265" width="13" height="28" rx="4"/><rect x="467" y="270" width="13" height="24" rx="4"/><rect x="486" y="264" width="13" height="28" rx="4"/>
+    </g>
+    <path d="M420 297h88" stroke="#8e6e4f" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <g>
+    <ellipse cx="465" cy="310" rx="37" ry="13" fill="#a77b56"/>
+    <ellipse cx="465" cy="305" rx="33" ry="11" fill="#c89869"/>
+    <g fill="#ead6aa" stroke="#c59d63" stroke-width="1.5">
+      <ellipse cx="445" cy="302" rx="9" ry="11"/><ellipse cx="460" cy="298" rx="9" ry="11"/><ellipse cx="476" cy="301" rx="9" ry="11"/><ellipse cx="487" cy="306" rx="9" ry="11"/>
+    </g>
+  </g>
+
+  <g filter="url(#shadow)">
+    <polygon points="405,476 552,435 674,470 525,515" fill="url(#wood)" stroke="#71472d" stroke-width="4"/>
+    <path d="M420 483v107M542 516v101M653 475v87M511 518v101" stroke="#72482e" stroke-width="15" stroke-linecap="round"/>
+    <polygon points="430,490 543,458 633,484 520,518" fill="#b97d4f" opacity="0.8"/>
+  </g>
+
+  <g>
+    <ellipse cx="550" cy="474" rx="30" ry="12" fill="#e9dbbe" stroke="#b9956f" stroke-width="3"/>
+    <path d="M529 471q18-22 39 0" fill="#f2d36d" stroke="#c99c3f" stroke-width="3"/>
+    <path d="M542 468q19-24 36-2" fill="#f4d872" stroke="#c99c3f" stroke-width="3"/>
+    <circle cx="480" cy="477" r="14" fill="#e9dfcc" stroke="#b9a488" stroke-width="3"/>
+    <path d="M493 475q12-1 12 8q0 9-12 8" fill="none" stroke="#b9a488" stroke-width="3"/>
+    <path d="M609 470v-26" stroke="#6f7957" stroke-width="4"/>
+    <g fill="#d8845c"><circle cx="604" cy="446" r="7"/><circle cx="615" cy="441" r="7"/><circle cx="620" cy="452" r="7"/></g>
+    <g fill="#8d9570"><ellipse cx="598" cy="438" rx="5" ry="10" transform="rotate(-45 598 438)"/><ellipse cx="619" cy="433" rx="5" ry="10" transform="rotate(35 619 433)"/></g>
+    <path d="M601 470h18l-3 21h-12z" fill="#e7d7be"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <polygon points="350,515 399,501 432,511 383,526" fill="#a96f46" stroke="#70472d" stroke-width="3"/>
+    <path d="M356 517v63M425 513v62" stroke="#70472d" stroke-width="10" stroke-linecap="round"/>
+    <path d="M359 546h62M365 557v27M417 543v32" stroke="#70472d" stroke-width="6" stroke-linecap="round"/>
+    <polygon points="598,515 647,501 680,511 631,526" fill="#a96f46" stroke="#70472d" stroke-width="3"/>
+    <path d="M604 517v63M673 513v62" stroke="#70472d" stroke-width="10" stroke-linecap="round"/>
+    <path d="M607 546h62M613 557v27M665 543v32" stroke="#70472d" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+  <g>
+    <polygon points="278,483 376,456 438,474 340,503" fill="#d8c49d" opacity="0.85"/>
+    <path d="M292 483 388 457M308 489 404 463M324 495 420 469" stroke="#8c9570" stroke-width="8" opacity="0.5"/>
+    <path d="M294 476 356 496M318 469 380 489M343 462 405 482" stroke="#e8dec5" stroke-width="8" opacity="0.7"/>
+  </g>
+
+  <g>
+    <path d="M499 352h38v28h-38z" fill="#d9bf88" opacity="0.9"/>
+    <path d="M507 365h22M518 355v20" stroke="#907454" stroke-width="3"/>
+    <rect x="511" y="382" width="7" height="24" rx="3" fill="#7c684e"/>
+    <rect x="524" y="386" width="7" height="20" rx="3" fill="#7c684e"/>
+    <rect x="537" y="383" width="7" height="23" rx="3" fill="#7c684e"/>
+  </g>
+
+  <g>
+    <path d="M645 288v18M665 293v18M683 300v18" stroke="#6c513d" stroke-width="4"/>
+    <path d="M639 287h52" stroke="#805d43" stroke-width="7" stroke-linecap="round"/>
+    <path d="M643 306q0 13 7 13t7-13M663 311q0 12 6 12t6-12M682 318q0 11 6 11t6-11" fill="none" stroke="#5f5448" stroke-width="4"/>
+  </g>
+</svg>
