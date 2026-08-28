@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { toAppPath } from '../../app/appLocation';
 import { useBackNavigation } from '../../components/navigation/useBackNavigation';
 import { getLocalDateKey } from '../../theme/stillContext';
 import './kitchen.css';
@@ -262,7 +263,7 @@ export function KitchenPage() {
         </div>
 
         <div className="kitchen-room-stage">
-          <img src="/assets/cozy/kitchen-inventory-room.svg" alt="Warm isometric kitchen with a refrigerator, pantry, stove, sink, counters, and dining table" />
+          <img src={toAppPath('/assets/cozy/kitchen-inventory-room.svg')} alt="Warm isometric kitchen with a refrigerator, pantry, stove, sink, counters, and dining table" />
           <button className="kitchen-hotspot kitchen-hotspot-fridge" onClick={() => selectLocation('fridge')} type="button"><Refrigerator size={18} /><span>Fridge</span></button>
           <button className="kitchen-hotspot kitchen-hotspot-freezer" onClick={() => selectLocation('freezer')} type="button"><Snowflake size={18} /><span>Freezer</span></button>
           <button className="kitchen-hotspot kitchen-hotspot-pantry" onClick={() => selectLocation('pantry')} type="button"><PackageOpen size={18} /><span>Pantry</span></button>
@@ -309,7 +310,7 @@ export function KitchenPage() {
       <section className="kitchen-section kitchen-last-section" ref={inventoryRef} aria-labelledby="kitchen-inventory-title">
         <div className="kitchen-section-head kitchen-inventory-head">
           <div><p className="section-kicker">Inventory</p><h2 id="kitchen-inventory-title">What you have left</h2><p>{filter === 'all' ? 'Everything currently logged.' : `${LOCATION_LABELS[filter]} items only.`}</p></div>
-          <button className="health-text-action" onClick={() => openAdd()} type="button"><Plus size={15} /> Add</button>
+          <button className="kitchen-text-action" onClick={() => openAdd()} type="button"><Plus size={15} /> Add</button>
         </div>
 
         <div className="kitchen-filter-row" aria-label="Inventory filter">
