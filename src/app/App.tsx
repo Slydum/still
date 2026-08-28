@@ -25,6 +25,7 @@ const MorePage = lazy(() => import('../features/more/MoreSettingsPage').then((mo
 const WorkQueuePage = lazy(() => import('../features/work/WorkQueuePage').then((module) => ({ default: module.WorkQueuePage })));
 const WorkDetailsPage = lazy(() => import('../features/work/WorkDetailsPage').then((module) => ({ default: module.WorkDetailsPage })));
 const HealthPage = lazy(() => import('../features/health/HealthRoutePage').then((module) => ({ default: module.HealthRoutePage })));
+const KitchenPage = lazy(() => import('../features/health/KitchenPage').then((module) => ({ default: module.KitchenPage })));
 const LovePage = lazy(() => import('../features/love/LovePage').then((module) => ({ default: module.LovePage })));
 const MoneyPage = lazy(() => import('../features/money/MoneyRoutePage').then((module) => ({ default: module.MoneyRoutePage })));
 const LifeAreaPage = lazy(() => import('../features/life-area/LifeAreaPage').then((module) => ({ default: module.LifeAreaPage })));
@@ -88,6 +89,7 @@ function AppRoutes() {
     <Route path="/work/details" element={<Suspense fallback={<AppLoading message="Opening Work details…" />}><WorkDetailsPage /></Suspense>} />
     <Route path="/life/work" element={<Navigate to="/work" replace />} />
     <Route path="/money" element={<Suspense fallback={<AppLoading message="Opening Money…" />}><MoneyPage /></Suspense>} />
+    <Route path="/health/kitchen" element={<Suspense fallback={<AppLoading message="Opening your kitchen…" />}><KitchenPage /></Suspense>} />
     <Route path="/health" element={<Suspense fallback={<AppLoading message="Opening Health…" />}><HealthPage /></Suspense>} />
     <Route path="/life/health" element={<Navigate to="/health" replace />} />
     <Route path="/life/love" element={<Suspense fallback={<AppLoading message="Opening Love…" />}><LovePage /></Suspense>} />
