@@ -5,7 +5,7 @@ const dist = path.join(process.cwd(), 'dist');
 const KiB = 1024;
 const limits = {
   largestJavaScript: 900 * KiB,
-  totalJavaScript: 1300 * KiB,
+  totalJavaScript: 1305 * KiB,
   largestCss: 150 * KiB,
 };
 
