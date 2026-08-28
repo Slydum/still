@@ -1,0 +1,71 @@
+.health-kitchen-launcher {
+  position: fixed;
+  z-index: 18;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: calc(5.7rem + env(safe-area-inset-bottom));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.62rem;
+  min-height: 3.4rem;
+  padding: 0.46rem 0.8rem 0.46rem 0.48rem;
+  border: 1px solid rgba(98, 87, 69, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 250, 241, 0.94);
+  color: #463a30;
+  box-shadow: 0 12px 30px rgba(72, 58, 45, 0.16);
+  backdrop-filter: blur(14px);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.health-kitchen-launcher-icon {
+  display: inline-grid;
+  width: 2.45rem;
+  height: 2.45rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(141, 149, 112, 0.18);
+  color: #687251;
+}
+
+.health-kitchen-launcher strong,
+.health-kitchen-launcher small {
+  display: block;
+}
+
+.health-kitchen-launcher strong {
+  font-size: 0.82rem;
+  line-height: 1.15;
+}
+
+.health-kitchen-launcher small {
+  margin-top: 0.12rem;
+  color: rgba(70, 58, 48, 0.66);
+  font-size: 0.68rem;
+  line-height: 1.15;
+}
+
+.health-kitchen-launcher:focus-visible {
+  outline: 3px solid rgba(104, 114, 81, 0.28);
+  outline-offset: 3px;
+}
+
+@media (max-width: 390px) {
+  .health-kitchen-launcher {
+    right: 0.75rem;
+    bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    min-height: 3rem;
+    padding: 0.38rem;
+  }
+
+  .health-kitchen-launcher > span:last-child {
+    display: none;
+  }
+
+  .health-kitchen-launcher-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
