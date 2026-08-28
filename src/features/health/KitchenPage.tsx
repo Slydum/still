@@ -1,15 +1,3 @@
-import {
-  ArrowLeft,
-  ChefHat,
-  Edit3,
-  PackageOpen,
-  Plus,
-  Refrigerator,
-  Snowflake,
-  Trash2,
-  UtensilsCrossed,
-  X,
-} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { toAppPath } from '../../app/appLocation';
 import { useBackNavigation } from '../../components/navigation/useBackNavigation';
@@ -48,6 +36,13 @@ const LOCATION_LABELS: Record<KitchenLocation, string> = {
   freezer: 'Freezer',
   pantry: 'Pantry',
   counter: 'Counter',
+};
+
+const LOCATION_GLYPHS: Record<KitchenLocation, string> = {
+  fridge: '▥',
+  freezer: '❄',
+  pantry: '▦',
+  counter: '▤',
 };
 
 function createItemId() {
@@ -231,14 +226,14 @@ export function KitchenPage() {
   return (
     <main className="shell kitchen-page">
       <header className="still-page-header kitchen-header">
-        <button className="btn-icon" onClick={goBack} type="button" aria-label="Back to Health"><ArrowLeft size={20} /></button>
+        <button className="btn-icon" onClick={goBack} type="button" aria-label="Back to Health"><span aria-hidden="true">←</span></button>
         <div className="still-page-heading">
           <div className="still-page-heading-copy">
             <p className="section-kicker">Health · kitchen</p>
             <h1>Your real-life kitchen</h1>
             <p className="subtle">Track what is actually in the fridge, freezer, pantry, and counter before buying more food.</p>
           </div>
-          <button className="btn btn-secondary btn-compact still-action-button" onClick={() => openAdd()} type="button"><Plus size={16} /> Add food</button>
+          <button className="btn btn-secondary btn-compact still-action-button" onClick={() => openAdd()} type="button"><span aria-hidden="true">+</span> Add food</button>
         </div>
       </header>
 
@@ -256,25 +251,25 @@ export function KitchenPage() {
         </div>
 
         <div className="kitchen-location-chips" aria-label="Filter by storage location">
-          <button className={filter === 'fridge' ? 'is-active' : ''} onClick={() => selectLocation('fridge')} type="button"><Refrigerator size={16} /> Fridge</button>
-          <button className={filter === 'pantry' ? 'is-active' : ''} onClick={() => selectLocation('pantry')} type="button"><PackageOpen size={16} /> Pantry</button>
-          <button className={filter === 'freezer' ? 'is-active' : ''} onClick={() => selectLocation('freezer')} type="button"><Snowflake size={16} /> Freezer</button>
-          <button onClick={() => document.getElementById('kitchen-meals')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} type="button"><ChefHat size={16} /> Cook</button>
+          <button className={filter === 'fridge' ? 'is-active' : ''} onClick={() => selectLocation('fridge')} type="button"><b aria-hidden="true">▥</b> Fridge</button>
+          <button className={filter === 'pantry' ? 'is-active' : ''} onClick={() => selectLocation('pantry')} type="button"><b aria-hidden="true">▦</b> Pantry</button>
+          <button className={filter === 'freezer' ? 'is-active' : ''} onClick={() => selectLocation('freezer')} type="button"><b aria-hidden="true">❄</b> Freezer</button>
+          <button onClick={() => document.getElementById('kitchen-meals')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} type="button"><b aria-hidden="true">♨</b> Cook</button>
         </div>
 
         <div className="kitchen-room-stage">
           <img src={toAppPath('/assets/cozy/kitchen-inventory-room.svg')} alt="Warm isometric kitchen with a refrigerator, pantry, stove, sink, counters, and dining table" />
-          <button className="kitchen-hotspot kitchen-hotspot-fridge" onClick={() => selectLocation('fridge')} type="button"><Refrigerator size={18} /><span>Fridge</span></button>
-          <button className="kitchen-hotspot kitchen-hotspot-freezer" onClick={() => selectLocation('freezer')} type="button"><Snowflake size={18} /><span>Freezer</span></button>
-          <button className="kitchen-hotspot kitchen-hotspot-pantry" onClick={() => selectLocation('pantry')} type="button"><PackageOpen size={18} /><span>Pantry</span></button>
-          <button className="kitchen-hotspot kitchen-hotspot-cook" onClick={() => document.getElementById('kitchen-meals')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} type="button"><ChefHat size={18} /><span>Cook</span></button>
+          <button className="kitchen-hotspot kitchen-hotspot-fridge" onClick={() => selectLocation('fridge')} type="button"><b aria-hidden="true">▥</b><span>Fridge</span></button>
+          <button className="kitchen-hotspot kitchen-hotspot-freezer" onClick={() => selectLocation('freezer')} type="button"><b aria-hidden="true">❄</b><span>Freezer</span></button>
+          <button className="kitchen-hotspot kitchen-hotspot-pantry" onClick={() => selectLocation('pantry')} type="button"><b aria-hidden="true">▦</b><span>Pantry</span></button>
+          <button className="kitchen-hotspot kitchen-hotspot-cook" onClick={() => document.getElementById('kitchen-meals')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} type="button"><b aria-hidden="true">♨</b><span>Cook</span></button>
         </div>
       </section>
 
       {draft && <section className="card kitchen-editor" aria-labelledby="kitchen-editor-title">
         <div className="kitchen-editor-head">
           <div><p className="section-kicker">{draft.id ? 'Update food' : 'Add food'}</p><h2 id="kitchen-editor-title">{draft.id ? 'What changed?' : 'What did you bring home?'}</h2></div>
-          <button onClick={() => setDraft(undefined)} type="button" aria-label="Close food editor"><X size={18} /></button>
+          <button onClick={() => setDraft(undefined)} type="button" aria-label="Close food editor"><span aria-hidden="true">×</span></button>
         </div>
         <form onSubmit={saveItem}>
           <label className="kitchen-field kitchen-field-wide"><span>Food</span><input autoFocus maxLength={80} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="e.g. Greek yogurt" required type="text" value={draft.name} /></label>
@@ -293,7 +288,7 @@ export function KitchenPage() {
         <div className="kitchen-section-head"><div><p className="section-kicker">Use soon</p><h2 id="kitchen-soon-title">Eat these before they betray you</h2><p>Anything with a use-by date within three days appears here.</p></div></div>
         {useSoon.length === 0 ? <div className="card kitchen-empty-small"><span>Nothing urgent right now.</span><small>Add use-by dates and Still will surface the short-lived stuff here.</small></div> : <div className="kitchen-soon-grid">
           {useSoon.slice(0, 4).map(({ item, days }) => <button className={`kitchen-soon-card ${days !== undefined && days < 0 ? 'is-overdue' : ''}`} key={item.id} onClick={() => openEdit(item)} type="button">
-            <span className="kitchen-soon-icon"><UtensilsCrossed size={20} /></span>
+            <span className="kitchen-soon-icon" aria-hidden="true">◌</span>
             <strong>{item.name}</strong>
             <small>{expiryLabel(days)}</small>
           </button>)}
@@ -302,29 +297,29 @@ export function KitchenPage() {
 
       <section className="kitchen-section" id="kitchen-meals" aria-labelledby="kitchen-meals-title">
         <div className="kitchen-section-head"><div><p className="section-kicker">What can I make?</p><h2 id="kitchen-meals-title">Start with what you already own</h2><p>These are simple matches from the foods you logged, not a nutrition prescription.</p></div></div>
-        {ideas.length === 0 ? <div className="card kitchen-empty-small"><ChefHat size={20} /><span>No obvious meal match yet.</span><small>Once you log a few staples, simple ideas will appear here.</small></div> : <div className="kitchen-idea-list">
-          {ideas.map((idea) => <article className="card kitchen-idea" key={idea.title}><span><ChefHat size={18} /></span><div><strong>{idea.title}</strong><small>{idea.note}</small></div></article>)}
+        {ideas.length === 0 ? <div className="card kitchen-empty-small"><span aria-hidden="true">♨</span><span>No obvious meal match yet.</span><small>Once you log a few staples, simple ideas will appear here.</small></div> : <div className="kitchen-idea-list">
+          {ideas.map((idea) => <article className="card kitchen-idea" key={idea.title}><span aria-hidden="true">♨</span><div><strong>{idea.title}</strong><small>{idea.note}</small></div></article>)}
         </div>}
       </section>
 
       <section className="kitchen-section kitchen-last-section" ref={inventoryRef} aria-labelledby="kitchen-inventory-title">
         <div className="kitchen-section-head kitchen-inventory-head">
           <div><p className="section-kicker">Inventory</p><h2 id="kitchen-inventory-title">What you have left</h2><p>{filter === 'all' ? 'Everything currently logged.' : `${LOCATION_LABELS[filter]} items only.`}</p></div>
-          <button className="kitchen-text-action" onClick={() => openAdd()} type="button"><Plus size={15} /> Add</button>
+          <button className="kitchen-text-action" onClick={() => openAdd()} type="button"><span aria-hidden="true">+</span> Add</button>
         </div>
 
         <div className="kitchen-filter-row" aria-label="Inventory filter">
           {(['all', 'fridge', 'freezer', 'pantry', 'counter'] as KitchenFilter[]).map((location) => <button className={filter === location ? 'is-active' : ''} key={location} onClick={() => setFilter(location)} type="button">{location === 'all' ? 'All' : LOCATION_LABELS[location]}</button>)}
         </div>
 
-        {filteredItems.length === 0 ? <button className="card kitchen-empty" onClick={() => openAdd()} type="button"><Refrigerator size={24} /><span><strong>{items.length === 0 ? 'Your kitchen is empty here, not necessarily in real life.' : `Nothing logged in ${filter === 'all' ? 'this view' : LOCATION_LABELS[filter]}.`}</strong><small>Add what is actually there. No imaginary groceries, no pantry fan fiction.</small></span><Plus size={18} /></button> : <div className="card kitchen-inventory-list">
+        {filteredItems.length === 0 ? <button className="card kitchen-empty" onClick={() => openAdd()} type="button"><span aria-hidden="true">▥</span><span><strong>{items.length === 0 ? 'Your kitchen is empty here, not necessarily in real life.' : `Nothing logged in ${filter === 'all' ? 'this view' : LOCATION_LABELS[filter]}.`}</strong><small>Add what is actually there. No imaginary groceries, no pantry fan fiction.</small></span><span aria-hidden="true">+</span></button> : <div className="card kitchen-inventory-list">
           {filteredItems.map((item) => {
             const days = daysUntil(item.expiresOn, today);
             return <article className="kitchen-item-row" key={item.id}>
-              <span className={`kitchen-storage-mark kitchen-storage-${item.location}`} aria-hidden="true">{item.location === 'fridge' ? <Refrigerator size={17} /> : item.location === 'freezer' ? <Snowflake size={17} /> : <PackageOpen size={17} />}</span>
+              <span className={`kitchen-storage-mark kitchen-storage-${item.location}`} aria-hidden="true">{LOCATION_GLYPHS[item.location]}</span>
               <div className="kitchen-item-copy"><strong>{item.name}</strong><span>{LOCATION_LABELS[item.location]} · {item.quantity} {item.unit}{days !== undefined ? ` · ${expiryLabel(days)}` : ''}</span></div>
               <div className="kitchen-quantity-stepper" aria-label={`Adjust ${item.name} quantity`}><button onClick={() => adjustQuantity(item, -1)} type="button" aria-label={`Use one ${item.unit} of ${item.name}`}>−</button><span>{item.quantity}</span><button onClick={() => adjustQuantity(item, 1)} type="button" aria-label={`Add one ${item.unit} of ${item.name}`}>+</button></div>
-              <div className="kitchen-row-actions"><button onClick={() => openEdit(item)} type="button" aria-label={`Edit ${item.name}`}><Edit3 size={15} /></button><button onClick={() => removeItem(item)} type="button" aria-label={`Remove ${item.name}`}><Trash2 size={15} /></button></div>
+              <div className="kitchen-row-actions"><button onClick={() => openEdit(item)} type="button" aria-label={`Edit ${item.name}`}><span aria-hidden="true">✎</span></button><button onClick={() => removeItem(item)} type="button" aria-label={`Remove ${item.name}`}><span aria-hidden="true">×</span></button></div>
             </article>;
           })}
         </div>}
